@@ -1,0 +1,36 @@
+# Dependências e artefatos de build (instalados/gerados na imagem)
+node_modules
+.next
+out
+build
+coverage
+
+# Git e metadados locais
+.git
+.github
+.gitignore
+
+# Ambientes e segredos (nunca copiar .env reais para a imagem)
+.env
+.env.*
+!.env.example
+
+# Logs e temporários
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.log
+*.tsbuildinfo
+.DS_Store
+*.pem
+
+# Deploy / IDE / agentes
+.vercel
+.agents
+.claude
+.windsurf
+skills-lock.json
+
+# Cliente Prisma gerado no host (regenerado no build da imagem)
+src/generated/prisma
