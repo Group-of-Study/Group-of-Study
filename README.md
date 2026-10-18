@@ -2,6 +2,9 @@
 
 Plataforma web para grupos de estudo.
 
+# Integrantes
+Matheus, Miguel, Gabriel, Eduardo e Talys
+
 ## Stack
 
 | Tecnologia | Para que serve |
