@@ -3,7 +3,7 @@
 Plataforma web para grupos de estudo.
 
 # Integrantes
-Matheus, Miguel, Gabriel, Eduardo e Talys
+Matheus, Miguel, Gabriel, Eduardo e Talys.
 
 ## Stack
 
