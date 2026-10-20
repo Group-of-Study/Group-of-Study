@@ -1,6 +1,6 @@
 # Rascunho — CI com GitHub Actions (Task 3)
 
-> Status: **planejamento** — nada implementado ainda.
+> Status: **implementado** — workflow, scripts e ajustes preparatórios aplicados.
 > Projeto: Group of Study (Next.js 16, React 19, TypeScript, Prisma 7, PostgreSQL, Docker).
 
 ## Objetivo

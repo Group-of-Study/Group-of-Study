@@ -12,7 +12,7 @@ Matheus, Miguel, Gabriel, Eduardo e Talys
 | [Next.js](https://nextjs.org) | Framework React usado no front-end e no back-end (App Router, Server Components e rotas de API). |
 | [TypeScript](https://www.typescriptlang.org) | Tipagem estática em todo o projeto, para pegar erros antes de rodar. |
 | [Tailwind CSS](https://tailwindcss.com) | Estilização com classes utilitárias direto no JSX. |
-| [Node.js](https://nodejs.org) | Ambiente de execução do servidor (**20.9+**; imagens Docker usam **Node 22**). |
+| [Node.js](https://nodejs.org) | Ambiente de execução do servidor (**22+**; imagens Docker usam **Node 22**). |
 | [Prisma](https://www.prisma.io) | ORM: define os modelos do banco, gera as migrations e dá acesso tipado aos dados. |
 | [PostgreSQL](https://www.postgresql.org) | Banco de dados relacional. |
 | [Better Auth](https://www.better-auth.com) | Autenticação (cadastro, login e sessões). |
@@ -21,7 +21,7 @@ Matheus, Miguel, Gabriel, Eduardo e Talys
 ## Pré-requisitos
 
 - [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/) (v2+)
-- (Opcional, fora do Docker) Node.js 20.9+ e npm, se for rodar a app no host
+- (Opcional, fora do Docker) Node.js 22+ e npm, se for rodar a app no host
 
 ## Arquivos Docker
 
@@ -190,6 +190,23 @@ docker compose -f compose.prod.yaml up --build -d
 | `prisma generate` falha no build | Confirme que `prisma/`, `prisma7.config.ts` e o lockfile entram na imagem (não estão no `.dockerignore`). |
 | Cliente Prisma “sumiu” no dev | É regenerado no start do contêiner; se precisar: `docker compose exec app npx prisma generate --config prisma7.config.ts`. |
 
+## CI (GitHub Actions)
+
+O workflow `.github/workflows/ci.yml` roda em Pull Requests e pushes para `main` (e manualmente via `workflow_dispatch`):
+
+- **Lint**: `npm run lint` (ESLint).
+- **Typecheck**: `npm run typecheck` (`next typegen` + `tsc --noEmit`).
+- **Build**: `npm run build` (`next build`), job condicional ativado pela variável de repositório `CI_BUILD_ENABLED=true`.
+
+Node 22 (`.nvmrc`) e cache npm. Nenhum segredo real é usado; placeholders são fornecidos via `env`.
+
+### Configuração do repositório (fora do código)
+
+Após o primeiro PR verde, configure no GitHub:
+- Branch protection em `main`: exigir os checks **Lint** e **Typecheck**.
+- Exigir **Build** somente após validar o job condicional.
+- Criar a variável de repositório `CI_BUILD_ENABLED=true` para habilitar o build.
+
 ## Scripts npm (host ou contêiner)
 
 | Script | Comando |
@@ -198,4 +215,5 @@ docker compose -f compose.prod.yaml up --build -d
 | `build` | `next build` |
 | `start` | `next start` (local; produção Docker usa `node server.js`) |
 | `lint` | `eslint` |
+| `typecheck` | `next typegen && tsc --noEmit` |
 | `postinstall` | `prisma generate --config prisma7.config.ts` |

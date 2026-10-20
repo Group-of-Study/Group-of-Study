@@ -2,11 +2,15 @@
   "name": "group-of-study",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
     "postinstall": "prisma generate --config prisma7.config.ts"
   },
   "dependencies": {
