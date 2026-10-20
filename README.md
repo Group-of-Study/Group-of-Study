@@ -199,3 +199,5 @@ docker compose -f compose.prod.yaml up --build -d
 | `start` | `next start` (local; produção Docker usa `node server.js`) |
 | `lint` | `eslint` |
 | `postinstall` | `prisma generate --config prisma7.config.ts` |
+
+teste
