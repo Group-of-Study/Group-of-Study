@@ -1,12 +1,13 @@
 import { APIError } from "better-auth/api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { signUpEmail, signInEmail } = vi.hoisted(() => ({
+const { signUpEmail, signInEmail, signOut } = vi.hoisted(() => ({
     signUpEmail: vi.fn(),
     signInEmail: vi.fn(),
+    signOut: vi.fn(),
 }));
 
-vi.mock("@/lib/auth", () => ({ auth: { api: { signUpEmail, signInEmail } } }));
+vi.mock("@/lib/auth", () => ({ auth: { api: { signUpEmail, signInEmail, signOut } } }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 // O redirect() do Next lança uma exceção; aqui ela carrega o destino.
 vi.mock("next/navigation", () => ({
@@ -15,7 +16,7 @@ vi.mock("next/navigation", () => ({
     },
 }));
 
-import { signInAction, signUpAction } from "./actions";
+import { signInAction, signOutAction, signUpAction } from "./actions";
 
 function form(data: Record<string, string>): FormData {
     const formData = new FormData();
@@ -100,5 +101,18 @@ describe("signInAction", () => {
         await expect(signInAction({}, form({ ...credentials, password: "errada-123" }))).resolves.toEqual({
             error: "Email ou senha incorretos.",
         });
+    });
+});
+
+describe("signOutAction", () => {
+    it("encerra a sessão e vai para /login", async () => {
+        await expect(signOutAction()).rejects.toThrow("REDIRECT:/login");
+        expect(signOut).toHaveBeenCalledWith({ headers: expect.any(Headers) });
+    });
+
+    it("registra a falha e vai para /login mesmo assim", async () => {
+        signOut.mockRejectedValue(new Error("falhou"));
+        await expect(signOutAction()).rejects.toThrow("REDIRECT:/login");
+        expect(console.error).toHaveBeenCalled();
     });
 });

@@ -34,3 +34,12 @@ export async function signInAction(_prev: AuthFormState, formData: FormData): Pr
     }
     redirect(safeCallbackUrl(formData.get("callbackUrl")));
 }
+
+export async function signOutAction(): Promise<void> {
+    try {
+        await auth.api.signOut({ headers: await headers() });
+    } catch (error) {
+        handleAuthError("signOut", error);
+    }
+    redirect("/login");
+}
