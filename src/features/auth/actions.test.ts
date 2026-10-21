@@ -1,11 +1,12 @@
 import { APIError } from "better-auth/api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { signUpEmail } = vi.hoisted(() => ({
+const { signUpEmail, signInEmail } = vi.hoisted(() => ({
     signUpEmail: vi.fn(),
+    signInEmail: vi.fn(),
 }));
 
-vi.mock("@/lib/auth", () => ({ auth: { api: { signUpEmail } } }));
+vi.mock("@/lib/auth", () => ({ auth: { api: { signUpEmail, signInEmail } } }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 // O redirect() do Next lança uma exceção; aqui ela carrega o destino.
 vi.mock("next/navigation", () => ({
@@ -14,7 +15,7 @@ vi.mock("next/navigation", () => ({
     },
 }));
 
-import { signUpAction } from "./actions";
+import { signInAction, signUpAction } from "./actions";
 
 function form(data: Record<string, string>): FormData {
     const formData = new FormData();
@@ -63,5 +64,41 @@ describe("signUpAction", () => {
         signUpEmail.mockRejectedValue(new Error("banco fora do ar"));
         await expect(signUpAction({}, form(user))).resolves.toEqual({ error: "Algo deu errado. Tente novamente." });
         expect(console.error).toHaveBeenCalled();
+    });
+});
+
+describe("signInAction", () => {
+    const credentials = { email: user.email, password: user.password };
+
+    it("entra e redireciona para o callbackUrl", async () => {
+        await expect(signInAction({}, form({ ...credentials, callbackUrl: "/grupos/1" }))).rejects.toThrow(
+            "REDIRECT:/grupos/1",
+        );
+        expect(signInEmail).toHaveBeenCalledWith({ body: credentials, headers: expect.any(Headers) });
+    });
+
+    it("vai para /dashboard quando não há callbackUrl", async () => {
+        await expect(signInAction({}, form(credentials))).rejects.toThrow("REDIRECT:/dashboard");
+    });
+
+    it("ignora callbackUrl externo e vai para /dashboard", async () => {
+        await expect(signInAction({}, form({ ...credentials, callbackUrl: "//site-falso.com" }))).rejects.toThrow(
+            "REDIRECT:/dashboard",
+        );
+    });
+
+    it("devolve erros de campo sem chamar o Better Auth", async () => {
+        const state = await signInAction({}, form({ email: "x", password: "" }));
+        expect(state.fieldErrors).toEqual({ email: ["Email inválido"], password: ["Informe a senha"] });
+        expect(signInEmail).not.toHaveBeenCalled();
+    });
+
+    it("avisa quando email ou senha estão errados e não redireciona", async () => {
+        signInEmail.mockRejectedValue(
+            new APIError("UNAUTHORIZED", { code: "INVALID_EMAIL_OR_PASSWORD", message: "" }),
+        );
+        await expect(signInAction({}, form({ ...credentials, password: "errada-123" }))).resolves.toEqual({
+            error: "Email ou senha incorretos.",
+        });
     });
 });

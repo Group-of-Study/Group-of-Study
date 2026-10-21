@@ -10,3 +10,8 @@ export const signUpSchema = z.object({
         .min(8, "A senha precisa ter pelo menos 8 caracteres")
         .max(128, "A senha pode ter no máximo 128 caracteres"),
 });
+
+export const signInSchema = z.object({
+    email,
+    password: z.string().min(1, "Informe a senha"),
+});

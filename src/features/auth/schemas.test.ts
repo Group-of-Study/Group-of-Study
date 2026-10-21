@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { signUpSchema } from "./schemas";
+import { signInSchema, signUpSchema } from "./schemas";
 
 const valid = { name: "Miguel", email: "miguel@exemplo.com", password: "senha-forte-123" };
 
@@ -42,5 +42,17 @@ describe("signUpSchema", () => {
     it("ignora campos extras, como o callbackUrl", () => {
         const result = signUpSchema.safeParse({ ...valid, callbackUrl: "/grupos" });
         expect(result.data).toEqual(valid);
+    });
+});
+
+describe("signInSchema", () => {
+    it("aceita email e senha", () => {
+        const result = signInSchema.safeParse({ email: " miguel@exemplo.com ", password: "qualquer" });
+        expect(result.data).toEqual({ email: "miguel@exemplo.com", password: "qualquer" });
+    });
+
+    it("exige a senha", () => {
+        const result = signInSchema.safeParse({ email: valid.email, password: "" });
+        expect(result.success).toBe(false);
     });
 });
