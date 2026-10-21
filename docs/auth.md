@@ -69,5 +69,47 @@ Rotas privadas hoje: `/dashboard`, `/grupos` (e tudo abaixo delas).
 - O `proxy.ts` só verifica se o cookie **existe**, não se a sessão é válida. Ele não substitui o `requireSession()`.
 - **Não** coloque no proxy a regra "logado sai do `/login`": com cookie expirado isso gera loop de redirecionamento. Essa regra fica na própria página de login, usando `getSession()`.
 
+## Login, cadastro e logout (Server Actions)
+Ficam em `src/features/auth/actions.ts`, no formato do `useActionState`:
+
+| Action | Sucesso | Erro |
+|---|---|---|
+| `signUpAction` | cria a conta, inicia a sessão e redireciona para o `callbackUrl` | devolve `{ error }` ou `{ fieldErrors }` |
+| `signInAction` | inicia a sessão e redireciona para o `callbackUrl` | devolve `{ error }` ou `{ fieldErrors }` |
+| `signOutAction` | encerra a sessão e redireciona para `/login` | — |
+
+```tsx
+"use client";
+
+import { useActionState } from "react";
+import { signInAction } from "@/features/auth/actions";
+
+export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
+    const [state, formAction, pending] = useActionState(signInAction, {});
+
+    return (
+        <form action={formAction}>
+            <input type="hidden" name="callbackUrl" value={callbackUrl ?? ""} />
+            <input name="email" type="email" />
+            {state.fieldErrors?.email && <p>{state.fieldErrors.email[0]}</p>}
+            <input name="password" type="password" />
+            {state.fieldErrors?.password && <p>{state.fieldErrors.password[0]}</p>}
+            {state.error && <p>{state.error}</p>}
+            <button disabled={pending}>{pending ? "Entrando..." : "Entrar"}</button>
+        </form>
+    );
+}
+```
+
+Logout: `<form action={signOutAction}><button>Sair</button></form>`.
+
+- **Validação:** os dados passam pelos schemas Zod de `src/features/auth/schemas.ts` antes de chegar ao Better Auth. Erros de campo voltam em `fieldErrors` (ex.: `{ email: ["Email inválido"] }`).
+- **`callbackUrl`:** vem de um campo do formulário. Só caminhos internos são aceitos (`/grupos/1`); URLs externas (`https://...`, `//site.com`) viram `/dashboard`, para evitar open redirect.
+- **Erros:** os conhecidos (email já cadastrado, senha errada) viram mensagens em português em `error`. Os inesperados (banco fora do ar, bug) vão para o log do servidor como `[auth] <action> falhou` e o usuário vê "Algo deu errado. Tente novamente.".
+
+## Testes
+- `npm test` roda os testes (Vitest) uma vez; `npm run test:watch` roda a cada alteração.
+- Os testes ficam ao lado do código (`*.test.ts`) e não precisam de banco: Better Auth e Next são substituídos por mocks.
+
 ## Pendente
-- Telas de `/login` e `/cadastro` (até lá, o redirecionamento para `/login` cai em 404). Depois do login, o usuário volta para a página que tentou abrir, via `?callbackUrl=`.
+- Telas de `/login` e `/cadastro` (até lá, o redirecionamento para `/login` cai em 404). Usam as Server Actions acima.
