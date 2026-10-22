@@ -118,7 +118,17 @@ Logout: `<form action={signOutAction}><button>Sair</button></form>`.
 | `src/app/api/me/route.test.ts` | `/api/me`: 200 com o usuário, 401 sem sessão, sem expor o token |
 | `src/proxy.test.ts` | Rotas que o proxy protege (e as que não) e o redirecionamento para `/login` |
 
-Para testar um Route Handler novo, siga o `route.test.ts` da `/api/me`: simule só `@/lib/auth` e `next/headers` e chame a função (`GET`, `POST`) direto. Arquivos que importam `server-only` precisam de `vi.mock("server-only", () => ({}))`.
+Para testar um Route Handler novo, siga o `route.test.ts` da `/api/me`: simule `@/lib/auth`, `next/headers` e, se a rota usar o banco, `@/lib/prisma`, e chame a função (`GET`, `POST`) direto. Arquivos que importam `server-only` precisam de `vi.mock("server-only", () => ({}))`.
+
+O `@/lib/prisma` precisa ser simulado porque ele lança erro ao ser importado sem `DATABASE_URL` (o Vitest não carrega o `.env`) e, com a variável, conectaria num banco de verdade. Simule só os métodos que a rota usa:
+
+```ts
+vi.mock("@/lib/prisma", () => ({
+    prisma: {
+        group: { findMany: vi.fn(), create: vi.fn() },
+    },
+}));
+```
 
 ## Pendente
 - Telas de `/login` e `/cadastro` (até lá, o redirecionamento para `/login` cai em 404). Usam as Server Actions acima.
