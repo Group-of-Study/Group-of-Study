@@ -3,9 +3,9 @@ import { AUTH_RATE_LIMITS, createMemoryRateLimitStorage, isRateLimitEnabled, rat
 
 const rule = { window: 60, max: 3 };
 
-function setup() {
+function setup(maxEntries?: number) {
     let time = 1_000_000;
-    const storage = createMemoryRateLimitStorage(() => time);
+    const storage = createMemoryRateLimitStorage(() => time, maxEntries);
     const advance = (seconds: number) => {
         time += seconds * 1000;
     };
@@ -63,6 +63,33 @@ describe("createMemoryRateLimitStorage", () => {
 
         await expect(storage.consume("2.2.2.2|/sign-in/email", rule)).resolves.toMatchObject({ allowed: true });
         await expect(storage.consume("1.1.1.1|/sign-up/email", rule)).resolves.toMatchObject({ allowed: true });
+    });
+});
+
+describe("limpeza de contadores antigos", () => {
+    it("não apaga um bloqueio longo ao limpar contadores de janela curta", async () => {
+        const { storage, advance } = setup(2);
+        const longRule = { window: 900, max: 1 };
+        await storage.consume("conta", longRule);
+        await expect(storage.consume("conta", longRule)).resolves.toMatchObject({ allowed: false });
+
+        advance(120);
+        await storage.consume("ip-1", rule);
+        await storage.consume("ip-2", rule);
+
+        await expect(storage.consume("conta", longRule)).resolves.toMatchObject({ allowed: false });
+    });
+
+    it("apaga contadores cuja janela já terminou", async () => {
+        const { storage, advance } = setup(2);
+        await storage.consume("velho", { window: 60, max: 1 });
+        await expect(storage.consume("velho", { window: 60, max: 1 })).resolves.toMatchObject({ allowed: false });
+
+        advance(61);
+        await storage.consume("novo-1", rule);
+        await storage.consume("novo-2", rule);
+
+        await expect(storage.consume("velho", { window: 60, max: 1 })).resolves.toMatchObject({ allowed: true });
     });
 });
 

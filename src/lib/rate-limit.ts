@@ -21,21 +21,26 @@ export function isRateLimitEnabled(): boolean {
 type Entry = {
     count: number;
     windowStart: number;
+    windowMs: number;
 };
 
 const MAX_ENTRIES = 10_000;
 
 // Contador em memória. Sobrevive ao hot reload (globalThis), mas zera quando
 // o servidor reinicia e não é compartilhado entre instâncias.
-export function createMemoryRateLimitStorage(now: () => number = Date.now): BetterAuthRateLimitStorage {
+export function createMemoryRateLimitStorage(
+    now: () => number = Date.now,
+    maxEntries: number = MAX_ENTRIES,
+): BetterAuthRateLimitStorage {
     const entries = new Map<string, Entry>();
 
-    function prune(time: number, windowMs: number) {
-        if (entries.size < MAX_ENTRIES) {
+    // Remove só contadores cuja própria janela já terminou.
+    function prune(time: number) {
+        if (entries.size < maxEntries) {
             return;
         }
         for (const [key, entry] of entries) {
-            if (time - entry.windowStart >= windowMs) {
+            if (time - entry.windowStart >= entry.windowMs) {
                 entries.delete(key);
             }
         }
@@ -45,11 +50,11 @@ export function createMemoryRateLimitStorage(now: () => number = Date.now): Bett
         async consume(key, rule) {
             const time = now();
             const windowMs = rule.window * 1000;
-            prune(time, windowMs);
+            prune(time);
 
             const entry = entries.get(key);
             if (!entry || time - entry.windowStart >= windowMs) {
-                entries.set(key, { count: 1, windowStart: time });
+                entries.set(key, { count: 1, windowStart: time, windowMs });
                 return { allowed: true, retryAfter: null };
             }
             if (entry.count >= rule.max) {
