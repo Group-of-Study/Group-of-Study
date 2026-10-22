@@ -32,9 +32,18 @@ describe("proxy: o que ele faz", () => {
         const response = proxy(request("/grupos/123?aba=membros"));
 
         expect(response.status).toBe(307);
-        const location = new URL(getRedirectUrl(response)!);
+        const redirectUrl = getRedirectUrl(response);
+        expect(redirectUrl).not.toBeNull();
+        const location = new URL(redirectUrl as string);
         expect(location.pathname).toBe("/login");
-        expect(location.searchParams.get("callbackUrl")).toBe("/grupos/123");
+        expect(location.searchParams.get("callbackUrl")).toBe("/grupos/123?aba=membros");
+    });
+
+    it("sem query, guarda só o caminho", () => {
+        const response = proxy(request("/dashboard"));
+
+        const location = new URL(getRedirectUrl(response) as string);
+        expect(location.searchParams.get("callbackUrl")).toBe("/dashboard");
     });
 
     it.each([
