@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Client do Prisma gerado (src/generated/prisma), gitignored.
+    "src/generated/**",
   ]),
 ]);
 
