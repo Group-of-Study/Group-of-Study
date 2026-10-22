@@ -13,6 +13,13 @@ export const AUTH_RATE_LIMITS = {
     "/sign-up/email": { window: 60, max: 3 },
 } satisfies Record<string, RateLimitRule>;
 
+// Limite por conta (email) no login, somando API e Server Actions. Protege a
+// senha mesmo quando o IP é falsificado. Contra: quem erra a senha de outra
+// pessoa de propósito trava o login dela até a janela terminar.
+export const ACCOUNT_SIGN_IN_LIMIT: RateLimitRule = { window: 15 * 60, max: 10 };
+
+export const ACCOUNT_RATE_LIMIT_CODE = "TOO_MANY_ATTEMPTS";
+
 // Mesmo critério do Better Auth: ativo só em produção.
 export function isRateLimitEnabled(): boolean {
     return process.env.NODE_ENV === "production";

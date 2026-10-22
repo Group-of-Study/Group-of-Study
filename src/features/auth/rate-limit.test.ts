@@ -39,7 +39,7 @@ describe("checkAuthRateLimit", () => {
 
         const blocked = await checkAuthRateLimit("/sign-in/email");
 
-        expect(blocked?.error).toMatch(/^Muitas tentativas\. Tente novamente em \d+ segundos?\.$/);
+        expect(blocked?.error).toMatch(/^Muitas tentativas\. Tente novamente em \d+ (segundos?|minutos?)\.$/);
     });
 
     it("cadastro tem limite próprio, mais rígido (3)", async () => {
