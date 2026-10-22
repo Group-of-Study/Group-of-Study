@@ -111,5 +111,14 @@ Logout: `<form action={signOutAction}><button>Sair</button></form>`.
 - `npm test` roda os testes (Vitest) uma vez; `npm run test:watch` roda a cada alteração.
 - Os testes ficam ao lado do código (`*.test.ts`) e não precisam de banco: Better Auth e Next são substituídos por mocks.
 
+| Arquivo | O que cobre |
+|---|---|
+| `src/features/auth/*.test.ts` | Server Actions, validação Zod, mensagens de erro e `callbackUrl` |
+| `src/lib/session.test.ts` | `getSession`, `requireSession` (redireciona sem sessão) e `unauthorized` (401) |
+| `src/app/api/me/route.test.ts` | `/api/me`: 200 com o usuário, 401 sem sessão, sem expor o token |
+| `src/proxy.test.ts` | Rotas que o proxy protege (e as que não) e o redirecionamento para `/login` |
+
+Para testar um Route Handler novo, siga o `route.test.ts` da `/api/me`: simule só `@/lib/auth` e `next/headers` e chame a função (`GET`, `POST`) direto. Arquivos que importam `server-only` precisam de `vi.mock("server-only", () => ({}))`.
+
 ## Pendente
 - Telas de `/login` e `/cadastro` (até lá, o redirecionamento para `/login` cai em 404). Usam as Server Actions acima.
