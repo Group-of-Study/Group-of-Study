@@ -23,6 +23,18 @@ export async function POST(request: Request) {
 
 Exemplo completo: `src/app/api/me/route.ts` (retorna o usuário logado, 401 sem login).
 
+## Formato das respostas da API
+Todas as rotas do projeto (`src/app/api/**/route.ts`) seguem o mesmo formato, o das rotas de grupos:
+
+| Caso | Corpo | Exemplo |
+|---|---|---|
+| Sucesso | `{ data }` (e outros campos quando precisar, ex.: `pagination`, `message`) | `{ "data": { "id": "...", "name": "..." } }` |
+| Erro | `{ error }` com mensagem em português | `{ "error": "Grupo não encontrado." }` |
+| Erro de validação (400) | `{ error, issues }` | `{ "error": "Dados inválidos.", "issues": [{ "field": "name", "message": "..." }] }` |
+
+- O status HTTP diz o tipo do erro: 400 (dados inválidos), 401 (sem login, use `unauthorized()`), 403 (sem permissão), 404 (não encontrado), 409 (conflito), 500 (erro inesperado, registrar no log).
+- **Exceção:** as rotas do Better Auth (`/api/auth/*`) usam o formato dele (`{ message, code }`) e não podem ser alteradas. O front usa as Server Actions, que já devolvem `{ error }`.
+
 ## Em Server Actions privadas
 ```ts
 "use server";

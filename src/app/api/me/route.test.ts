@@ -24,7 +24,7 @@ describe("GET /api/me", () => {
         const response = await GET();
 
         expect(response.status).toBe(200);
-        await expect(response.json()).resolves.toEqual({ user });
+        await expect(response.json()).resolves.toEqual({ data: user });
     });
 
     it("não expõe os dados da sessão (token), só o usuário", async () => {
@@ -32,7 +32,7 @@ describe("GET /api/me", () => {
 
         const body = await (await GET()).json();
 
-        expect(body).not.toHaveProperty("session");
+        expect(body).toEqual({ data: user });
         expect(JSON.stringify(body)).not.toContain("segredo");
     });
 
@@ -42,6 +42,6 @@ describe("GET /api/me", () => {
         const response = await GET();
 
         expect(response.status).toBe(401);
-        await expect(response.json()).resolves.toEqual({ message: "Não autenticado" });
+        await expect(response.json()).resolves.toEqual({ error: "Autenticação necessária." });
     });
 });

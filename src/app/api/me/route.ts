@@ -5,5 +5,5 @@ export async function GET() {
     if (!session) {
         return unauthorized();
     }
-    return Response.json({ user: session.user });
+    return Response.json({ data: session.user });
 }

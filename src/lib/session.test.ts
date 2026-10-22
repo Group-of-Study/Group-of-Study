@@ -59,11 +59,11 @@ describe("requireSession", () => {
 });
 
 describe("unauthorized", () => {
-    it("responde 401 com mensagem em JSON", async () => {
+    it("responde 401 no formato de erro da API ({ error })", async () => {
         const response = unauthorized();
 
         expect(response.status).toBe(401);
         expect(response.headers.get("content-type")).toContain("application/json");
-        await expect(response.json()).resolves.toEqual({ message: "Não autenticado" });
+        await expect(response.json()).resolves.toEqual({ error: "Autenticação necessária." });
     });
 });
