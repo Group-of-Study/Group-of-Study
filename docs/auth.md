@@ -69,6 +69,23 @@ Rotas privadas hoje: `/dashboard`, `/grupos` (e tudo abaixo delas).
 - O `proxy.ts` só verifica se o cookie **existe**, não se a sessão é válida. Ele não substitui o `requireSession()`.
 - **Não** coloque no proxy a regra "logado sai do `/login`": com cookie expirado isso gera loop de redirecionamento. Essa regra fica na própria página de login, usando `getSession()`.
 
+## Rate limit
+Limita tentativas por IP para dificultar ataques de força bruta. **Só fica ativo em produção** (`NODE_ENV=production`).
+
+| Rota | Limite |
+|---|---|
+| Login (`/sign-in/email`) | 5 tentativas por minuto |
+| Cadastro (`/sign-up/email`) | 3 tentativas por minuto |
+| Demais rotas de `/api/auth/*` | 100 requisições por minuto |
+
+- Os limites ficam em `AUTH_RATE_LIMITS` (`src/lib/rate-limit.ts`).
+- Vale para os **dois caminhos**: a API HTTP (`/api/auth/*`, via Better Auth) e as Server Actions. O rate limit do Better Auth não roda em chamadas `auth.api.*` feitas no servidor, então as actions aplicam o mesmo limite com o mesmo contador (`checkAuthRateLimit` em `src/features/auth/rate-limit.ts`). Trocar de caminho não zera as tentativas.
+- Bloqueado: a API responde `429`; a action devolve `{ error: "Muitas tentativas. Tente novamente em N segundos." }`.
+- O contador fica **em memória**: zera quando o servidor reinicia e não é compartilhado entre instâncias. Para rodar mais de uma instância, trocar por um armazenamento compartilhado (banco ou Redis) em `src/lib/rate-limit.ts`.
+- O IP vem do header `x-forwarded-for`. Se a aplicação ficar atrás de um proxy reverso (Nginx, Cloudflare), configurar `advanced.ipAddress.trustedProxies` no `src/lib/auth.ts`; sem isso, pedidos com IP não confiável dividem um único contador.
+
+Para testar localmente: `npm run build && npm start` (modo produção) e repetir o login mais de 5 vezes.
+
 ## Login, cadastro e logout (Server Actions)
 Ficam em `src/features/auth/actions.ts`, no formato do `useActionState`:
 
