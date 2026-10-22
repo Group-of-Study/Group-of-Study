@@ -7,6 +7,12 @@ export type AuthFormState = {
 
 export const GENERIC_ERROR = "Algo deu errado. Tente novamente.";
 
+export function rateLimitedError(retryAfter: number | null): AuthFormState {
+    const seconds = retryAfter ?? 60;
+    const unit = seconds === 1 ? "segundo" : "segundos";
+    return { error: `Muitas tentativas. Tente novamente em ${seconds} ${unit}.` };
+}
+
 // Códigos do Better Auth → mensagem para o usuário.
 const MESSAGES: Record<string, string> = {
     USER_ALREADY_EXISTS: "Este email já está cadastrado.",

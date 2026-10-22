@@ -1,6 +1,6 @@
 import { APIError } from "better-auth/api";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { GENERIC_ERROR, handleAuthError } from "./errors";
+import { GENERIC_ERROR, handleAuthError, rateLimitedError } from "./errors";
 
 describe("handleAuthError", () => {
     afterEach(() => {
@@ -36,5 +36,15 @@ describe("handleAuthError", () => {
 
         expect(handleAuthError("signIn", error)).toEqual({ error: GENERIC_ERROR });
         expect(log).toHaveBeenCalledWith("[auth] signIn falhou", error);
+    });
+});
+
+describe("rateLimitedError", () => {
+    it.each([
+        [30, "Muitas tentativas. Tente novamente em 30 segundos."],
+        [1, "Muitas tentativas. Tente novamente em 1 segundo."],
+        [null, "Muitas tentativas. Tente novamente em 60 segundos."],
+    ])("com retryAfter %s", (retryAfter, message) => {
+        expect(rateLimitedError(retryAfter)).toEqual({ error: message });
     });
 });
