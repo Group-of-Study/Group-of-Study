@@ -1,6 +1,6 @@
 # Rascunho — CI com GitHub Actions (Task 3)
 
-> Status: **planejamento** — nada implementado ainda.
+> Status: **implementado** — workflow em `.github/workflows/ci.yml`, ajustes em `package.json`, `.nvmrc` e `eslint.config.mjs`. Uso documentado no `README.md`.
 > Projeto: Group of Study (Next.js 16, React 19, TypeScript, Prisma 7, PostgreSQL, Docker).
 
 ## Objetivo
@@ -12,6 +12,8 @@
 
 ## Baseline do repositório
 
+> Estado **antes** da implementação (mantido como histórico do plano).
+
 - `.github/` tem apenas `CODEOWNERS`; não existe workflow.
 - `package.json` tem `lint`, mas não tem script de `typecheck`.
 - `npm ci` dispara `postinstall` → `prisma generate`, que precisa de `DATABASE_URL`.
@@ -21,15 +23,15 @@
 
 ## Ajustes preparatórios
 
-- [ ] Adicionar script em `package.json`:
+- [x] Adicionar script em `package.json`:
   ```json
   "typecheck": "next typegen && tsc --noEmit"
   ```
   O `next typegen` é necessário para gerar tipos de rota (ex.: `LayoutProps<"/">`).
-- [ ] Adicionar `"src/generated/**"` ao `globalIgnores` do `eslint.config.mjs`.
-- [ ] Criar `.nvmrc` com `22`.
+- [x] Adicionar `"src/generated/**"` ao `globalIgnores` do `eslint.config.mjs`.
+- [x] Criar `.nvmrc` com `22`.
 - [ ] Opcional: adicionar `engines.node` no `package.json`.
-- [ ] Documentar o CI no `README.md`.
+- [x] Documentar o CI no `README.md`.
 
 ## Workflow proposto
 
@@ -79,10 +81,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: package-lock.json
       - run: npm ci
@@ -93,10 +95,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: package-lock.json
       - run: npm ci
@@ -109,10 +111,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: package-lock.json
       - run: npm ci
@@ -121,27 +123,29 @@ jobs:
 
 ## Rollout
 
-1. **Fase 0 — local**
+1. **Fase 0 — local** ✅
    ```bash
    npm ci
    npm run lint
    npm run typecheck
    npm run build
    ```
-2. **Fase 1 — lint + typecheck**
+2. **Fase 1 — lint + typecheck** ✅ (workflow criado; branch protection ainda a configurar)
    - Criar o workflow.
    - Abrir PR de teste.
    - Exigir `Lint` e `Typecheck` na branch protection.
-3. **Fase 2 — build em observação**
+3. **Fase 2 — build em observação** ⏳ (falta criar a variável `CI_BUILD_ENABLED=true`)
    - Habilitar `CI_BUILD_ENABLED=true`.
    - Rodar por alguns PRs sem exigir o check.
-4. **Fase 3 — build obrigatório**
+4. **Fase 3 — build obrigatório** ⏳
    - Adicionar `Build` aos required status checks.
    - Atualizar README.
 
-## Testes automatizados (fase futura)
+## Testes automatizados
 
-A task 3, sozinha, **não inclui testes**. `lint`, `typecheck` e `build` são verificações, não suítes de teste.
+`lint`, `typecheck` e `build` são verificações, não suítes de teste. A task 3, sozinha, **não inclui testes**.
+
+> Atualização: a suíte Vitest já existe (41 testes em `src/features/auth`) e o job `Test` foi incluído no workflow. E2E continua fora do escopo.
 
 ### Agora
 - Nenhum teste obrigatório; o projeto ainda é o template do Next.
@@ -181,19 +185,19 @@ A task 3, sozinha, **não inclui testes**. `lint`, `typecheck` e `build` são ve
 
 ## Critérios de aceite
 
-- [ ] Todo PR para `main` dispara o workflow.
-- [ ] `Lint` e `Typecheck` bloqueiam merge quando falham.
-- [ ] `next typegen` integrado ao typecheck.
-- [ ] Client Prisma não gera ruído no lint.
-- [ ] `npm ci` funciona sem banco real.
-- [ ] Build roda com `CI_BUILD_ENABLED=true`.
+- [x] Todo PR para `main` dispara o workflow.
+- [ ] `Lint` e `Typecheck` bloqueiam merge quando falham. *(falta configurar a branch protection)*
+- [x] `next typegen` integrado ao typecheck.
+- [x] Client Prisma não gera ruído no lint.
+- [x] `npm ci` funciona sem banco real.
+- [ ] Build roda com `CI_BUILD_ENABLED=true`. *(falta criar a variável de repositório)*
 - [ ] Build vira obrigatório após validação.
-- [ ] Nenhum segredo real no CI.
-- [ ] README documenta o CI.
+- [x] Nenhum segredo real no CI.
+- [x] README documenta o CI.
 
 ## Decisões pendentes
 
-- [ ] Build obrigatório desde o início? **Recomendação: não; começar condicional.**
-- [ ] Node 22 no CI? **Recomendação: sim.**
-- [ ] Jobs separados? **Recomendação: sim (`Lint`, `Typecheck`, `Build`).**
-- [ ] Adicionar smoke test já na primeira versão? **Opcional.**
+- [x] Build obrigatório desde o início? **Recomendação: não; começar condicional.**
+- [x] Node 22 no CI? **Recomendação: sim.**
+- [x] Jobs separados? **Recomendação: sim (`Lint`, `Typecheck`, `Test`, `Build`).**
+- [x] Adicionar smoke test já na primeira versão? **Opcional.** — a suíte Vitest já existe (41 testes), então o job `Test` foi incluído; E2E continua fora do escopo.

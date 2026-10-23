@@ -2,80 +2,93 @@
 # CI — GitHub Actions
 # =============================================================================
 #
-# TODO: Fazer o cabeçalho do workflow, com:
-#   name: CI
-#   on:
-#     pull_request:
-#       branches: [main]
-#     push:
-#       branches: [main]
-#     workflow_dispatch:
-#   permissions:
-#     contents: read
-#   concurrency:
-#     group: ci-${{ github.workflow }}-${{ github.ref }}
-#     cancel-in-progress: true
-#   env:
-#     DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci?schema=public
-#     BETTER_AUTH_SECRET: ci-placeholder-secret-not-used-in-production
-#     BETTER_AUTH_URL: http://localhost:3000
-#     NEXT_TELEMETRY_DISABLED: "1"
+# Referência: docs/ci-plan.md
 #
-# jobs:
+# Gatilhos:
+#   - pull_request para main
+#   - push em main
+#   - workflow_dispatch (execução manual)
 #
-#   lint:
-#     # TODO: Fazer o job de lint, com:
-#     #   name: Lint
-#     #   runs-on: ubuntu-latest
-#     #   timeout-minutes: 10
-#     #   steps:
-#     #     1. actions/checkout@v4
-#     #     2. actions/setup-node@v4
-#     #        with:
-#     #          node-version-file: .nvmrc
-#     #          cache: npm
-#     #          cache-dependency-path: package-lock.json
-#     #     3. npm ci
-#     #     4. npm run lint
-#
-#   typecheck:
-#     # TODO: Fazer o job de typecheck, com:
-#     #   name: Typecheck
-#     #   runs-on: ubuntu-latest
-#     #   timeout-minutes: 10
-#     #   steps:
-#     #     1. actions/checkout@v4
-#     #     2. actions/setup-node@v4
-#     #        with:
-#     #          node-version-file: .nvmrc
-#     #          cache: npm
-#     #          cache-dependency-path: package-lock.json
-#     #     3. npm ci
-#     #     4. npm run typecheck
-#
-#   build:
-#     # TODO: Fazer o job de build condicional, com:
-#     #   name: Build
-#     #   if: ${{ vars.CI_BUILD_ENABLED == 'true' }}
-#     #   runs-on: ubuntu-latest
-#     #   timeout-minutes: 20
-#     #   steps:
-#     #     1. actions/checkout@v4
-#     #     2. actions/setup-node@v4
-#     #        with:
-#     #          node-version-file: .nvmrc
-#     #          cache: npm
-#     #          cache-dependency-path: package-lock.json
-#     #     3. npm ci
-#     #     4. npm run build
-#
-# TODO: Depois do primeiro PR verde, configurar a branch protection:
-#   - exigir "Lint" e "Typecheck";
-#   - exigir "Build" somente depois de validar o job condicional.
-#
-# TODO: Criar a variável de repositório CI_BUILD_ENABLED=true para habilitar o build.
-#
-# TODO: Adicionar jobs de testes (unit/integration/e2e) quando a suíte existir.
-#
-# TODO: Se o build passar a consultar o banco, adicionar um serviço PostgreSQL
-#       e rodar as migrations antes de `npm run build`.
+# O build roda de forma condicional: habilite com a variável de repositório
+# CI_BUILD_ENABLED=true (Settings → Secrets and variables → Actions → Variables).
+# =============================================================================
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci?schema=public
+  BETTER_AUTH_SECRET: ci-placeholder-secret-not-used-in-production
+  BETTER_AUTH_URL: http://localhost:3000
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run lint
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm test
+
+  build:
+    name: Build
+    # Habilite com a variável de repositório CI_BUILD_ENABLED=true
+    if: ${{ vars.CI_BUILD_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run build

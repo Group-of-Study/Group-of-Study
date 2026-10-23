@@ -198,6 +198,59 @@ docker compose -f compose.prod.yaml up --build -d
 | `build` | `next build` |
 | `start` | `next start` (local; produção Docker usa `node server.js`) |
 | `lint` | `eslint` |
+| `typecheck` | `next typegen && tsc --noEmit` |
+| `test` | `vitest run` |
 | `postinstall` | `prisma generate --config prisma7.config.ts` |
+
+> O `typecheck` roda `next typegen` antes do `tsc` porque o Next.js 16 gera os tipos de rota (`LayoutProps`, `PageProps`, `RouteContext`) em `.next/types` — sem esse passo o `tsc` acusa `Cannot find name 'LayoutProps'`.
+
+## CI (GitHub Actions)
+
+Workflow: `.github/workflows/ci.yml` (planejamento em `docs/ci-plan.md`).
+
+**Gatilhos:** `pull_request` para `main`, `push` em `main` e `workflow_dispatch` (execução manual).
+
+**Jobs:**
+
+| Job | Check | O que faz |
+| --- | --- | --- |
+| `lint` | Lint | `npm run lint` (ESLint 9 + `eslint-config-next`). |
+| `typecheck` | Typecheck | `npm run typecheck` (`next typegen` + `tsc --noEmit`). |
+| `test` | Test | `npm test` (Vitest). |
+| `build` | Build | `npm run build` (`next build`). **Condicional**: só roda com `CI_BUILD_ENABLED=true`. |
+
+Detalhes que valem saber:
+
+- **Node 22** vem do `.nvmrc` (`node-version-file: .nvmrc`); o cache do npm vem do `package-lock.json`.
+- **Nenhum segredo real**: o workflow usa placeholders (`DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`) só para carregar a `prisma7.config.ts` e o Better Auth.
+- **O build não precisa de banco**: as páginas são estáticas e as rotas de API são dinâmicas, então nenhum Postgres roda no CI. Se alguma página passar a consultar o banco em build, será preciso adicionar um serviço PostgreSQL e rodar `prisma migrate deploy` antes do `next build`.
+- **`permissions: contents: read`** e **`concurrency`** com `cancel-in-progress` (push novo cancela a execução anterior do mesmo ref).
+
+### Habilitar o job de build
+
+O build é condicional por padrão (fase de observação). Para habilitá-lo:
+
+1. Crie a **variável de repositório** `CI_BUILD_ENABLED=true`
+   (Settings → Secrets and variables → Actions → Variables → New repository variable).
+2. Rode o workflow de novo (push em `main` ou `workflow_dispatch`).
+
+Depois de validar alguns PRs com o build verde, adicione `Build` aos *required status checks* da branch protection de `main`, junto de `Lint` e `Typecheck`.
+
+### Rodar os mesmos checks localmente
+
+```bash
+nvm use            # usa a versão do .nvmrc (Node 22)
+npm ci
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+### Branch protection sugerida (Settings → Branches → `main`)
+
+- Require status checks to pass: `Lint`, `Typecheck` (e `Test`).
+- Add `Build` só depois de validá-lo com `CI_BUILD_ENABLED=true`.
+- Require branches to be up to date antes de fazer merge.
 
 teste
