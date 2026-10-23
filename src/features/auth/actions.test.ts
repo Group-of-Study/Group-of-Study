@@ -1,13 +1,15 @@
 import { APIError } from "better-auth/api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { signUpEmail, signInEmail, signOut } = vi.hoisted(() => ({
+const { signUpEmail, signInEmail, signOut, checkAuthRateLimit } = vi.hoisted(() => ({
     signUpEmail: vi.fn(),
     signInEmail: vi.fn(),
     signOut: vi.fn(),
+    checkAuthRateLimit: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({ auth: { api: { signUpEmail, signInEmail, signOut } } }));
+vi.mock("./rate-limit", () => ({ checkAuthRateLimit }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 // O redirect() do Next lança uma exceção; aqui ela carrega o destino.
 vi.mock("next/navigation", () => ({
@@ -30,6 +32,7 @@ const user = { name: "Miguel", email: "miguel@exemplo.com", password: "senha-for
 
 beforeEach(() => {
     vi.clearAllMocks();
+    checkAuthRateLimit.mockResolvedValue(null);
     vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -114,5 +117,36 @@ describe("signOutAction", () => {
         signOut.mockRejectedValue(new Error("falhou"));
         await expect(signOutAction()).rejects.toThrow("REDIRECT:/login");
         expect(console.error).toHaveBeenCalled();
+    });
+});
+
+describe("rate limit nas actions", () => {
+    const blocked = { error: "Muitas tentativas. Tente novamente em 30 segundos." };
+
+    it("bloqueia o login sem chamar o Better Auth", async () => {
+        checkAuthRateLimit.mockResolvedValue(blocked);
+
+        await expect(signInAction({}, form({ email: user.email, password: user.password }))).resolves.toEqual(blocked);
+        expect(checkAuthRateLimit).toHaveBeenCalledWith("/sign-in/email");
+        expect(signInEmail).not.toHaveBeenCalled();
+    });
+
+    it("bloqueia o cadastro sem chamar o Better Auth", async () => {
+        checkAuthRateLimit.mockResolvedValue(blocked);
+
+        await expect(signUpAction({}, form(user))).resolves.toEqual(blocked);
+        expect(checkAuthRateLimit).toHaveBeenCalledWith("/sign-up/email");
+        expect(signUpEmail).not.toHaveBeenCalled();
+    });
+
+    it("dados inválidos não contam como tentativa", async () => {
+        await signInAction({}, form({ email: "x", password: "" }));
+
+        expect(checkAuthRateLimit).not.toHaveBeenCalled();
+    });
+
+    it("logout não tem rate limit", async () => {
+        await expect(signOutAction()).rejects.toThrow("REDIRECT:/login");
+        expect(checkAuthRateLimit).not.toHaveBeenCalled();
     });
 });

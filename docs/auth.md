@@ -69,6 +69,25 @@ Rotas privadas hoje: `/dashboard`, `/grupos` (e tudo abaixo delas).
 - O `proxy.ts` só verifica se o cookie **existe**, não se a sessão é válida. Ele não substitui o `requireSession()`.
 - **Não** coloque no proxy a regra "logado sai do `/login`": com cookie expirado isso gera loop de redirecionamento. Essa regra fica na própria página de login, usando `getSession()`.
 
+## Rate limit
+Limita tentativas por IP para dificultar ataques de força bruta. **Só fica ativo em produção** (`NODE_ENV=production`).
+
+| Rota | Limite |
+|---|---|
+| Login (`/sign-in/email`) | 5 tentativas por minuto **por IP** |
+| Login (`/sign-in/email`) | 10 tentativas a cada 15 minutos **por conta (email)** |
+| Cadastro (`/sign-up/email`) | 3 tentativas por minuto por IP |
+| Demais rotas de `/api/auth/*` | 100 requisições por minuto por IP |
+
+- Os limites ficam em `src/lib/rate-limit.ts` (`AUTH_RATE_LIMITS` e `ACCOUNT_SIGN_IN_LIMIT`).
+- **Limite por conta:** conta todas as tentativas de login de um email (maiúsculas e espaços não importam), venham de qualquer IP. Protege a senha mesmo que o IP seja falsificado. É um hook do Better Auth (`src/lib/account-rate-limit.ts`), então vale para a API e para as Server Actions. **Contra:** quem errar a senha de outra pessoa de propósito trava o login dela por até 15 minutos.
+- Vale para os **dois caminhos**: a API HTTP (`/api/auth/*`, via Better Auth) e as Server Actions. O rate limit do Better Auth não roda em chamadas `auth.api.*` feitas no servidor, então as actions aplicam o mesmo limite com o mesmo contador (`checkAuthRateLimit` em `src/features/auth/rate-limit.ts`). Trocar de caminho não zera as tentativas.
+- Bloqueado: a API responde `429` com o header `X-Retry-After`; a action devolve `{ error: "Muitas tentativas. Tente novamente em N segundos." }` (ou "N minutos").
+- O contador fica **em memória**: zera quando o servidor reinicia e não é compartilhado entre instâncias. Para rodar mais de uma instância, trocar por um armazenamento compartilhado (banco ou Redis) em `src/lib/rate-limit.ts`.
+- O IP vem do header `x-forwarded-for`. **O Next repassa esse header como o cliente mandou**, então com o app exposto direto qualquer um inventa um IP por tentativa e escapa do limite por IP (o limite por conta continua valendo). Em produção, colocar um proxy reverso (Nginx, Caddy, Cloudflare) que **sobrescreva** o `x-forwarded-for` com o IP real e configurar `advanced.ipAddress.trustedProxies` no `src/lib/auth.ts`. Pedidos sem IP confiável dividem um único contador.
+
+Para testar localmente: `npm run build && npm start` (modo produção) e repetir o login mais de 5 vezes.
+
 ## Login, cadastro e logout (Server Actions)
 Ficam em `src/features/auth/actions.ts`, no formato do `useActionState`:
 

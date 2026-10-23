@@ -1,6 +1,6 @@
 import { APIError } from "better-auth/api";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { GENERIC_ERROR, handleAuthError } from "./errors";
+import { GENERIC_ERROR, handleAuthError, rateLimitedError } from "./errors";
 
 describe("handleAuthError", () => {
     afterEach(() => {
@@ -36,5 +36,26 @@ describe("handleAuthError", () => {
 
         expect(handleAuthError("signIn", error)).toEqual({ error: GENERIC_ERROR });
         expect(log).toHaveBeenCalledWith("[auth] signIn falhou", error);
+    });
+});
+
+describe("rateLimitedError", () => {
+    it.each([
+        [30, "Muitas tentativas. Tente novamente em 30 segundos."],
+        [1, "Muitas tentativas. Tente novamente em 1 segundo."],
+        [59, "Muitas tentativas. Tente novamente em 59 segundos."],
+        [60, "Muitas tentativas. Tente novamente em 1 minuto."],
+        [61, "Muitas tentativas. Tente novamente em 2 minutos."],
+        [null, "Muitas tentativas. Tente novamente em 1 minuto."],
+    ])("com retryAfter %s", (retryAfter, message) => {
+        expect(rateLimitedError(retryAfter)).toEqual({ error: message });
+    });
+});
+
+describe("handleAuthError com limite por conta", () => {
+    it("vira a mensagem de muitas tentativas com o tempo de espera", () => {
+        const error = new APIError("TOO_MANY_REQUESTS", { code: "TOO_MANY_ATTEMPTS", message: "", retryAfter: 900 });
+
+        expect(handleAuthError("signIn", error)).toEqual({ error: "Muitas tentativas. Tente novamente em 15 minutos." });
     });
 });
