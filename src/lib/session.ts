@@ -23,7 +23,8 @@ export async function requireSession(): Promise<Session> {
     return session;
 }
 
-// Para Route Handlers (API): resposta padrão de não autenticado.
+// Para Route Handlers (API): resposta padrão de não autenticado, no formato
+// de erro da API ({ error }), o mesmo das rotas de grupos.
 export function unauthorized(): Response {
-    return Response.json({ message: "Não autenticado" }, { status: 401 });
+    return Response.json({ error: "Autenticação necessária." }, { status: 401 });
 }

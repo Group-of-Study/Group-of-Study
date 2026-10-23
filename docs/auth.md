@@ -23,6 +23,18 @@ export async function POST(request: Request) {
 
 Exemplo completo: `src/app/api/me/route.ts` (retorna o usuário logado, 401 sem login).
 
+## Formato das respostas da API
+Todas as rotas do projeto (`src/app/api/**/route.ts`) seguem o mesmo formato, o das rotas de grupos:
+
+| Caso | Corpo | Exemplo |
+|---|---|---|
+| Sucesso | `{ data }` (e outros campos quando precisar, ex.: `pagination`, `message`) | `{ "data": { "id": "...", "name": "..." } }` |
+| Erro | `{ error }` com mensagem em português | `{ "error": "Grupo não encontrado." }` |
+| Erro de validação (400) | `{ error, issues }` | `{ "error": "Dados inválidos.", "issues": [{ "field": "name", "message": "..." }] }` |
+
+- O status HTTP diz o tipo do erro: 400 (dados inválidos), 401 (sem login, use `unauthorized()`), 403 (sem permissão), 404 (não encontrado), 409 (conflito), 500 (erro inesperado, registrar no log).
+- **Exceção:** as rotas do Better Auth (`/api/auth/*`) usam o formato dele (`{ message, code }`) e não podem ser alteradas. O front usa as Server Actions, que já devolvem `{ error }`.
+
 ## Em Server Actions privadas
 ```ts
 "use server";
@@ -129,6 +141,25 @@ Logout: `<form action={signOutAction}><button>Sair</button></form>`.
 ## Testes
 - `npm test` roda os testes (Vitest) uma vez; `npm run test:watch` roda a cada alteração.
 - Os testes ficam ao lado do código (`*.test.ts`) e não precisam de banco: Better Auth e Next são substituídos por mocks.
+
+| Arquivo | O que cobre |
+|---|---|
+| `src/features/auth/*.test.ts` | Server Actions, validação Zod, mensagens de erro e `callbackUrl` |
+| `src/lib/session.test.ts` | `getSession`, `requireSession` (redireciona sem sessão) e `unauthorized` (401) |
+| `src/app/api/me/route.test.ts` | `/api/me`: 200 com o usuário, 401 sem sessão, sem expor o token |
+| `src/proxy.test.ts` | Rotas que o proxy protege (e as que não) e o redirecionamento para `/login` |
+
+Para testar um Route Handler novo, siga o `route.test.ts` da `/api/me`: simule `@/lib/auth`, `next/headers` e, se a rota usar o banco, `@/lib/prisma`, e chame a função (`GET`, `POST`) direto. Arquivos que importam `server-only` precisam de `vi.mock("server-only", () => ({}))`.
+
+O `@/lib/prisma` precisa ser simulado porque ele lança erro ao ser importado sem `DATABASE_URL` (o Vitest não carrega o `.env`) e, com a variável, conectaria num banco de verdade. Simule só os métodos que a rota usa:
+
+```ts
+vi.mock("@/lib/prisma", () => ({
+    prisma: {
+        group: { findMany: vi.fn(), create: vi.fn() },
+    },
+}));
+```
 
 ## Pendente
 - Telas de `/login` e `/cadastro` (até lá, o redirecionamento para `/login` cai em 404). Usam as Server Actions acima.
