@@ -10,6 +10,12 @@ datasource db {
   provider = "postgresql"
 }
 
+enum GroupStatus {
+  ACTIVE
+  ARCHIVED
+  CLOSED
+}
+
 model User {
   id            String    @id
   name          String
@@ -77,12 +83,12 @@ model Verification {
 }
 
 model Group {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   name        String
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  status      String   @default("ACTIVE")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  status      GroupStatus @default(ACTIVE)
 
   creatorId String?
   creator   User?   @relation("GroupCreator", fields: [creatorId], references: [id], onDelete: SetNull)

@@ -1,6 +1,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import type { Prisma } from "@/generated/prisma/client";
 
 import { getSession, unauthorized } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
@@ -141,7 +142,7 @@ export async function GET(request: NextRequest) {
     const { limit, cursor, q, member } = validation.data;
 
     // Filtros compartilhados entre a validação do cursor e a listagem.
-    const where = {
+    const where: Prisma.GroupWhereInput = {
       status: "ACTIVE",
 
       ...(q
