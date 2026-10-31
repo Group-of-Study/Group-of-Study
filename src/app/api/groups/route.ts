@@ -1,9 +1,9 @@
-    
-import { headers } from "next/headers";
+
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import type { Prisma } from "@/generated/prisma/client";
 
-import { auth } from "@/lib/auth";
+import { getSession, unauthorized } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
 const CreateGroupSchema = z
@@ -21,26 +21,18 @@ const CreateGroupSchema = z
 const ListGroupsSchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),
   cursor: z.string().min(1).max(100).optional(),
+  q: z.string().trim().max(100).optional(),
+  member: z.enum(["me"]).optional(),
 });
-
-async function getAuthenticatedUser() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  return session?.user ?? null;
-}
 
 // POST: criar um grupo de estudo
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser();
+    const session = await getSession();
+    const user = session?.user;
 
     if (!user?.id) {
-      return NextResponse.json(
-        { error: "Autenticação necessária." },
-        { status: 401 },
-      );
+      return unauthorized();
     }
 
     let body: unknown;
@@ -121,16 +113,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: listar grupos ativos com paginação
+// GET: listar grupos ativos com busca, filtros e paginação
 export async function GET(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser();
+    const session = await getSession();
+    const user = session?.user;
 
     if (!user?.id) {
-      return NextResponse.json(
-        { error: "Autenticação necessária." },
-        { status: 401 },
-      );
+      return unauthorized();
     }
 
     const params = request.nextUrl.searchParams;
@@ -138,6 +128,8 @@ export async function GET(request: NextRequest) {
     const validation = ListGroupsSchema.safeParse({
       limit: params.get("limit") ?? "20",
       cursor: params.get("cursor") ?? undefined,
+      q: params.get("q") ?? undefined,
+      member: params.get("member") ?? undefined,
     });
 
     if (!validation.success) {
@@ -147,13 +139,48 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { limit, cursor } = validation.data;
+    const { limit, cursor, q, member } = validation.data;
 
+    // Filtros compartilhados entre a validação do cursor e a listagem.
+    const where: Prisma.GroupWhereInput = {
+      status: "ACTIVE",
+
+      ...(q
+        ? {
+            OR: [
+              {
+                name: {
+                  contains: q,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                description: {
+                  contains: q,
+                  mode: "insensitive" as const,
+                },
+              },
+            ],
+          }
+        : {}),
+
+      ...(member === "me"
+        ? {
+            members: {
+              some: {
+                userId: user.id,
+              },
+            },
+          }
+        : {}),
+    };
+
+    // Verifica se o cursor pertence ao resultado filtrado.
     if (cursor) {
       const cursorGroup = await prisma.group.findFirst({
         where: {
           id: cursor,
-          status: "ACTIVE",
+          ...where,
         },
         select: { id: true },
       });
@@ -167,9 +194,7 @@ export async function GET(request: NextRequest) {
     }
 
     const groups = await prisma.group.findMany({
-      where: {
-        status: "ACTIVE",
-      },
+      where,
       orderBy: [
         { createdAt: "desc" },
         { id: "desc" },

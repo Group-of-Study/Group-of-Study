@@ -76,10 +76,14 @@ export async function POST(
           },
         });
 
+        // Busca os participantes restantes, do mais antigo ao mais recente.
         const remainingMembers = await tx.groupMember.findMany({
           where: { groupId },
           select: { userId: true },
-          orderBy: { joinedAt: "asc" },
+          orderBy: [
+            { joinedAt: "asc" },
+            { userId: "asc" },
+          ],
         });
 
         if (remainingMembers.length === 0) {
@@ -108,12 +112,9 @@ export async function POST(
 
         let newLeaderId = group.leaderId;
 
+        // Se o líder sair, o participante mais antigo assume a liderança.
         if (group.leaderId === userId) {
-          const randomIndex = Math.floor(
-            Math.random() * remainingMembers.length,
-          );
-
-          newLeaderId = remainingMembers[randomIndex].userId;
+          newLeaderId = remainingMembers[0].userId;
 
           await tx.group.update({
             where: { id: groupId },
