@@ -1,6 +1,5 @@
 
 import { NextResponse } from "next/server";
-import type { Prisma } from "@/generated/prisma/client";
 import { getSession, unauthorized } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 

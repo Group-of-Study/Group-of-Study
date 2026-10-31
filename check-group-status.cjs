@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { Client } = require("pg");
 async function main() {
   const client = new Client({ connectionString: process.env.DATABASE_URL });
