@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { Prisma } from "@/generated/prisma/client";
 import { z } from "zod";
@@ -72,6 +71,7 @@ export async function POST(
           where: { id: groupId },
           select: {
             id: true,
+            name: true,
             leaderId: true,
           },
         });
@@ -136,6 +136,19 @@ export async function POST(
             },
           };
         }
+
+        // Notifica o usuário que recebeu a liderança.
+        await tx.notification.create({
+          data: {
+            userId: newLeaderId,
+            type: "BECAME_LEADER",
+            data: {
+              groupId,
+              groupName: group.name,
+              previousLeaderId: currentUser.id,
+            },
+          },
+        });
 
         return {
           status: 200,

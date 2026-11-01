@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { getSession, unauthorized } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
@@ -35,6 +34,7 @@ export async function POST(
         id: true,
         name: true,
         status: true,
+        visibility: true,
       },
     });
 
@@ -69,6 +69,16 @@ export async function POST(
       return NextResponse.json(
         { error: "Você já participa deste grupo." },
         { status: 409 },
+      );
+    }
+
+    // Grupos privados só aceitam novos membros por convite.
+    if (group.visibility === "PRIVATE") {
+      return NextResponse.json(
+        {
+          error: "Este grupo é privado. Entre por meio de um convite válido.",
+        },
+        { status: 403 },
       );
     }
 

@@ -1,4 +1,3 @@
-
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
@@ -16,6 +15,9 @@ const {
       findUnique: vi.fn(),
       delete: vi.fn(),
       count: vi.fn(),
+    },
+    notification: {
+      create: vi.fn(),
     },
   },
 }));
@@ -61,6 +63,7 @@ beforeEach(() => {
 
   txMocks.group.findUnique.mockResolvedValue({
     id: "group-1",
+    name: "Grupo de teste",
     leaderId: leader.id,
   });
 
@@ -73,6 +76,10 @@ beforeEach(() => {
   });
 
   txMocks.groupMember.count.mockResolvedValue(2);
+
+  txMocks.notification.create.mockResolvedValue({
+    id: "notification-test-id",
+  });
 
   transactionMock.mockImplementation(
     async (
@@ -106,6 +113,18 @@ describe("DELETE /api/groups/[groupId]/members/[userId]", () => {
         userId_groupId: {
           userId: "member-1",
           groupId: "group-1",
+        },
+      },
+    });
+
+    expect(txMocks.notification.create).toHaveBeenCalledWith({
+      data: {
+        userId: "member-1",
+        type: "GROUP_REMOVED",
+        data: {
+          groupId: "group-1",
+          groupName: "Grupo de teste",
+          removedById: leader.id,
         },
       },
     });

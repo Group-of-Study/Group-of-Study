@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { Prisma } from "@/generated/prisma/client";
 
@@ -41,6 +40,7 @@ export async function DELETE(
           where: { id: groupId },
           select: {
             id: true,
+            name: true,
             leaderId: true,
           },
         });
@@ -101,6 +101,19 @@ export async function DELETE(
             userId_groupId: {
               userId,
               groupId,
+            },
+          },
+        });
+
+        // Cria uma notificação para o participante removido.
+        await tx.notification.create({
+          data: {
+            userId,
+            type: "GROUP_REMOVED",
+            data: {
+              groupId,
+              groupName: group.name,
+              removedById: currentUserId,
             },
           },
         });

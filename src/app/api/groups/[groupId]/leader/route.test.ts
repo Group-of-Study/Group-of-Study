@@ -1,4 +1,3 @@
-
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
@@ -15,6 +14,9 @@ const {
     },
     groupMember: {
       findUnique: vi.fn(),
+    },
+    notification: {
+      create: vi.fn(),
     },
   },
 }));
@@ -62,6 +64,7 @@ beforeEach(() => {
 
   txMocks.group.findUnique.mockResolvedValue({
     id: "group-1",
+    name: "Grupo de teste",
     leaderId: leader.id,
   });
 
@@ -71,6 +74,10 @@ beforeEach(() => {
 
   txMocks.group.updateMany.mockResolvedValue({ count: 1 });
 
+  txMocks.notification.create.mockResolvedValue({
+    id: "notification-test-id",
+  });
+
   transactionMock.mockImplementation(
     async (callback: (tx: typeof txMocks) => Promise<unknown>) =>
       callback(txMocks),
@@ -78,7 +85,7 @@ beforeEach(() => {
 });
 
 describe("POST /api/groups/[groupId]/leader", () => {
-  it("transfere a liderança para um participante", async () => {
+  it("transfere a liderança para um participante e cria uma notificação", async () => {
     const response = await POST(
       createRequest({ userId: newLeader.id }),
       createContext(),
@@ -104,6 +111,18 @@ describe("POST /api/groups/[groupId]/leader", () => {
       },
       data: {
         leaderId: newLeader.id,
+      },
+    });
+
+    expect(txMocks.notification.create).toHaveBeenCalledWith({
+      data: {
+        userId: newLeader.id,
+        type: "BECAME_LEADER",
+        data: {
+          groupId: "group-1",
+          groupName: "Grupo de teste",
+          previousLeaderId: leader.id,
+        },
       },
     });
   });
@@ -132,6 +151,7 @@ describe("POST /api/groups/[groupId]/leader", () => {
 
     expect(response.status).toBe(403);
     expect(txMocks.group.updateMany).not.toHaveBeenCalled();
+    expect(txMocks.notification.create).not.toHaveBeenCalled();
   });
 
   it("retorna 404 quando o grupo não existe", async () => {
@@ -144,6 +164,7 @@ describe("POST /api/groups/[groupId]/leader", () => {
 
     expect(response.status).toBe(404);
     expect(txMocks.group.updateMany).not.toHaveBeenCalled();
+    expect(txMocks.notification.create).not.toHaveBeenCalled();
   });
 
   it("retorna 409 quando o novo líder não participa do grupo", async () => {
@@ -156,6 +177,7 @@ describe("POST /api/groups/[groupId]/leader", () => {
 
     expect(response.status).toBe(409);
     expect(txMocks.group.updateMany).not.toHaveBeenCalled();
+    expect(txMocks.notification.create).not.toHaveBeenCalled();
   });
 
   it("retorna 409 quando o líder tenta transferir para si mesmo", async () => {
@@ -167,6 +189,19 @@ describe("POST /api/groups/[groupId]/leader", () => {
     expect(response.status).toBe(409);
     expect(txMocks.groupMember.findUnique).not.toHaveBeenCalled();
     expect(txMocks.group.updateMany).not.toHaveBeenCalled();
+    expect(txMocks.notification.create).not.toHaveBeenCalled();
+  });
+
+  it("retorna 409 quando a atualização da liderança não acontece", async () => {
+    txMocks.group.updateMany.mockResolvedValue({ count: 0 });
+
+    const response = await POST(
+      createRequest({ userId: newLeader.id }),
+      createContext(),
+    );
+
+    expect(response.status).toBe(409);
+    expect(txMocks.notification.create).not.toHaveBeenCalled();
   });
 
   it("retorna 400 quando os dados são inválidos", async () => {
@@ -177,6 +212,7 @@ describe("POST /api/groups/[groupId]/leader", () => {
 
     expect(response.status).toBe(400);
     expect(txMocks.group.updateMany).not.toHaveBeenCalled();
+    expect(txMocks.notification.create).not.toHaveBeenCalled();
   });
 
   it("utiliza transação com isolamento Serializable", async () => {
