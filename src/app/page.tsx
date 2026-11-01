@@ -1,68 +1,177 @@
-import Image from "next/image";
+import PublicNavbar from "@/components/layout/PublicNavbar";
+import Button from "@/components/ui/button";
+import Badge from "@/components/ui/badge";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <div className="min-h-screen bg-white text-zinc-900">
+      {/* 1. Navbar */}
+      <PublicNavbar />
+
+      {/* 2. Hero Section */}
+      <main className="mx-auto max-w-7xl px-6 py-12 md:px-12 lg:py-16">
+        <section className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+          
+          {/* Lado Esquerdo: Conteúdo */}
+          <div className="flex flex-col items-start gap-5">
+            <Badge variant="info">
+              ✦ Em desenvolvimento - entre na lista do beta
+            </Badge>
+
+            <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 sm:text-5xl lg:text-6xl">
+              Aprender juntos. <br />
+              <span className="text-[#0969DA]">Evoluir juntos.</span>
+            </h1>
+
+            <p className="max-w-lg text-base leading-relaxed text-zinc-600 sm:text-lg">
+              O Group of Study junta grupos de estudo, metas e gamificação num
+              lugar só. Organize o que estudar com seus colegas, acompanhe o
+              progresso de todo mundo e ganhe XP a cada passo — no seu ritmo.
+            </p>
+
+            {/* Botões CTA */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <Button
+                variant="primary"
+                size="md"
+                className="px-5 py-2.5 font-semibold"
+                icon={
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M14 5l7 7m0 0l-7 7m7-7H3"
+                    />
+                  </svg>
+                }
+              >
+                Criar conta grátis
+              </Button>
+
+              <Button variant="secondary" size="md" className="px-5 py-2.5 font-semibold">
+                Já tenho conta
+              </Button>
+            </div>
+
+            {/* Prova social (Avatares) */}
+            <div className="flex items-center gap-3 pt-3">
+              <div className="flex -space-x-2">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-[#0969DA] ring-2 ring-white">
+                  AN
+                </span>
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-600 ring-2 ring-white">
+                  GB
+                </span>
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-600 ring-2 ring-white">
+                  TS
+                </span>
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-[10px] font-bold text-amber-600 ring-2 ring-white">
+                  ED
+                </span>
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 text-[10px] font-bold text-zinc-600 ring-2 ring-white">
+                  +4
+                </span>
+              </div>
+              <span className="text-xs font-medium text-zinc-500">
+                Feito por estudantes, para estudantes.
+              </span>
+            </div>
+          </div>
+
+          {/* Lado Direito: Preview de Gamificação */}
+          <div className="relative w-full max-w-lg justify-self-center rounded-2xl bg-blue-50/50 p-6 sm:p-8">
+            
+            {/* Card Nível */}
+            <div className="rounded-xl bg-zinc-900 p-5 text-white shadow-xl">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0969DA] text-lg font-bold">
+                  7
+                </div>
+                <div>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                    Seu Nível
+                  </span>
+                  <h3 className="text-lg font-bold">Nível 7 · Explorador</h3>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <div className="mb-1.5 flex justify-between text-xs font-medium text-zinc-400">
+                  <span>1.240 / 1.500 XP</span>
+                  <span>83%</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-zinc-800">
+                  <div className="h-2 w-[83%] rounded-full bg-[#0969DA]"></div>
+                </div>
+              </div>
+
+              <p className="mt-3 text-xs text-zinc-400">
+                Faltam 260 XP para o nível 8 · Mentor. Conclua 2 metas para chegar lá!
+              </p>
+            </div>
+
+            {/* Metas / Tarefas */}
+            <div className="mt-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between rounded-lg border border-zinc-100 bg-white p-3 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked
+                    readOnly
+                    className="h-4 w-4 rounded accent-[#0969DA]"
+                  />
+                  <div>
+                    <p className="text-xs font-semibold text-zinc-500 line-through">
+                      Assistir aula 6 — Present Perfect
+                    </p>
+                    <p className="text-[10px] text-zinc-400">
+                      Inglês para TI · Concluída às 10h
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="success">+15 XP</Badge>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border border-zinc-100 bg-white p-3 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    readOnly
+                    className="h-4 w-4 rounded border-zinc-300"
+                  />
+                  <div>
+                    <p className="text-xs font-semibold text-zinc-800">
+                      Resolver a lista 4 de derivadas
+                    </p>
+                    <p className="text-[10px] text-zinc-400">
+                      Cálculo I — Turma B · Hoje, 19h
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="info">+30 XP</Badge>
+              </div>
+            </div>
+
+            {/* Popup XP Mantido */}
+            <div className="absolute -bottom-3 right-4 flex items-center gap-3 rounded-lg bg-zinc-900 px-4 py-2.5 text-white shadow-2xl">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0969DA]">
+                ✦
+              </div>
+              <div>
+                <p className="text-xs font-bold">+15 XP!</p>
+                <p className="text-[10px] text-zinc-400">Sequência de 12 dias mantida</p>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
       </main>
     </div>
   );
