@@ -4,6 +4,8 @@ import { ACCOUNT_RATE_LIMIT_CODE } from "@/lib/rate-limit";
 export type AuthFormState = {
     error?: string;
     fieldErrors?: Record<string, string[] | undefined>;
+    // O que a pessoa digitou (nunca a senha), para o formulário não voltar vazio.
+    values?: Record<string, string>;
 };
 
 export const GENERIC_ERROR = "Algo deu errado. Tente novamente.";

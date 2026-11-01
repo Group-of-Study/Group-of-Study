@@ -18,3 +18,24 @@ export function safeCallbackUrl(value: unknown): string {
         return DEFAULT_REDIRECT;
     }
 }
+
+// Lê o ?callbackUrl= das páginas de login e cadastro. Valor externo ou
+// inválido é descartado (undefined), em vez de virar o padrão.
+export function readCallbackUrl(value: string | string[] | undefined): string | undefined {
+    if (typeof value !== "string") {
+        return undefined;
+    }
+    const safe = safeCallbackUrl(value);
+    if (safe === DEFAULT_REDIRECT && value !== DEFAULT_REDIRECT) {
+        return undefined;
+    }
+    return safe;
+}
+
+// Link entre login e cadastro mantendo o destino ("/cadastro?callbackUrl=...").
+export function withCallbackUrl(path: string, callbackUrl: string | undefined): string {
+    if (!callbackUrl) {
+        return path;
+    }
+    return `${path}?${new URLSearchParams({ callbackUrl })}`;
+}
