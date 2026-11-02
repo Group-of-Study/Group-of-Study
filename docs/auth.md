@@ -71,7 +71,7 @@ export default function DashboardPage() {
 }
 ```
 
-Rotas privadas hoje: `/dashboard`, `/grupos` (e tudo abaixo delas).
+Rotas privadas hoje: `/dashboard`, `/grupos`, `/configuracoes` (e tudo abaixo delas).
 
 ## Regras
 - **Nunca** aceite `userId` vindo do body, da query ou do formulário. O usuário é sempre `session.user.id`.
@@ -89,6 +89,8 @@ Limita tentativas por IP para dificultar ataques de força bruta. **Só fica ati
 | Login (`/sign-in/email`) | 5 tentativas por minuto **por IP** |
 | Login (`/sign-in/email`) | 10 tentativas a cada 15 minutos **por conta (email)** |
 | Cadastro (`/sign-up/email`) | 3 tentativas por minuto por IP |
+| Troca de senha (`/change-password`) | 5 tentativas por minuto por IP |
+| Troca de e-mail (`/change-email`) | 5 tentativas por minuto por IP |
 | Demais rotas de `/api/auth/*` | 100 requisições por minuto por IP |
 
 - Os limites ficam em `src/lib/rate-limit.ts` (`AUTH_RATE_LIMITS` e `ACCOUNT_SIGN_IN_LIMIT`).
@@ -140,6 +142,28 @@ Logout: `<form action={signOutAction}><button>Sair</button></form>`.
 - **`callbackUrl`:** vem de um campo do formulário. Só caminhos internos são aceitos (`/grupos/1`); URLs externas (`https://...`, `//site.com`) viram `/dashboard`, para evitar open redirect.
 - **Erros:** os conhecidos (email já cadastrado, senha errada) viram mensagens em português em `error`. Os inesperados (banco fora do ar, bug) vão para o log do servidor como `[auth] <action> falhou` e o usuário vê "Algo deu errado. Tente novamente.".
 
+## Configurações da conta
+A página `/configuracoes` (Figma: App / 10 · Configurações e Mobile / 13 · Configurações) usa as Server Actions de `src/features/account/actions.ts`, no mesmo formato do login, mais um `success` com a mensagem de sucesso (a pessoa continua na página):
+
+| Action | O que faz | Better Auth |
+|---|---|---|
+| `updateProfileAction` | troca o nome e recarrega a página (`refresh()`) | `updateUser` |
+| `changeEmailAction` | confere a senha atual e troca o e-mail | `verifyPassword` + `changeEmail` |
+| `changePasswordAction` | troca a senha; com "Desconectar dos outros dispositivos" marcado, encerra as outras sessões | `changePassword` (`revokeOtherSessions`) |
+
+| Arquivo | Papel |
+|---|---|
+| `src/app/(app)/configuracoes/page.tsx` | Página: título, menu das seções e os painéis dentro do `<Suspense>` |
+| `src/features/account/components/` | Painéis (`ProfileForm`, `AccountSecurityPanel`, `DangerZonePanel`), `SettingsNav` e partes reaproveitáveis (`SettingsPanel`, `SettingRow`, `ComingSoon`) |
+| `src/features/account/schemas.ts` | Validação; nome, e-mail e senha usam os mesmos campos do cadastro (`src/features/auth/schemas.ts`) |
+
+- **Todas as actions começam com `requireSession()`**: sem sessão, redirecionam para o login antes de ler o formulário.
+- **Troca de e-mail sem confirmação:** ainda não há envio de e-mail, então `user.changeEmail.updateEmailWithoutVerification` está ligado em `src/lib/auth.ts` e o e-mail muda na hora. Para compensar, a action pede a senha atual. Quando a verificação de e-mail entrar (GOS-031/GOS-032), trocar para o fluxo com link de confirmação.
+- **E-mail já cadastrado:** o Better Auth responde sucesso sem trocar nada, para não revelar quem tem conta. Como o cadastro já avisa "Este email já está cadastrado", a action confere antes no banco e avisa também, em vez de mostrar um sucesso falso. Se um dia o cadastro deixar de revelar isso, esta checagem sai junto.
+- **Senha:** a nova precisa ser diferente da atual. "Desconectar dos outros dispositivos" vem marcado; a sessão atual continua (o Better Auth cria uma nova e troca o cookie).
+- **O que ainda não existe aparece como "Em breve"**: verificação em duas etapas (GOS-034), sessões ativas (GOS-035) e excluir conta (GOS-036). Gamificação, Notificações, Privacidade, foto e bio estão no Figma, mas ficam para quando as funcionalidades existirem (foto e bio: GOS-039).
+- **Sem sidebar e topbar:** o `(app)` ainda não tem a moldura do app; a página mostra só a área de conteúdo do Figma.
+
 ## Testes
 - `npm test` roda os testes (Vitest) uma vez; `npm run test:watch` roda a cada alteração.
 - Os testes ficam ao lado do código (`*.test.ts`) e não precisam de banco: Better Auth e Next são substituídos por mocks.
@@ -172,7 +196,7 @@ vi.mock("@/lib/prisma", () => ({
 | `src/app/(auth)/login/page.tsx`, `cadastro/page.tsx` | Páginas: só montam os `<Suspense>` e o formulário |
 | `src/features/auth/components/` | `LoginForm`, `SignUpForm` (Client Components com `useActionState`) e as partes das telas |
 | `src/features/auth/auth-page.ts` | `getCallbackUrl` (lê o `?callbackUrl=`) e `redirectIfAuthenticated` |
-| `src/components/ui/` | Componentes base do Design System: `Button`, `TextField`, `Checkbox`, `Alert`, `LogoMark` |
+| `src/components/ui/` | Componentes base do Design System: `Button`, `TextField`, `Checkbox`, `Alert`, `Avatar`, `LogoMark` |
 
 - **Logado abrindo `/login` ou `/cadastro`:** vai direto para o `callbackUrl` (ou `/dashboard`). A regra fica na página, não no proxy, para não criar loop com cookie expirado.
 - **`callbackUrl`:** a página repassa o `?callbackUrl=` para o formulário (campo escondido) e para o link "Criar conta" / "Entrar", então o destino não se perde ao trocar de tela. Valor externo é descartado já na página.
@@ -183,7 +207,10 @@ vi.mock("@/lib/prisma", () => ({
 ### Tokens do Design System
 Os tokens do Figma (Foundations) ficam no `@theme` do `src/app/globals.css`, **com o mesmo nome do Figma**: `--color-bg-brand` vira a classe `bg-bg-brand`, `--color-text-secondary` vira `text-text-secondary`, `--color-border-default` vira `border-border-default`. Tipografia: `text-display-lg`, `text-h1`…`text-h4`, `text-body-md`, `text-body-sm`, `text-label-sm`, `text-caption` (tamanho, altura de linha, espaçamento e peso juntos). Use os tokens em vez de cores fixas (`#0969DA`) ou da paleta padrão do Tailwind (`zinc-*`).
 
+**`Button`:** as variantes e tamanhos do Figma são `primary`, `ds-secondary`, `danger` e `ds-sm`, `ds-md`, `ds-lg` (Components › Button). `secondary`, `ghost`, `sm` e `md` são os da landing page, que ainda não segue o Design System; quando ela migrar, os nomes `ds-*` podem perder o prefixo. Pelo Figma, `primary` é para a ação principal da tela (uma por tela).
+
 ## Pendente
 - "Esqueci minha senha": está no Figma, mas fica de fora até existir a recuperação de senha (precisa de envio de email).
 - Página de termos de uso (o checkbox do cadastro ainda não tem link).
 - Tema escuro: os tokens do escuro já existem no Figma; hoje só o claro está no `globals.css`.
+- Configurações: confirmação por e-mail na troca de e-mail (GOS-031/GOS-032), 2FA (GOS-034), sessões ativas (GOS-035), excluir conta (GOS-036), foto e bio (GOS-039).
