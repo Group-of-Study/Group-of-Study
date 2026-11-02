@@ -20,6 +20,21 @@ const SIZES = {
   md: "px-4 py-2 text-sm min-h-[38px] rounded-xl",
 } as const;
 
+const BASE =
+  "inline-flex items-center justify-center gap-2 font-medium transition-all duration-150 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:pointer-events-none disabled:cursor-not-allowed shrink-0";
+
+type ButtonStyle = {
+  variant?: keyof typeof VARIANTS;
+  size?: keyof typeof SIZES;
+  className?: string;
+};
+
+// Visual de botão para um link: <Link className={buttonClassName({ ... })}>.
+// Não coloque <Button> dentro de <Link> (botão dentro de link é HTML inválido).
+export function buttonClassName({ variant = "primary", size = "md", className = "" }: ButtonStyle = {}): string {
+  return `${BASE} ${VARIANTS[variant]} ${SIZES[size]} ${className}`;
+}
+
 type ButtonProps = ComponentProps<"button"> & {
   variant?: keyof typeof VARIANTS;
   size?: keyof typeof SIZES;
@@ -38,10 +53,8 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
-  const base =
-    "inline-flex items-center justify-center gap-2 font-medium transition-all duration-150 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:pointer-events-none disabled:cursor-not-allowed shrink-0";
   return (
-    <button type={type} className={`${base} ${VARIANTS[variant]} ${SIZES[size]} ${className}`} {...props}>
+    <button type={type} className={buttonClassName({ variant, size, className })} {...props}>
       {leadingIcon && <span className="inline-flex shrink-0 items-center">{leadingIcon}</span>}
       <span>{children}</span>
       {icon && <span className="inline-flex shrink-0 items-center">{icon}</span>}
