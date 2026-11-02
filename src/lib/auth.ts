@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { accountRateLimitHook } from "@/lib/account-rate-limit";
+import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { AUTH_RATE_LIMITS, isRateLimitEnabled, rateLimitStorage } from "@/lib/rate-limit";
 
