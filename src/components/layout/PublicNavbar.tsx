@@ -57,7 +57,7 @@ export default function PublicNavbar() {
               Entrar
             </Button>
           </Link>
-          <Link href="/register">
+          <Link href="/cadastro">
             <Button variant="primary" size="sm" className="px-4 font-semibold">
               Criar conta
             </Button>

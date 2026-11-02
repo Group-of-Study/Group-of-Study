@@ -48,7 +48,7 @@ export default function Footer() {
                 CONTA
               </span>
               <Link href="/login" className="text-zinc-600 hover:text-zinc-900">Entrar</Link>
-              <Link href="/register" className="text-zinc-600 hover:text-zinc-900">Criar conta</Link>
+              <Link href="/cadastro" className="text-zinc-600 hover:text-zinc-900">Criar conta</Link>
             </div>
           </div>
         </div>

@@ -74,7 +74,7 @@ export function SignUpForm({ callbackUrl }: { callbackUrl?: string }) {
 
             {state.error && <Alert tone="danger">{state.error}</Alert>}
 
-            <Button type="submit" disabled={pending} className="w-full">
+            <Button type="submit" size="lg" disabled={pending} className="w-full">
                 {pending ? "Criando conta..." : "Criar conta"}
             </Button>
 
