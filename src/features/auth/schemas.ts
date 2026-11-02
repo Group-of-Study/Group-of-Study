@@ -1,19 +1,22 @@
 import { z } from "zod";
 
-const email = z.string().trim().pipe(z.email("Email inválido"));
+// Campos com as mesmas regras no cadastro e nas configurações da conta.
+export const nameField = z.string().trim().min(2, "Informe seu nome");
+export const emailField = z.string().trim().pipe(z.email("Email inválido"));
+export const passwordField = z
+    .string()
+    .min(8, "A senha precisa ter pelo menos 8 caracteres")
+    .max(128, "A senha pode ter no máximo 128 caracteres");
 
 const passwords = z.object({
-    password: z
-        .string()
-        .min(8, "A senha precisa ter pelo menos 8 caracteres")
-        .max(128, "A senha pode ter no máximo 128 caracteres"),
+    password: passwordField,
     confirmPassword: z.string().min(1, "Confirme a senha"),
 });
 
 export const signUpSchema = passwords
     .extend({
-        name: z.string().trim().min(2, "Informe seu nome"),
-        email,
+        name: nameField,
+        email: emailField,
         // Checkbox marcado envia "on"; desmarcado, o campo nem vem no formulário.
         terms: z.literal("on", "Aceite os termos de uso para continuar"),
     })
@@ -25,7 +28,7 @@ export const signUpSchema = passwords
     });
 
 export const signInSchema = z.object({
-    email,
+    email: emailField,
     password: z.string().min(1, "Informe a senha"),
     // "Lembrar de mim" desmarcado: a sessão acaba quando o navegador fecha.
     rememberMe: z
