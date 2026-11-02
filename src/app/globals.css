@@ -1,14 +1,136 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: #ffffff;
-    --foreground: #171717;
-  }
+/*
+ * Tokens do Design System (Figma: "Group of Study — Design System → App",
+ * página Foundations). Os nomes são os mesmos do Figma.
+ * Por enquanto só o tema claro; o escuro já existe no Figma.
+ */
+@theme {
+    /* Base */
+    --color-background: #ffffff;
+    --color-foreground: #0d1117;
 
-  body {
-    background-color: var(--background);
-    color: var(--foreground);
-    font-family: var(--font-geist-sans), system-ui, sans-serif;
-  }
+    /* Fundo */
+    --color-bg-canvas: #ffffff;
+    --color-bg-surface: #ffffff;
+    --color-bg-subtle: #f6f8fa;
+    --color-bg-muted: #eef1f4;
+    --color-bg-brand: #0969da;
+    --color-bg-brand-hover: #0550ae;
+    --color-bg-brand-subtle: #eef5ff;
+    --color-bg-brand-strong: #0d1117;
+    --color-bg-accent: #2f81f7;
+    --color-bg-accent-subtle: #eef5ff;
+    --color-bg-streak: #0969da;
+    --color-bg-streak-subtle: #eef5ff;
+    --color-bg-level: #0969da;
+    --color-bg-level-subtle: #ddebff;
+    --color-bg-danger: #cf222e;
+    --color-bg-danger-subtle: #ffebe9;
+    --color-bg-success-subtle: #dafbe1;
+    --color-bg-info-subtle: #eef5ff;
+    --color-bg-inverse: #0d1117;
+
+    /* Texto */
+    --color-text-primary: #0d1117;
+    --color-text-secondary: #57606a;
+    --color-text-tertiary: #6e7781;
+    --color-text-disabled: #8c959f;
+    --color-text-on-brand: #ffffff;
+    --color-text-brand: #0969da;
+    --color-text-accent: #0969da;
+    --color-text-streak: #0969da;
+    --color-text-level: #0550ae;
+    --color-text-danger: #cf222e;
+    --color-text-success: #1a7f37;
+    --color-text-info: #0969da;
+    --color-text-inverse: #ffffff;
+
+    /* Borda */
+    --color-border-subtle: #eef1f4;
+    --color-border-default: #e1e5ea;
+    --color-border-strong: #cdd3da;
+    --color-border-brand: #2f81f7;
+    --color-border-focus: #80b6ff;
+    --color-border-danger: #e5534b;
+
+    /* Heatmap */
+    --color-heat-0: #eef1f4;
+    --color-heat-1: #b6d4ff;
+    --color-heat-2: #58a6ff;
+    --color-heat-3: #0969da;
+    --color-heat-4: #033d8b;
+
+    /* Tipografia */
+    --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+    --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+    --text-display-lg: 2.75rem;
+    --text-display-lg--line-height: 3.25rem;
+    --text-display-lg--letter-spacing: -0.02em;
+    --text-display-lg--font-weight: 700;
+
+    --text-h1: 2rem;
+    --text-h1--line-height: 2.5rem;
+    --text-h1--letter-spacing: -0.015em;
+    --text-h1--font-weight: 600;
+
+    --text-h2: 1.5rem;
+    --text-h2--line-height: 2rem;
+    --text-h2--letter-spacing: -0.01em;
+    --text-h2--font-weight: 600;
+
+    --text-h3: 1.25rem;
+    --text-h3--line-height: 1.75rem;
+    --text-h3--letter-spacing: -0.005em;
+    --text-h3--font-weight: 600;
+
+    --text-h4: 1rem;
+    --text-h4--line-height: 1.5rem;
+    --text-h4--font-weight: 600;
+
+    --text-body-lg: 1.125rem;
+    --text-body-lg--line-height: 1.75rem;
+
+    --text-body-md: 1rem;
+    --text-body-md--line-height: 1.5rem;
+
+    --text-body-sm: 0.875rem;
+    --text-body-sm--line-height: 1.25rem;
+
+    --text-label-md: 0.875rem;
+    --text-label-md--line-height: 1.25rem;
+    --text-label-md--font-weight: 500;
+
+    --text-label-sm: 0.8125rem;
+    --text-label-sm--line-height: 1.125rem;
+    --text-label-sm--font-weight: 500;
+
+    --text-caption: 0.75rem;
+    --text-caption--line-height: 1rem;
+
+    --text-overline: 0.6875rem;
+    --text-overline--line-height: 1rem;
+    --text-overline--letter-spacing: 0.06em;
+    --text-overline--font-weight: 600;
+
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
+    --radius-2xl: 16px;
+
+    --shadow-xs: 0 1px 0 0 rgb(13 17 23 / 0.04);
+    --shadow-sm: 0 1px 2px 0 rgb(13 17 23 / 0.06);
+    --shadow-md: 0 3px 8px -2px rgb(13 17 23 / 0.08);
+    --shadow-lg: 0 12px 28px -6px rgb(13 17 23 / 0.16), 0 2px 6px -2px rgb(13 17 23 / 0.06);
+    --shadow-focus: 0 0 0 3px rgb(9 105 218 / 0.22);
+}
+
+@layer base {
+    body {
+        background-color: var(--color-background);
+        color: var(--color-foreground);
+        font-family: var(--font-sans);
+    }
 }

@@ -29,6 +29,10 @@ function form(data: Record<string, string>): FormData {
 }
 
 const user = { name: "Miguel", email: "miguel@exemplo.com", password: "senha-forte-123" };
+// Como o formulário de cadastro envia: confirmação da senha e termos marcados.
+const signUpForm = { ...user, confirmPassword: user.password, terms: "on" };
+// O que volta para o formulário depois de um erro (sem as senhas).
+const signUpValues = { name: user.name, email: user.email, terms: "on" };
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -38,18 +42,19 @@ beforeEach(() => {
 
 describe("signUpAction", () => {
     it("cadastra e redireciona para o callbackUrl", async () => {
-        await expect(signUpAction({}, form({ ...user, callbackUrl: "/grupos" }))).rejects.toThrow("REDIRECT:/grupos");
+        await expect(signUpAction({}, form({ ...signUpForm, callbackUrl: "/grupos" }))).rejects.toThrow("REDIRECT:/grupos");
+        // confirmPassword e terms não vão para o Better Auth.
         expect(signUpEmail).toHaveBeenCalledWith({ body: user, headers: expect.any(Headers) });
     });
 
     it("ignora callbackUrl externo e vai para /dashboard", async () => {
-        await expect(signUpAction({}, form({ ...user, callbackUrl: "https://site-falso.com" }))).rejects.toThrow(
+        await expect(signUpAction({}, form({ ...signUpForm, callbackUrl: "https://site-falso.com" }))).rejects.toThrow(
             "REDIRECT:/dashboard",
         );
     });
 
     it("devolve erros de campo sem chamar o Better Auth", async () => {
-        const state = await signUpAction({}, form({ ...user, email: "x", password: "123" }));
+        const state = await signUpAction({}, form({ ...signUpForm, email: "x", password: "123" }));
         expect(state.fieldErrors).toEqual({
             email: ["Email inválido"],
             password: ["A senha precisa ter pelo menos 8 caracteres"],
@@ -61,12 +66,18 @@ describe("signUpAction", () => {
         signUpEmail.mockRejectedValue(
             new APIError("UNPROCESSABLE_ENTITY", { code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL", message: "" }),
         );
-        await expect(signUpAction({}, form(user))).resolves.toEqual({ error: "Este email já está cadastrado." });
+        await expect(signUpAction({}, form(signUpForm))).resolves.toEqual({
+            error: "Este email já está cadastrado.",
+            values: signUpValues,
+        });
     });
 
     it("devolve mensagem genérica em erro inesperado", async () => {
         signUpEmail.mockRejectedValue(new Error("banco fora do ar"));
-        await expect(signUpAction({}, form(user))).resolves.toEqual({ error: "Algo deu errado. Tente novamente." });
+        await expect(signUpAction({}, form(signUpForm))).resolves.toEqual({
+            error: "Algo deu errado. Tente novamente.",
+            values: signUpValues,
+        });
         expect(console.error).toHaveBeenCalled();
     });
 });
@@ -78,7 +89,18 @@ describe("signInAction", () => {
         await expect(signInAction({}, form({ ...credentials, callbackUrl: "/grupos/1" }))).rejects.toThrow(
             "REDIRECT:/grupos/1",
         );
-        expect(signInEmail).toHaveBeenCalledWith({ body: credentials, headers: expect.any(Headers) });
+        expect(signInEmail).toHaveBeenCalledWith({
+            body: { ...credentials, rememberMe: false },
+            headers: expect.any(Headers),
+        });
+    });
+
+    it("repassa o 'Lembrar de mim' para o Better Auth", async () => {
+        await expect(signInAction({}, form({ ...credentials, rememberMe: "on" }))).rejects.toThrow("REDIRECT:/dashboard");
+        expect(signInEmail).toHaveBeenCalledWith({
+            body: { ...credentials, rememberMe: true },
+            headers: expect.any(Headers),
+        });
     });
 
     it("vai para /dashboard quando não há callbackUrl", async () => {
@@ -101,9 +123,22 @@ describe("signInAction", () => {
         signInEmail.mockRejectedValue(
             new APIError("UNAUTHORIZED", { code: "INVALID_EMAIL_OR_PASSWORD", message: "" }),
         );
-        await expect(signInAction({}, form({ ...credentials, password: "errada-123" }))).resolves.toEqual({
+        await expect(
+            signInAction({}, form({ ...credentials, password: "errada-123", rememberMe: "on" })),
+        ).resolves.toEqual({
             error: "Email ou senha incorretos.",
+            values: { email: user.email, rememberMe: "on" },
         });
+    });
+
+    it("nunca devolve a senha para o formulário", async () => {
+        signInEmail.mockRejectedValue(
+            new APIError("UNAUTHORIZED", { code: "INVALID_EMAIL_OR_PASSWORD", message: "" }),
+        );
+        const signIn = await signInAction({}, form(credentials));
+        const signUp = await signUpAction({}, form({ ...signUpForm, email: "x" }));
+
+        expect(JSON.stringify([signIn, signUp])).not.toContain(user.password);
     });
 });
 
@@ -126,7 +161,10 @@ describe("rate limit nas actions", () => {
     it("bloqueia o login sem chamar o Better Auth", async () => {
         checkAuthRateLimit.mockResolvedValue(blocked);
 
-        await expect(signInAction({}, form({ email: user.email, password: user.password }))).resolves.toEqual(blocked);
+        await expect(signInAction({}, form({ email: user.email, password: user.password }))).resolves.toEqual({
+            ...blocked,
+            values: { email: user.email },
+        });
         expect(checkAuthRateLimit).toHaveBeenCalledWith("/sign-in/email");
         expect(signInEmail).not.toHaveBeenCalled();
     });
@@ -134,7 +172,7 @@ describe("rate limit nas actions", () => {
     it("bloqueia o cadastro sem chamar o Better Auth", async () => {
         checkAuthRateLimit.mockResolvedValue(blocked);
 
-        await expect(signUpAction({}, form(user))).resolves.toEqual(blocked);
+        await expect(signUpAction({}, form(signUpForm))).resolves.toEqual({ ...blocked, values: signUpValues });
         expect(checkAuthRateLimit).toHaveBeenCalledWith("/sign-up/email");
         expect(signUpEmail).not.toHaveBeenCalled();
     });

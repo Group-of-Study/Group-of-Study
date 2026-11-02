@@ -105,9 +105,11 @@ Ficam em `src/features/auth/actions.ts`, no formato do `useActionState`:
 
 | Action | Sucesso | Erro |
 |---|---|---|
-| `signUpAction` | cria a conta, inicia a sessão e redireciona para o `callbackUrl` | devolve `{ error }` ou `{ fieldErrors }` |
-| `signInAction` | inicia a sessão e redireciona para o `callbackUrl` | devolve `{ error }` ou `{ fieldErrors }` |
+| `signUpAction` | cria a conta, inicia a sessão e redireciona para o `callbackUrl` | devolve `{ error }` ou `{ fieldErrors }`, sempre com `values` |
+| `signInAction` | inicia a sessão e redireciona para o `callbackUrl` | devolve `{ error }` ou `{ fieldErrors }`, sempre com `values` |
 | `signOutAction` | encerra a sessão e redireciona para `/login` | — |
+
+Exemplo mínimo (a versão completa, com o visual do Figma, está em `src/features/auth/components/login-form.tsx`):
 
 ```tsx
 "use client";
@@ -161,5 +163,27 @@ vi.mock("@/lib/prisma", () => ({
 }));
 ```
 
+## Telas de login e cadastro
+`/login` e `/cadastro` seguem o Figma (Público / 02 · Login, Público / 03 · Cadastro e as versões Mobile).
+
+| Arquivo | Papel |
+|---|---|
+| `src/app/(auth)/layout.tsx` | Moldura das duas telas: painel da marca + área do formulário (no mobile, marca em cima e formulário numa "folha" branca) |
+| `src/app/(auth)/login/page.tsx`, `cadastro/page.tsx` | Páginas: só montam os `<Suspense>` e o formulário |
+| `src/features/auth/components/` | `LoginForm`, `SignUpForm` (Client Components com `useActionState`) e as partes das telas |
+| `src/features/auth/auth-page.ts` | `getCallbackUrl` (lê o `?callbackUrl=`) e `redirectIfAuthenticated` |
+| `src/components/ui/` | Componentes base do Design System: `Button`, `TextField`, `Checkbox`, `Alert`, `LogoMark` |
+
+- **Logado abrindo `/login` ou `/cadastro`:** vai direto para o `callbackUrl` (ou `/dashboard`). A regra fica na página, não no proxy, para não criar loop com cookie expirado.
+- **`callbackUrl`:** a página repassa o `?callbackUrl=` para o formulário (campo escondido) e para o link "Criar conta" / "Entrar", então o destino não se perde ao trocar de tela. Valor externo é descartado já na página.
+- **Suspense:** sessão e `searchParams` só existem na hora do request (exigência do `cacheComponents`). O formulário aparece na hora (fallback) e a checagem de sessão roda num `<Suspense>` separado, para não atrasar a tela.
+- **Campos só do formulário:** o cadastro pede "Confirmar senha" e "Li e aceito os termos de uso", validados no `signUpSchema`; o Better Auth recebe só `name`, `email` e `password`. No login, "Lembrar de mim" vira o `rememberMe` do Better Auth (desmarcado, a sessão acaba ao fechar o navegador).
+- **Valores após erro:** o React limpa o formulário depois da action. Por isso as actions devolvem `values` (email, nome, checkboxes; **nunca a senha**) e os campos usam como `defaultValue`.
+
+### Tokens do Design System
+Os tokens do Figma (Foundations) ficam no `@theme` do `src/app/globals.css`, **com o mesmo nome do Figma**: `--color-bg-brand` vira a classe `bg-bg-brand`, `--color-text-secondary` vira `text-text-secondary`, `--color-border-default` vira `border-border-default`. Tipografia: `text-display-lg`, `text-h1`…`text-h4`, `text-body-md`, `text-body-sm`, `text-label-sm`, `text-caption` (tamanho, altura de linha, espaçamento e peso juntos). Use os tokens em vez de cores fixas (`#0969DA`) ou da paleta padrão do Tailwind (`zinc-*`).
+
 ## Pendente
-- Telas de `/login` e `/cadastro` (até lá, o redirecionamento para `/login` cai em 404). Usam as Server Actions acima.
+- "Esqueci minha senha": está no Figma, mas fica de fora até existir a recuperação de senha (precisa de envio de email).
+- Página de termos de uso (o checkbox do cadastro ainda não tem link).
+- Tema escuro: os tokens do escuro já existem no Figma; hoje só o claro está no `globals.css`.
