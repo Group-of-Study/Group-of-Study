@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 
 // Aviso dentro de formulários. "info" segue a nota da tela de Login no Figma;
-// "danger" usa os tokens de erro (bg/danger-subtle, text/danger).
+// "danger" e "success" usam os tokens de erro e de sucesso (bg/*-subtle, text/*).
 const TONES = {
     info: "bg-bg-info-subtle text-text-info",
+    success: "bg-bg-success-subtle text-text-success",
     danger: "bg-bg-danger-subtle text-text-danger",
 } as const;
 

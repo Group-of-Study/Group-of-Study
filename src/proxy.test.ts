@@ -15,11 +15,11 @@ function request(path: string, cookie?: string) {
 }
 
 describe("proxy: quais rotas ele protege", () => {
-    it.each(["/dashboard", "/dashboard/config", "/grupos", "/grupos/123/membros"])("roda em %s", (url) => {
+    it.each(["/dashboard", "/dashboard/config", "/grupos", "/grupos/123/membros", "/configuracoes"])("roda em %s", (url) => {
         expect(matches(url)).toBe(true);
     });
 
-    it.each(["/", "/login", "/cadastro", "/dashboardx", "/grupo", "/api/me", "/api/auth/get-session"])(
+    it.each(["/", "/login", "/cadastro", "/dashboardx", "/grupo", "/configuracao", "/api/me", "/api/auth/get-session"])(
         "não roda em %s",
         (url) => {
             expect(matches(url)).toBe(false);
