@@ -209,6 +209,8 @@ Os tokens do Figma (Foundations) ficam no `@theme` do `src/app/globals.css`, **c
 
 **`Button`:** as variantes e tamanhos do Figma são `primary`, `ds-secondary`, `danger` e `ds-sm`, `ds-md`, `ds-lg` (Components › Button). `secondary`, `ghost`, `sm` e `md` são os da landing page, que ainda não segue o Design System; quando ela migrar, os nomes `ds-*` podem perder o prefixo. Pelo Figma, `primary` é para a ação principal da tela (uma por tela).
 
+Telas de erro, 404 e carregamento, `EmptyState`, links com visual de botão (`buttonClassName`) e toast: ver [ui.md](ui.md).
+
 ## Pendente
 - "Esqueci minha senha": está no Figma, mas fica de fora até existir a recuperação de senha (precisa de envio de email).
 - Página de termos de uso (o checkbox do cadastro ainda não tem link).
