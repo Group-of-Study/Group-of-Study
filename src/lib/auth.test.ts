@@ -52,6 +52,31 @@ describe("rate limit da API /api/auth", () => {
     });
 });
 
+describe("rate limit das configurações da conta", () => {
+    function changePassword(ip: string) {
+        return auth.handler(
+            new Request("http://localhost:3000/api/auth/change-password", {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json",
+                    origin: "http://localhost:3000",
+                    "x-forwarded-for": ip,
+                },
+                body: JSON.stringify({ currentPassword: "senha-forte-123", newPassword: "outra-senha-123" }),
+            }),
+        );
+    }
+
+    // O padrão do Better Auth seria 3 a cada 10 segundos; o nosso é 5 por minuto.
+    it("bloqueia a troca de senha com 429 depois de 5 tentativas do mesmo IP", async () => {
+        for (let i = 0; i < 5; i++) {
+            expect((await changePassword("203.0.113.50")).status).not.toBe(429);
+        }
+
+        expect((await changePassword("203.0.113.50")).status).toBe(429);
+    });
+});
+
 describe("limite por conta", () => {
     it("bloqueia a conta mesmo trocando de IP a cada tentativa", async () => {
         for (let i = 1; i <= 10; i++) {

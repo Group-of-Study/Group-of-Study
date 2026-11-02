@@ -11,6 +11,9 @@ export const AUTH_RATE_LIMITS = {
     default: { window: 60, max: 100 },
     "/sign-in/email": { window: 60, max: 5 },
     "/sign-up/email": { window: 60, max: 3 },
+    // Configurações da conta: pedem a senha atual, então também são alvo de força bruta.
+    "/change-password": { window: 60, max: 5 },
+    "/change-email": { window: 60, max: 5 },
 } satisfies Record<string, RateLimitRule>;
 
 // Limite por conta (email) no login, somando API e Server Actions. Protege a

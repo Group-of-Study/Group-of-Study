@@ -27,6 +27,9 @@ const MESSAGES: Record<string, string> = {
     INVALID_EMAIL: "Email inválido.",
     PASSWORD_TOO_SHORT: "A senha precisa ter pelo menos 8 caracteres.",
     PASSWORD_TOO_LONG: "A senha pode ter no máximo 128 caracteres.",
+    // Configurações da conta (senha atual errada, conta sem senha cadastrada).
+    INVALID_PASSWORD: "Senha atual incorreta.",
+    CREDENTIAL_ACCOUNT_NOT_FOUND: "Sua conta não tem senha cadastrada.",
 };
 
 // Erro conhecido do Better Auth vira mensagem amigável. Erro inesperado
