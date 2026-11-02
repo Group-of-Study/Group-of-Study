@@ -1,239 +1,345 @@
-
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 const {
-    getSessionMock,
-    findFirstMock,
-    findManyMock,
+  getSessionMock,
+  findFirstMock,
+  findManyMock,
 } = vi.hoisted(() => ({
-    getSessionMock: vi.fn(),
-    findFirstMock: vi.fn(),
-    findManyMock: vi.fn(),
+  getSessionMock: vi.fn(),
+  findFirstMock: vi.fn(),
+  findManyMock: vi.fn(),
 }));
 
 vi.mock("@/lib/session", () => ({
-    getSession: getSessionMock,
-    unauthorized: () =>
-        Response.json(
-            { error: "Autenticação necessária." },
-            { status: 401 },
-        ),
+  getSession: getSessionMock,
+  unauthorized: () =>
+    Response.json(
+      { error: "Autenticação necessária." },
+      { status: 401 },
+    ),
 }));
 
 vi.mock("@/lib/prisma", () => ({
-    prisma: {
-        group: {
-            findFirst: findFirstMock,
-            findMany: findManyMock,
-        },
+  prisma: {
+    group: {
+      findFirst: findFirstMock,
+      findMany: findManyMock,
     },
+  },
 }));
 
 import { GET } from "./route";
 
 const user = {
-    id: "user-1",
-    name: "Miguel",
-    email: "miguel@exemplo.com",
+  id: "user-1",
+  name: "Miguel",
+  email: "miguel@exemplo.com",
 };
 
 function createRequest(url: string) {
-    return new NextRequest(`http://localhost:3000${url}`);
+  return new NextRequest(`http://localhost:3000${url}`);
 }
 
 beforeEach(() => {
-    vi.clearAllMocks();
+  vi.clearAllMocks();
 
-    getSessionMock.mockResolvedValue({ user });
-    findFirstMock.mockResolvedValue({ id: "group-1" });
-    findManyMock.mockResolvedValue([]);
+  getSessionMock.mockResolvedValue({ user });
+  findFirstMock.mockResolvedValue({ id: "group-1" });
+  findManyMock.mockResolvedValue([]);
 });
 
 describe("GET /api/groups", () => {
-    it("devolve 401 sem sessão", async () => {
-        getSessionMock.mockResolvedValue(null);
+  it("devolve 401 sem sessão", async () => {
+    getSessionMock.mockResolvedValue(null);
 
-        const response = await GET(createRequest("/api/groups"));
+    const response = await GET(createRequest("/api/groups"));
 
-        expect(response.status).toBe(401);
-        await expect(response.json()).resolves.toEqual({
-            error: "Autenticação necessária.",
-        });
+    expect(response.status).toBe(401);
 
-        expect(findManyMock).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toEqual({
+      error: "Autenticação necessária.",
     });
 
-    it("busca grupos pelo nome ou descrição sem diferenciar maiúsculas", async () => {
-        const response = await GET(
-            createRequest("/api/groups?q=DIREITO"),
-        );
+    expect(findManyMock).not.toHaveBeenCalled();
+  });
 
-        expect(response.status).toBe(200);
+  it("busca grupos pelo nome ou descrição sem diferenciar maiúsculas", async () => {
+    const response = await GET(
+      createRequest("/api/groups?q=direito"),
+    );
 
-        expect(findManyMock).toHaveBeenCalledWith(
+    expect(response.status).toBe(200);
+
+    // Sem cursor, não deve validar findFirst.
+    expect(findFirstMock).not.toHaveBeenCalled();
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
             expect.objectContaining({
-                where: {
-                    status: "ACTIVE",
-                    OR: [
-                        {
-                            name: {
-                                contains: "DIREITO",
-                                mode: "insensitive",
-                            },
-                        },
-                        {
-                            description: {
-                                contains: "DIREITO",
-                                mode: "insensitive",
-                            },
-                        },
-                    ],
-                },
+              status: "ACTIVE",
             }),
-        );
-    });
 
-    it("filtra somente os grupos dos quais o usuário participa", async () => {
-        const response = await GET(
-            createRequest("/api/groups?member=me"),
-        );
-
-        expect(response.status).toBe(200);
-
-        expect(findManyMock).toHaveBeenCalledWith(
+            // Grupos públicos ou dos quais o usuário participa.
             expect.objectContaining({
-                where: {
-                    status: "ACTIVE",
-                    members: {
-                        some: {
-                            userId: user.id,
-                        },
-                    },
-                },
-            }),
-        );
-    });
-
-    it("combina a busca com o filtro de participação", async () => {
-        const response = await GET(
-            createRequest("/api/groups?q=direito&member=me"),
-        );
-
-        expect(response.status).toBe(200);
-
-        expect(findManyMock).toHaveBeenCalledWith(
-            expect.objectContaining({
-                where: {
-                    status: "ACTIVE",
-                    OR: [
-                        {
-                            name: {
-                                contains: "direito",
-                                mode: "insensitive",
-                            },
-                        },
-                        {
-                            description: {
-                                contains: "direito",
-                                mode: "insensitive",
-                            },
-                        },
-                    ],
-                    members: {
-                        some: {
-                            userId: user.id,
-                        },
-                    },
-                },
-            }),
-        );
-    });
-
-    it("devolve 400 quando o filtro member é inválido", async () => {
-        const response = await GET(
-            createRequest("/api/groups?member=all"),
-        );
-
-        expect(response.status).toBe(400);
-        await expect(response.json()).resolves.toEqual({
-            error: "Parâmetros de consulta inválidos.",
-        });
-
-        expect(findManyMock).not.toHaveBeenCalled();
-    });
-
-    it("devolve 400 quando o cursor não pertence aos grupos filtrados", async () => {
-        findFirstMock.mockResolvedValue(null);
-
-        const response = await GET(
-            createRequest(
-                "/api/groups?q=direito&member=me&cursor=cursor-invalido",
-            ),
-        );
-
-        expect(response.status).toBe(400);
-        expect(findManyMock).not.toHaveBeenCalled();
-    });
-
-    it("mantém os filtros ao validar e utilizar o cursor", async () => {
-        const response = await GET(
-            createRequest(
-                "/api/groups?q=direito&member=me&cursor=group-1",
-            ),
-        );
-
-        expect(response.status).toBe(200);
-
-        expect(findFirstMock).toHaveBeenCalledWith(
-            expect.objectContaining({
-                where: expect.objectContaining({
-                    id: "group-1",
-                    status: "ACTIVE",
-                    members: {
-                        some: {
-                            userId: user.id,
-                        },
-                    },
+              OR: expect.arrayContaining([
+                expect.objectContaining({
+                  visibility: "PUBLIC",
                 }),
-            }),
-        );
-
-        expect(findManyMock).toHaveBeenCalledWith(
-            expect.objectContaining({
-                cursor: { id: "group-1" },
-                skip: 1,
-                where: expect.objectContaining({
-                    status: "ACTIVE",
-                    members: {
-                        some: {
-                            userId: user.id,
-                        },
+                expect.objectContaining({
+                  members: {
+                    some: {
+                      userId: "user-1",
                     },
+                  },
                 }),
+              ]),
             }),
-        );
+
+            // Busca pelo nome ou descrição.
+            expect.objectContaining({
+              OR: [
+                {
+                  name: {
+                    contains: "direito",
+                    mode: "insensitive",
+                  },
+                },
+                {
+                  description: {
+                    contains: "direito",
+                    mode: "insensitive",
+                  },
+                },
+              ],
+            }),
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it("permite visualizar grupos públicos e grupos privados dos quais o usuário participa", async () => {
+    const response = await GET(
+      createRequest("/api/groups"),
+    );
+
+    expect(response.status).toBe(200);
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            expect.objectContaining({
+              OR: expect.arrayContaining([
+                {
+                  visibility: "PUBLIC",
+                },
+                {
+                  members: {
+                    some: {
+                      userId: "user-1",
+                    },
+                  },
+                },
+              ]),
+            }),
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it("filtra grupos dos quais o usuário participa quando member=me", async () => {
+    const response = await GET(
+      createRequest("/api/groups?member=me"),
+    );
+
+    expect(response.status).toBe(200);
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            expect.objectContaining({
+              members: {
+                some: {
+                  userId: "user-1",
+                },
+              },
+            }),
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it("mantém os filtros ao validar e utilizar o cursor", async () => {
+    const response = await GET(
+      createRequest(
+        "/api/groups?cursor=group-1&q=direito&member=me",
+      ),
+    );
+
+    expect(response.status).toBe(200);
+
+    const expectedFilters = [
+      expect.objectContaining({
+        status: "ACTIVE",
+      }),
+
+      // Filtro de visibilidade.
+      expect.objectContaining({
+        OR: expect.arrayContaining([
+          {
+            visibility: "PUBLIC",
+          },
+          {
+            members: {
+              some: {
+                userId: "user-1",
+              },
+            },
+          },
+        ]),
+      }),
+
+      // Filtro de busca.
+      expect.objectContaining({
+        OR: [
+          {
+            name: {
+              contains: "direito",
+              mode: "insensitive",
+            },
+          },
+          {
+            description: {
+              contains: "direito",
+              mode: "insensitive",
+            },
+          },
+        ],
+      }),
+
+      // Filtro member=me.
+      expect.objectContaining({
+        members: {
+          some: {
+            userId: "user-1",
+          },
+        },
+      }),
+    ];
+
+    // Verifica se o cursor respeita todos os filtros.
+    expect(findFirstMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: "group-1",
+          AND: expect.arrayContaining(expectedFilters),
+        }),
+        select: {
+          id: true,
+        },
+      }),
+    );
+
+    // Verifica se a listagem também utiliza os mesmos filtros.
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining(expectedFilters),
+        }),
+        cursor: {
+          id: "group-1",
+        },
+        skip: 1,
+      }),
+    );
+  });
+
+  it("devolve 400 quando o cursor não pertence aos resultados filtrados", async () => {
+    findFirstMock.mockResolvedValue(null);
+
+    const response = await GET(
+      createRequest("/api/groups?cursor=invalid-group&q=direito"),
+    );
+
+    expect(response.status).toBe(400);
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Cursor inválido ou grupo não encontrado.",
     });
 
-    it("respeita o limite e retorna o próximo cursor", async () => {
-        findManyMock.mockResolvedValue([
-            { id: "group-1" },
-            { id: "group-2" },
-            { id: "group-3" },
-        ]);
+    expect(findFirstMock).toHaveBeenCalled();
 
-        const response = await GET(
-            createRequest("/api/groups?limit=2"),
-        );
+    // Não deve listar grupos se o cursor for inválido.
+    expect(findManyMock).not.toHaveBeenCalled();
+  });
 
-        const body = await response.json();
+  it("aplica o limite de resultados e informa o próximo cursor", async () => {
+    findManyMock.mockResolvedValue([
+      { id: "group-1" },
+      { id: "group-2" },
+      { id: "group-3" },
+    ]);
 
-        expect(response.status).toBe(200);
-        expect(body.data).toHaveLength(2);
+    const response = await GET(
+      createRequest("/api/groups?limit=2"),
+    );
 
-        expect(body.pagination).toEqual({
-            limit: 2,
-            nextCursor: "group-2",
-        });
+    expect(response.status).toBe(200);
+
+    await expect(response.json()).resolves.toEqual({
+      data: [
+        { id: "group-1" },
+        { id: "group-2" },
+      ],
+      pagination: {
+        limit: 2,
+        nextCursor: "group-2",
+      },
     });
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        take: 3,
+      }),
+    );
+  });
+
+  it("retorna nextCursor null quando não existem mais resultados", async () => {
+    findManyMock.mockResolvedValue([
+      { id: "group-1" },
+      { id: "group-2" },
+    ]);
+
+    const response = await GET(
+      createRequest("/api/groups?limit=2"),
+    );
+
+    expect(response.status).toBe(200);
+
+    const result = await response.json();
+
+    expect(result.pagination).toEqual({
+      limit: 2,
+      nextCursor: null,
+    });
+
+    expect(result.data).toHaveLength(2);
+  });
+
+  it("devolve 400 quando os parâmetros são inválidos", async () => {
+    const response = await GET(
+      createRequest("/api/groups?limit=100"),
+    );
+
+    expect(response.status).toBe(400);
+
+    expect(findManyMock).not.toHaveBeenCalled();
+  });
 });

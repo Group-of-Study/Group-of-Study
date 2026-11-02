@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -12,15 +11,23 @@ type RouteContext = {
   }>;
 };
 
+const DescriptionSchema = z.preprocess(
+  (value) =>
+    typeof value === "string" && value.trim() === ""
+      ? null
+      : value,
+  z.string().trim().max(1000).nullable(),
+);
+
 const DueDateSchema = z.preprocess(
-  (value) => value === "" ? null : value,
+  (value) => (value === "" ? null : value),
   z.coerce.date().nullable(),
 );
 
 const UpdateGoalSchema = z
   .object({
     title: z.string().trim().min(1).max(120).optional(),
-    description: z.string().trim().max(1000).nullable().optional(),
+    description: DescriptionSchema.optional(),
     dueDate: DueDateSchema.optional(),
   })
   .strict()
@@ -74,7 +81,7 @@ export async function PATCH(
         {
           error: "Dados inválidos.",
           issues: validation.error.issues.map((issue) => ({
-            field: issue.path.join("."),
+            path: issue.path.join("."),
             message: issue.message,
           })),
         },
@@ -87,6 +94,7 @@ export async function PATCH(
       select: {
         id: true,
         leaderId: true,
+        status: true,
       },
     });
 
@@ -94,6 +102,15 @@ export async function PATCH(
       return NextResponse.json(
         { error: "Grupo não encontrado." },
         { status: 404 },
+      );
+    }
+
+    if (group.status !== "ACTIVE") {
+      return NextResponse.json(
+        {
+          error: "Não é possível editar metas de um grupo que não está ativo.",
+        },
+        { status: 409 },
       );
     }
 
@@ -134,7 +151,9 @@ export async function PATCH(
 
     if (goal.authorId !== user.id && group.leaderId !== user.id) {
       return NextResponse.json(
-        { error: "Somente o autor ou o líder pode editar esta meta." },
+        {
+          error: "Somente o autor ou o líder pode editar esta meta.",
+        },
         { status: 403 },
       );
     }
@@ -172,7 +191,7 @@ export async function PATCH(
   }
 }
 
-
+// DELETE: excluir meta (somente autor ou líder)
 export async function DELETE(
   _request: Request,
   { params }: RouteContext,
@@ -199,6 +218,7 @@ export async function DELETE(
       select: {
         id: true,
         leaderId: true,
+        status: true,
       },
     });
 
@@ -206,6 +226,15 @@ export async function DELETE(
       return NextResponse.json(
         { error: "Grupo não encontrado." },
         { status: 404 },
+      );
+    }
+
+    if (group.status !== "ACTIVE") {
+      return NextResponse.json(
+        {
+          error: "Não é possível excluir metas de um grupo que não está ativo.",
+        },
+        { status: 409 },
       );
     }
 
@@ -246,7 +275,9 @@ export async function DELETE(
 
     if (goal.authorId !== user.id && group.leaderId !== user.id) {
       return NextResponse.json(
-        { error: "Somente o autor ou o líder pode excluir esta meta." },
+        {
+          error: "Somente o autor ou o líder pode excluir esta meta.",
+        },
         { status: 403 },
       );
     }
@@ -271,4 +302,3 @@ export async function DELETE(
     );
   }
 }
-

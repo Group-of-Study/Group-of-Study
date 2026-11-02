@@ -92,7 +92,10 @@ export async function DELETE(
       message: "Convite revogado com sucesso.",
     });
   } catch (error) {
-    console.error("[DELETE /api/groups/:groupId/invites/:inviteId]", error);
+    console.error(
+      "[DELETE /api/groups/:groupId/invites/:inviteId]",
+      error,
+    );
 
     return NextResponse.json(
       { error: "Erro interno ao revogar convite." },

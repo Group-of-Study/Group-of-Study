@@ -15,6 +15,7 @@ const CreateGroupSchema = z
       .max(500)
       .nullable()
       .optional(),
+    visibility: z.enum(["PUBLIC", "PRIVATE"]).default("PUBLIC"),
   })
   .strict();
 
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
         {
           error: "Dados inválidos.",
           issues: validation.error.issues.map((issue) => ({
-            field: issue.path.join("."),
+            path: issue.path.join("."),
             message: issue.message,
           })),
         },
@@ -61,12 +62,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, description } = validation.data;
+    const { name, description, visibility } = validation.data;
 
     const group = await prisma.group.create({
       data: {
         name,
         description: description || null,
+        visibility,
         status: "ACTIVE",
         creatorId: user.id,
         leaderId: user.id,
@@ -80,6 +82,7 @@ export async function POST(request: NextRequest) {
         id: true,
         name: true,
         description: true,
+        visibility: true,
         status: true,
         createdAt: true,
         creator: {
@@ -134,45 +137,75 @@ export async function GET(request: NextRequest) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Parâmetros de consulta inválidos." },
+        {
+          error: "Parâmetros de consulta inválidos.",
+          issues: validation.error.issues.map((issue) => ({
+            path: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
         { status: 400 },
       );
     }
 
     const { limit, cursor, q, member } = validation.data;
 
-    // Filtros compartilhados entre a validação do cursor e a listagem.
-    const where: Prisma.GroupWhereInput = {
-      status: "ACTIVE",
-
-      ...(q
-        ? {
-            OR: [
-              {
-                name: {
-                  contains: q,
-                  mode: "insensitive" as const,
-                },
-              },
-              {
-                description: {
-                  contains: q,
-                  mode: "insensitive" as const,
-                },
-              },
-            ],
-          }
-        : {}),
-
-      ...(member === "me"
-        ? {
+    // Grupos públicos são visíveis para todos.
+    // Grupos privados são visíveis somente para seus participantes.
+    const filters: Prisma.GroupWhereInput[] = [
+      {
+        status: "ACTIVE",
+      },
+      {
+        OR: [
+          {
+            visibility: "PUBLIC",
+          },
+          {
             members: {
               some: {
                 userId: user.id,
               },
             },
-          }
-        : {}),
+          },
+        ],
+      },
+    ];
+
+    // A busca possui seu próprio OR, sem substituir
+    // o OR responsável pela visibilidade.
+    if (q) {
+      filters.push({
+        OR: [
+          {
+            name: {
+              contains: q,
+              mode: "insensitive",
+            },
+          },
+          {
+            description: {
+              contains: q,
+              mode: "insensitive",
+            },
+          },
+        ],
+      });
+    }
+
+    if (member === "me") {
+      filters.push({
+        members: {
+          some: {
+            userId: user.id,
+          },
+        },
+      });
+    }
+
+    // Todos os filtros são aplicados juntos.
+    const where: Prisma.GroupWhereInput = {
+      AND: filters,
     };
 
     // Verifica se o cursor pertence ao resultado filtrado.
@@ -182,7 +215,9 @@ export async function GET(request: NextRequest) {
           id: cursor,
           ...where,
         },
-        select: { id: true },
+        select: {
+          id: true,
+        },
       });
 
       if (!cursorGroup) {
@@ -210,6 +245,7 @@ export async function GET(request: NextRequest) {
         id: true,
         name: true,
         description: true,
+        visibility: true,
         createdAt: true,
         creator: {
           select: {

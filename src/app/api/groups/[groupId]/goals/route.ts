@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -9,11 +8,24 @@ type RouteContext = {
   params: Promise<{ groupId: string }>;
 };
 
+const DescriptionSchema = z.preprocess(
+  (value) =>
+    typeof value === "string" && value.trim() === ""
+      ? null
+      : value,
+  z.string().trim().max(1000).nullable(),
+);
+
+const DueDateSchema = z.preprocess(
+  (value) => (value === "" ? null : value),
+  z.coerce.date().nullable(),
+);
+
 const CreateGoalSchema = z
   .object({
     title: z.string().trim().min(1).max(120),
-    description: z.string().trim().max(1000).nullable().optional(),
-    dueDate: z.coerce.date().nullable().optional(),
+    description: DescriptionSchema.optional(),
+    dueDate: DueDateSchema.optional(),
   })
   .strict();
 
@@ -68,6 +80,7 @@ export async function GET(
       );
     }
 
+    // A consulta permanece disponível para grupos arquivados.
     const goals = await prisma.goal.findMany({
       where: { groupId },
       orderBy: {
@@ -127,13 +140,25 @@ export async function POST(
 
     const group = await prisma.group.findUnique({
       where: { id: groupId },
-      select: { id: true },
+      select: {
+        id: true,
+        status: true,
+      },
     });
 
     if (!group) {
       return NextResponse.json(
         { error: "Grupo não encontrado." },
         { status: 404 },
+      );
+    }
+
+    if (group.status !== "ACTIVE") {
+      return NextResponse.json(
+        {
+          error: "Não é possível criar metas em um grupo que não está ativo.",
+        },
+        { status: 409 },
       );
     }
 
@@ -172,7 +197,7 @@ export async function POST(
         {
           error: "Dados inválidos.",
           issues: validation.error.issues.map((issue) => ({
-            field: issue.path.join("."),
+            path: issue.path.join("."),
             message: issue.message,
           })),
         },
@@ -185,7 +210,7 @@ export async function POST(
     const goal = await prisma.goal.create({
       data: {
         title,
-        description: description || null,
+        description: description ?? null,
         dueDate: dueDate ?? null,
         status: "PENDING",
         groupId,
@@ -224,3 +249,4 @@ export async function POST(
     );
   }
 }
+

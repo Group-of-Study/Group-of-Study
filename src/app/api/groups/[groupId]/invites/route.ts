@@ -11,12 +11,13 @@ type RouteContext = {
 
 const CreateInviteSchema = z
   .object({
-    expiresAt: z.string().datetime().nullable().optional(),
+    expiresAt: z.iso.datetime({ offset: true }).nullable().optional(),
     maxUses: z.number().int().positive().max(1000).nullable().optional(),
     recipientId: z.string().trim().min(1).nullable().optional(),
   })
   .strict();
 
+// POST: criar convite (somente o líder)
 export async function POST(
   request: Request,
   { params }: RouteContext,
@@ -78,7 +79,10 @@ export async function POST(
       return NextResponse.json(
         {
           error: "Dados inválidos.",
-          details: validation.error.flatten(),
+          issues: validation.error.issues.map((issue) => ({
+            path: issue.path.join("."),
+            message: issue.message,
+          })),
         },
         { status: 400 },
       );
@@ -139,7 +143,9 @@ export async function POST(
         data: {
           code: randomBytes(24).toString("base64url"),
           expiresAt,
-          maxUses: validation.data.maxUses ?? null,
+          maxUses: recipientId
+            ? 1
+            : (validation.data.maxUses ?? null),
           groupId,
           createdById: session.user.id,
           recipientId: recipientId ?? null,
@@ -186,6 +192,85 @@ export async function POST(
 
     return NextResponse.json(
       { error: "Erro interno ao criar convite." },
+      { status: 500 },
+    );
+  }
+}
+
+// GET: listar convites do grupo (somente o líder)
+export async function GET(
+  _request: Request,
+  { params }: RouteContext,
+) {
+  try {
+    const session = await getSession();
+
+    if (!session?.user?.id) {
+      return unauthorized();
+    }
+
+    const { groupId } = await params;
+
+    if (!groupId?.trim()) {
+      return NextResponse.json(
+        { error: "Identificador do grupo inválido." },
+        { status: 400 },
+      );
+    }
+
+    const group = await prisma.group.findUnique({
+      where: { id: groupId },
+      select: {
+        id: true,
+        leaderId: true,
+      },
+    });
+
+    if (!group) {
+      return NextResponse.json(
+        { error: "Grupo não encontrado." },
+        { status: 404 },
+      );
+    }
+
+    if (group.leaderId !== session.user.id) {
+      return NextResponse.json(
+        { error: "Somente o líder pode listar os convites." },
+        { status: 403 },
+      );
+    }
+
+    const invites = await prisma.groupInvite.findMany({
+      where: { groupId },
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+        code: true,
+        expiresAt: true,
+        maxUses: true,
+        uses: true,
+        revokedAt: true,
+        recipientId: true,
+        createdAt: true,
+        recipient: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({
+      data: invites,
+    });
+  } catch (error) {
+    console.error("[GET /api/groups/:groupId/invites]", error);
+
+    return NextResponse.json(
+      { error: "Não foi possível listar os convites." },
       { status: 500 },
     );
   }

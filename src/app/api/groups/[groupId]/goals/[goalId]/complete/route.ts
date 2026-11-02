@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 
 import { getSession, unauthorized } from "@/lib/session";
@@ -11,7 +10,7 @@ type RouteContext = {
   }>;
 };
 
-// PATCH: concluir meta (somente membros do grupo)
+// PATCH: concluir meta (somente membros de grupos ativos)
 export async function PATCH(
   _request: Request,
   { params }: RouteContext,
@@ -35,13 +34,25 @@ export async function PATCH(
 
     const group = await prisma.group.findUnique({
       where: { id: groupId },
-      select: { id: true },
+      select: {
+        id: true,
+        status: true,
+      },
     });
 
     if (!group) {
       return NextResponse.json(
         { error: "Grupo não encontrado." },
         { status: 404 },
+      );
+    }
+
+    if (group.status !== "ACTIVE") {
+      return NextResponse.json(
+        {
+          error: "Não é possível concluir metas de um grupo que não está ativo.",
+        },
+        { status: 409 },
       );
     }
 
@@ -87,7 +98,6 @@ export async function PATCH(
       );
     }
 
-    // Atualiza somente se a meta ainda estiver pendente.
     const result = await prisma.goal.updateMany({
       where: {
         id: goalId,
@@ -101,7 +111,9 @@ export async function PATCH(
 
     if (result.count === 0) {
       return NextResponse.json(
-        { error: "A meta já foi concluída ou foi alterada simultaneamente." },
+        {
+          error: "A meta já foi concluída ou foi alterada simultaneamente.",
+        },
         { status: 409 },
       );
     }

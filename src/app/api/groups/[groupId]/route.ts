@@ -13,11 +13,14 @@ const UpdateGroupSchema = z
   .object({
     name: z.string().trim().min(3).max(80).optional(),
     description: z.string().trim().max(500).nullable().optional(),
+    visibility: z.enum(["PUBLIC", "PRIVATE"]).optional(),
   })
   .strict()
   .refine(
     (data) =>
-      data.name !== undefined || data.description !== undefined,
+      data.name !== undefined ||
+      data.description !== undefined ||
+      data.visibility !== undefined,
     {
       message: "Informe ao menos um campo para atualizar.",
     },
@@ -63,7 +66,7 @@ export async function PATCH(
         {
           error: "Dados inválidos.",
           issues: validation.error.issues.map((issue) => ({
-            field: issue.path.join("."),
+            path: issue.path.join("."),
             message: issue.message,
           })),
         },
@@ -106,13 +109,19 @@ export async function PATCH(
         ...(validation.data.description !== undefined
           ? { description: validation.data.description || null }
           : {}),
+        ...(validation.data.visibility !== undefined
+          ? { visibility: validation.data.visibility }
+          : {}),
       },
     });
 
     if (result.count === 0) {
       return NextResponse.json(
-        { error: "Não foi possível atualizar o grupo. Verifique a liderança." },
-        { status: 403 },
+        {
+          error:
+            "Não foi possível atualizar o grupo. A liderança pode ter sido alterada.",
+        },
+        { status: 409 },
       );
     }
 
@@ -122,6 +131,7 @@ export async function PATCH(
         id: true,
         name: true,
         description: true,
+        visibility: true,
         status: true,
         updatedAt: true,
       },

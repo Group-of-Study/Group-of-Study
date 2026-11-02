@@ -18,6 +18,9 @@ const {
       delete: vi.fn(),
       findMany: vi.fn(),
     },
+    notification: {
+      create: vi.fn(),
+    },
   },
 }));
 
@@ -71,6 +74,9 @@ beforeEach(() => {
     { userId: "member-newest" },
   ]);
 
+  txMocks.group.update.mockResolvedValue({});
+  txMocks.notification.create.mockResolvedValue({});
+
   transactionMock.mockImplementation(
     async (callback: (tx: typeof txMocks) => Promise<unknown>) =>
       callback(txMocks),
@@ -78,7 +84,7 @@ beforeEach(() => {
 });
 
 describe("POST /api/groups/[groupId]/leave", () => {
-  it("transfere a liderança para o participante mais antigo", async () => {
+  it("transfere a liderança para o participante mais antigo e cria uma notificação", async () => {
     const response = await POST(
       new Request("http://localhost"),
       createContext(),
@@ -87,7 +93,6 @@ describe("POST /api/groups/[groupId]/leave", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-
     expect(body.data.leaderId).toBe("member-oldest");
 
     expect(txMocks.groupMember.findMany).toHaveBeenCalledWith({
@@ -102,6 +107,18 @@ describe("POST /api/groups/[groupId]/leave", () => {
     expect(txMocks.group.update).toHaveBeenCalledWith({
       where: { id: "group-1" },
       data: { leaderId: "member-oldest" },
+    });
+
+    expect(txMocks.notification.create).toHaveBeenCalledWith({
+      data: {
+        userId: "member-oldest",
+        type: "BECAME_LEADER",
+        data: {
+          groupId: "group-1",
+          groupName: "Grupo de Java",
+          previousLeaderId: leader.id,
+        },
+      },
     });
   });
 
@@ -125,6 +142,55 @@ describe("POST /api/groups/[groupId]/leave", () => {
     expect(response.status).toBe(200);
     expect(body.data.leaderId).toBe(leader.id);
     expect(txMocks.group.update).not.toHaveBeenCalled();
+    expect(txMocks.notification.create).not.toHaveBeenCalled();
+  });
+
+  it("permite sair de um grupo arquivado", async () => {
+    txMocks.group.findUnique.mockResolvedValue({
+      id: "group-1",
+      name: "Grupo de Java",
+      status: "ARCHIVED",
+      leaderId: leader.id,
+    });
+
+    const response = await POST(
+      new Request("http://localhost"),
+      createContext(),
+    );
+
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.status).toBe("ARCHIVED");
+    expect(body.data.leaderId).toBe("member-oldest");
+
+    expect(txMocks.groupMember.delete).toHaveBeenCalled();
+    expect(txMocks.notification.create).toHaveBeenCalled();
+  });
+
+  it("retorna 409 quando o grupo já está encerrado", async () => {
+    txMocks.group.findUnique.mockResolvedValue({
+      id: "group-1",
+      name: "Grupo de Java",
+      status: "CLOSED",
+      leaderId: leader.id,
+    });
+
+    const response = await POST(
+      new Request("http://localhost"),
+      createContext(),
+    );
+
+    expect(response.status).toBe(409);
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Este grupo já foi encerrado.",
+    });
+
+    expect(txMocks.groupMember.findUnique).not.toHaveBeenCalled();
+    expect(txMocks.groupMember.delete).not.toHaveBeenCalled();
+    expect(txMocks.group.update).not.toHaveBeenCalled();
+    expect(txMocks.notification.create).not.toHaveBeenCalled();
   });
 
   it("encerra o grupo quando o último participante sai", async () => {
@@ -148,6 +214,8 @@ describe("POST /api/groups/[groupId]/leave", () => {
         leaderId: null,
       },
     });
+
+    expect(txMocks.notification.create).not.toHaveBeenCalled();
   });
 
   it("retorna 401 quando não existe sessão", async () => {
@@ -164,6 +232,18 @@ describe("POST /api/groups/[groupId]/leave", () => {
 
   it("retorna 404 quando o grupo não existe", async () => {
     txMocks.group.findUnique.mockResolvedValue(null);
+
+    const response = await POST(
+      new Request("http://localhost"),
+      createContext(),
+    );
+
+    expect(response.status).toBe(404);
+    expect(txMocks.groupMember.delete).not.toHaveBeenCalled();
+  });
+
+  it("retorna 404 quando o usuário não participa do grupo", async () => {
+    txMocks.groupMember.findUnique.mockResolvedValue(null);
 
     const response = await POST(
       new Request("http://localhost"),

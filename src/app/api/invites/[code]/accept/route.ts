@@ -33,6 +33,7 @@ export async function POST(
             maxUses: true,
             uses: true,
             revokedAt: true,
+            recipientId: true,
             group: {
               select: {
                 id: true,
@@ -44,26 +45,52 @@ export async function POST(
         });
 
         if (!invite) {
-          return { ok: false as const, reason: "NOT_FOUND" as const };
+          return {
+            ok: false as const,
+            reason: "NOT_FOUND" as const,
+          };
+        }
+
+        // Convites direcionados só podem ser aceitos pelo destinatário.
+        if (
+          invite.recipientId &&
+          invite.recipientId !== session.user.id
+        ) {
+          return {
+            ok: false as const,
+            reason: "NOT_RECIPIENT" as const,
+          };
         }
 
         if (invite.revokedAt) {
-          return { ok: false as const, reason: "REVOKED" as const };
+          return {
+            ok: false as const,
+            reason: "REVOKED" as const,
+          };
         }
 
         if (invite.expiresAt && invite.expiresAt <= now) {
-          return { ok: false as const, reason: "EXPIRED" as const };
+          return {
+            ok: false as const,
+            reason: "EXPIRED" as const,
+          };
         }
 
         if (
           invite.maxUses !== null &&
           invite.uses >= invite.maxUses
         ) {
-          return { ok: false as const, reason: "LIMIT_REACHED" as const };
+          return {
+            ok: false as const,
+            reason: "LIMIT_REACHED" as const,
+          };
         }
 
         if (invite.group.status !== "ACTIVE") {
-          return { ok: false as const, reason: "GROUP_INACTIVE" as const };
+          return {
+            ok: false as const,
+            reason: "GROUP_INACTIVE" as const,
+          };
         }
 
         const existingMembership = await tx.groupMember.findUnique({
@@ -76,7 +103,10 @@ export async function POST(
         });
 
         if (existingMembership) {
-          return { ok: false as const, reason: "ALREADY_MEMBER" as const };
+          return {
+            ok: false as const,
+            reason: "ALREADY_MEMBER" as const,
+          };
         }
 
         const updatedInvite = await tx.groupInvite.updateMany({
@@ -101,7 +131,10 @@ export async function POST(
         });
 
         if (updatedInvite.count === 0) {
-          return { ok: false as const, reason: "UNAVAILABLE" as const };
+          return {
+            ok: false as const,
+            reason: "UNAVAILABLE" as const,
+          };
         }
 
         await tx.groupMember.create({
@@ -133,6 +166,14 @@ export async function POST(
             { status: 404 },
           );
 
+        case "NOT_RECIPIENT":
+          return NextResponse.json(
+            {
+              error: "Este convite foi direcionado a outro usuário.",
+            },
+            { status: 403 },
+          );
+
         case "REVOKED":
           return NextResponse.json(
             { error: "Este convite foi revogado." },
@@ -147,7 +188,9 @@ export async function POST(
 
         case "LIMIT_REACHED":
           return NextResponse.json(
-            { error: "O convite atingiu o limite de utilizações." },
+            {
+              error: "O convite atingiu o limite de utilizações.",
+            },
             { status: 409 },
           );
 
@@ -165,7 +208,9 @@ export async function POST(
 
         case "UNAVAILABLE":
           return NextResponse.json(
-            { error: "Este convite não está mais disponível." },
+            {
+              error: "Este convite não está mais disponível.",
+            },
             { status: 409 },
           );
       }
@@ -182,7 +227,10 @@ export async function POST(
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2034") {
         return NextResponse.json(
-          { error: "O convite foi utilizado simultaneamente. Tente novamente." },
+          {
+            error:
+              "O convite foi utilizado simultaneamente. Tente novamente.",
+          },
           { status: 409 },
         );
       }

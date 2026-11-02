@@ -49,10 +49,12 @@ export async function POST(
           };
         }
 
-        if (group.status !== "ACTIVE") {
+        // Somente grupos encerrados impedem a saída.
+        // Grupos arquivados também permitem que participantes saiam.
+        if (group.status === "CLOSED") {
           return {
             status: 409,
-            body: { error: "Este grupo não está ativo." },
+            body: { error: "Este grupo já foi encerrado." },
           };
         }
 
@@ -86,6 +88,7 @@ export async function POST(
           ],
         });
 
+        // Se não restar ninguém, encerra o grupo.
         if (remainingMembers.length === 0) {
           await tx.group.update({
             where: { id: groupId },
@@ -118,7 +121,22 @@ export async function POST(
 
           await tx.group.update({
             where: { id: groupId },
-            data: { leaderId: newLeaderId },
+            data: {
+              leaderId: newLeaderId,
+            },
+          });
+
+          // Notifica o novo líder dentro da mesma transação.
+          await tx.notification.create({
+            data: {
+              userId: newLeaderId,
+              type: "BECAME_LEADER",
+              data: {
+                groupId: group.id,
+                groupName: group.name,
+                previousLeaderId: userId,
+              },
+            },
           });
         }
 
@@ -128,7 +146,7 @@ export async function POST(
             message: "Você saiu do grupo com sucesso.",
             data: {
               groupId,
-              status: "ACTIVE",
+              status: group.status,
               leaderId: newLeaderId,
               remainingMembers: remainingMembers.length,
             },
