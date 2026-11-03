@@ -32,7 +32,7 @@ export async function signUpAction(_prev: AuthFormState, formData: FormData): Pr
         return { ...handleAuthError("signUp", error), values };
     }
     // redirect() fica fora do try: ele funciona lançando uma exceção.
-    redirect(safeCallbackUrl(formData.get("callbackUrl")));
+  redirect(safeCallbackUrl(formData.get("callbackUrl")) ?? "/grupos");
 }
 
 export async function signInAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
