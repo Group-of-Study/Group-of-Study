@@ -1,8 +1,5 @@
-
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-
-import { auth } from "@/lib/auth";
+import { getSession, unauthorized } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
 type RouteContext = {
@@ -14,22 +11,16 @@ export async function POST(
   { params }: RouteContext,
 ) {
   try {
-  
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const session = await getSession();
+    const user = session?.user;
 
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Você precisa estar autenticado para entrar em um grupo." },
-        { status: 401 },
-      );
+    if (!user?.id) {
+      return unauthorized();
     }
 
-    const userId = session.user.id;
+    const userId = user.id;
     const { groupId } = await params;
 
-   
     if (!groupId || groupId.trim().length === 0) {
       return NextResponse.json(
         { error: "Identificador do grupo inválido." },
@@ -37,13 +28,13 @@ export async function POST(
       );
     }
 
-    
     const group = await prisma.group.findUnique({
       where: { id: groupId },
       select: {
         id: true,
         name: true,
         status: true,
+        visibility: true,
       },
     });
 
@@ -54,9 +45,12 @@ export async function POST(
       );
     }
 
+    // Apenas grupos ativos aceitam novos participantes.
     if (group.status !== "ACTIVE") {
       return NextResponse.json(
-        { error: "Não é possível entrar em um grupo que não está ativo." },
+        {
+          error: "Não é possível entrar em um grupo que não está ativo.",
+        },
         { status: 409 },
       );
     }
@@ -78,7 +72,16 @@ export async function POST(
       );
     }
 
-   
+    // Grupos privados só aceitam novos membros por convite.
+    if (group.visibility === "PRIVATE") {
+      return NextResponse.json(
+        {
+          error: "Este grupo é privado. Entre por meio de um convite válido.",
+        },
+        { status: 403 },
+      );
+    }
+
     const membership = await prisma.groupMember.create({
       data: {
         userId,
@@ -106,7 +109,6 @@ export async function POST(
       { status: 201 },
     );
   } catch (error) {
-  
     if (
       typeof error === "object" &&
       error !== null &&

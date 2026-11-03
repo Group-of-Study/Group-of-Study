@@ -49,10 +49,12 @@ export async function POST(
           };
         }
 
-        if (group.status !== "ACTIVE") {
+        // Somente grupos encerrados impedem a saída.
+        // Grupos arquivados também permitem que participantes saiam.
+        if (group.status === "CLOSED") {
           return {
             status: 409,
-            body: { error: "Este grupo não está ativo." },
+            body: { error: "Este grupo já foi encerrado." },
           };
         }
 
@@ -76,12 +78,17 @@ export async function POST(
           },
         });
 
+        // Busca os participantes restantes, do mais antigo ao mais recente.
         const remainingMembers = await tx.groupMember.findMany({
           where: { groupId },
           select: { userId: true },
-          orderBy: { joinedAt: "asc" },
+          orderBy: [
+            { joinedAt: "asc" },
+            { userId: "asc" },
+          ],
         });
 
+        // Se não restar ninguém, encerra o grupo.
         if (remainingMembers.length === 0) {
           await tx.group.update({
             where: { id: groupId },
@@ -108,16 +115,28 @@ export async function POST(
 
         let newLeaderId = group.leaderId;
 
+        // Se o líder sair, o participante mais antigo assume a liderança.
         if (group.leaderId === userId) {
-          const randomIndex = Math.floor(
-            Math.random() * remainingMembers.length,
-          );
-
-          newLeaderId = remainingMembers[randomIndex].userId;
+          newLeaderId = remainingMembers[0].userId;
 
           await tx.group.update({
             where: { id: groupId },
-            data: { leaderId: newLeaderId },
+            data: {
+              leaderId: newLeaderId,
+            },
+          });
+
+          // Notifica o novo líder dentro da mesma transação.
+          await tx.notification.create({
+            data: {
+              userId: newLeaderId,
+              type: "BECAME_LEADER",
+              data: {
+                groupId: group.id,
+                groupName: group.name,
+                previousLeaderId: userId,
+              },
+            },
           });
         }
 
@@ -127,7 +146,7 @@ export async function POST(
             message: "Você saiu do grupo com sucesso.",
             data: {
               groupId,
-              status: "ACTIVE",
+              status: group.status,
               leaderId: newLeaderId,
               remainingMembers: remainingMembers.length,
             },

@@ -10,6 +10,28 @@ datasource db {
   provider = "postgresql"
 }
 
+enum GroupStatus {
+  ACTIVE
+  ARCHIVED
+  CLOSED
+}
+
+enum GoalStatus {
+  PENDING
+  COMPLETED
+}
+
+enum GroupVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum NotificationType {
+  GROUP_REMOVED
+  BECAME_LEADER
+  GROUP_INVITE
+}
+
 model User {
   id            String    @id
   name          String
@@ -21,9 +43,14 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
-  createdGroups Group[]       @relation("GroupCreator")
-  ledGroups     Group[]       @relation("GroupLeader")
-  memberships   GroupMember[]
+  createdGroups   Group[]       @relation("GroupCreator")
+  ledGroups       Group[]       @relation("GroupLeader")
+  receivedInvites GroupInvite[] @relation("GroupInviteRecipient")
+
+  notifications  Notification[]
+  memberships    GroupMember[]
+  authoredGoals  Goal[]         @relation("GoalAuthor")
+  createdInvites GroupInvite[]  @relation("GroupInviteCreator")
 
   @@map("user")
 }
@@ -77,19 +104,22 @@ model Verification {
 }
 
 model Group {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   name        String
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  status      String   @default("ACTIVE")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  status      GroupStatus @default(ACTIVE)
 
-  creatorId String?
-  creator   User?   @relation("GroupCreator", fields: [creatorId], references: [id], onDelete: SetNull)
-  leaderId  String?
-  leader    User?   @relation("GroupLeader", fields: [leaderId], references: [id], onDelete: SetNull)
+  creatorId  String?
+  creator    User?           @relation("GroupCreator", fields: [creatorId], references: [id], onDelete: SetNull)
+  leaderId   String?
+  leader     User?           @relation("GroupLeader", fields: [leaderId], references: [id], onDelete: SetNull)
+  visibility GroupVisibility @default(PUBLIC)
 
+  invites GroupInvite[]
   members GroupMember[]
+  goals   Goal[]
 
   @@index([creatorId])
   @@index([leaderId])
@@ -109,4 +139,62 @@ model GroupMember {
   @@unique([userId, groupId])
   @@index([groupId])
   @@map("group_member")
+}
+
+model Goal {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  dueDate     DateTime?
+  status      GoalStatus @default(PENDING)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  groupId  String
+  authorId String?
+
+  group  Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  author User? @relation("GoalAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([groupId, status])
+  @@index([authorId])
+  @@map("study_goal")
+}
+
+model GroupInvite {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  expiresAt DateTime?
+  maxUses   Int?
+  uses      Int       @default(0)
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  groupId     String
+  createdById String?
+  recipientId String?
+
+  group     Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdBy User? @relation("GroupInviteCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  recipient User? @relation("GroupInviteRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
+
+  @@index([groupId, revokedAt])
+  @@index([createdById])
+  @@index([recipientId])
+  @@index([expiresAt])
+  @@map("group_invite")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  data      Json
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+  @@map("notification")
 }

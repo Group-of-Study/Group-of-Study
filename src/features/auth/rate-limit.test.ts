@@ -52,6 +52,16 @@ describe("checkAuthRateLimit", () => {
         await expect(checkAuthRateLimit("/sign-in/email")).resolves.toBeNull();
     });
 
+    it("troca de senha e troca de e-mail têm limites próprios (5 cada)", async () => {
+        fromIp("198.51.100.6");
+        for (let i = 0; i < 5; i++) {
+            await expect(checkAuthRateLimit("/change-password")).resolves.toBeNull();
+        }
+
+        await expect(checkAuthRateLimit("/change-password")).resolves.toHaveProperty("error");
+        await expect(checkAuthRateLimit("/change-email")).resolves.toBeNull();
+    });
+
     it("divide o contador com a API HTTP (mesma chave IP + rota)", async () => {
         fromIp("198.51.100.3");
         for (let i = 0; i < 5; i++) {
