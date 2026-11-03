@@ -26,6 +26,135 @@ const UpdateGroupSchema = z
     },
   );
 
+// GET: buscar detalhes do grupo e seus membros
+export async function GET(
+  _request: NextRequest,
+  { params }: RouteContext,
+) {
+  try {
+    const session = await getSession();
+    const user = session?.user;
+
+    if (!user?.id) {
+      return unauthorized();
+    }
+
+    const { groupId } = await params;
+
+    if (!groupId || groupId.trim().length === 0) {
+      return NextResponse.json(
+        { error: "Identificador do grupo inválido." },
+        { status: 400 },
+      );
+    }
+
+    const group = await prisma.group.findUnique({
+      where: {
+        id: groupId,
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        createdAt: true,
+        status: true,
+        visibility: true,
+        creatorId: true,
+        leaderId: true,
+
+        creator: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+
+        leader: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+
+        members: {
+          orderBy: {
+            joinedAt: "asc",
+          },
+          select: {
+            id: true,
+            userId: true,
+            joinedAt: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+
+        _count: {
+          select: {
+            members: true,
+          },
+        },
+      },
+    });
+
+    if (!group) {
+      return NextResponse.json(
+        { error: "Grupo não encontrado." },
+        { status: 404 },
+      );
+    }
+
+    const isMember = group.members.some(
+      (member) => member.userId === user.id,
+    );
+
+    const canAccessPrivateGroup =
+      isMember ||
+      group.creatorId === user.id ||
+      group.leaderId === user.id;
+
+    if (
+      group.visibility === "PRIVATE" &&
+      !canAccessPrivateGroup
+    ) {
+      return NextResponse.json(
+        { error: "Grupo não encontrado." },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({
+      data: {
+        id: group.id,
+        name: group.name,
+        description: group.description,
+        createdAt: group.createdAt,
+        status: group.status,
+        visibility: group.visibility,
+        creator: group.creator,
+        leader: group.leader,
+        members: group.members.map((member) => ({
+          id: member.id,
+          joinedAt: member.joinedAt,
+          user: member.user,
+        })),
+        _count: group._count,
+      },
+    });
+  } catch (error) {
+    console.error("[GET /api/groups/:groupId]", error);
+
+    return NextResponse.json(
+      { error: "Não foi possível carregar os detalhes do grupo." },
+      { status: 500 },
+    );
+  }
+}
+
 // PATCH: atualizar grupo (somente o líder)
 export async function PATCH(
   request: NextRequest,

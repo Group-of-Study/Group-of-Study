@@ -14,7 +14,7 @@ export default function LoadMoreButton({
     <div className="flex justify-center py-8">
       <Button
         variant="secondary"
-        size="lg"
+        size="ds-lg"
         onClick={onClick}
         disabled={loading}
       >
