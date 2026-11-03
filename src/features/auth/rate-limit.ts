@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { AUTH_RATE_LIMITS, isRateLimitEnabled, rateLimitStorage } from "@/lib/rate-limit";
 import { rateLimitedError, type AuthFormState } from "./errors";
 
-type LimitedPath = "/sign-in/email" | "/sign-up/email";
+type LimitedPath = "/sign-in/email" | "/sign-up/email" | "/change-password" | "/change-email";
 
 // Mesma chave do Better Auth para quando o IP não pode ser determinado.
 const NO_TRUSTED_IP_KEY = "no-trusted-ip";

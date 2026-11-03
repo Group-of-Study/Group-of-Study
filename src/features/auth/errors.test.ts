@@ -14,6 +14,8 @@ describe("handleAuthError", () => {
         ["INVALID_EMAIL", "Email inválido."],
         ["PASSWORD_TOO_SHORT", "A senha precisa ter pelo menos 8 caracteres."],
         ["PASSWORD_TOO_LONG", "A senha pode ter no máximo 128 caracteres."],
+        ["INVALID_PASSWORD", "Senha atual incorreta."],
+        ["CREDENTIAL_ACCOUNT_NOT_FOUND", "Sua conta não tem senha cadastrada."],
     ])("traduz o erro %s sem registrar no log", (code, message) => {
         const log = vi.spyOn(console, "error").mockImplementation(() => {});
         const error = new APIError("BAD_REQUEST", { code, message: code });
