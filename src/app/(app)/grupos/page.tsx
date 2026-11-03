@@ -134,7 +134,7 @@ export default function GroupsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-bg-canvas">
+    <div className="min-h-screen bg-bg-canvas">
       <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
         <header className="mb-8">
           <p className="mb-2 text-overline uppercase text-text-brand">
@@ -199,6 +199,6 @@ export default function GroupsPage() {
           </>
         )}
       </div>
-    </main>
+    </div>
   );
 }
