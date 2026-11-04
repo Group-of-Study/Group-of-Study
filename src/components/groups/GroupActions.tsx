@@ -10,7 +10,7 @@ import GroupConfirmationDialog from "./GroupConfirmationDialog";
 
 import type {
   GroupDetails,
-  GroupsErrorResponse,
+
 } from "@/types/group";
 
 type Props = {
