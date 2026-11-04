@@ -17,6 +17,7 @@ import {
 import GroupLeader from "./GroupLeader";
 import GroupMembers from "./GroupMembers";
 import GroupStatusAlert from "./GroupStatusAlert";
+import GroupActions from "./GroupActions";
 
 import type {
   GroupDetails,
@@ -184,6 +185,12 @@ export default function GroupDetailsPage({ groupId }: Props) {
     );
   }
 
+  const isMember = group.members.some(
+    (member) => member.user.id === group.currentUserId,
+  );
+
+  const isLeader = group.leader?.id === group.currentUserId;
+
   return (
     <div className="min-h-screen bg-bg-canvas">
       <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
@@ -213,6 +220,13 @@ export default function GroupDetailsPage({ groupId }: Props) {
         <div className="mb-6">
           <GroupStatusAlert status={group.status} />
         </div>
+
+        <GroupActions
+          group={group}
+          isMember={isMember}
+          isLeader={isLeader}
+          onUpdated={() => setRetryKey((current) => current + 1)}
+        />
 
         <section className="mb-6 rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6">
           <div className="grid gap-5 sm:grid-cols-3">
@@ -279,8 +293,14 @@ export default function GroupDetailsPage({ groupId }: Props) {
           <GroupLeader leader={group.leader} />
 
           <GroupMembers
+            groupId={group.id}
             members={group.members}
             leaderId={group.leader?.id ?? null}
+            currentUserId={group.currentUserId}
+            isLeader={isLeader}
+            onMemberRemoved={() =>
+              setRetryKey((current) => current + 1)
+            }
           />
         </div>
 
