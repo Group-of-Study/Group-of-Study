@@ -45,11 +45,11 @@ describe("redirectIfAuthenticated", () => {
         );
     });
 
-    it("manda para /dashboard quando não há callbackUrl ou ele é externo", async () => {
+    it("manda para /grupos quando não há callbackUrl ou ele é externo", async () => {
         getSession.mockResolvedValue({ user: { id: "user-1" } });
-        await expect(redirectIfAuthenticated(params())).rejects.toThrow("REDIRECT:/dashboard");
+        await expect(redirectIfAuthenticated(params())).rejects.toThrow("REDIRECT:/grupos");
         await expect(redirectIfAuthenticated(params({ callbackUrl: "//site-falso.com" }))).rejects.toThrow(
-            "REDIRECT:/dashboard",
+            "REDIRECT:/grupos",
         );
     });
 });

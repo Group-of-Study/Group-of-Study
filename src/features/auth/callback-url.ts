@@ -1,4 +1,4 @@
-export const DEFAULT_REDIRECT = "/dashboard";
+export const DEFAULT_REDIRECT = "/grupos";
 
 const INTERNAL_ORIGIN = "http://internal.invalid";
 

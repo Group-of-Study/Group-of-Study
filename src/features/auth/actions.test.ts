@@ -47,9 +47,9 @@ describe("signUpAction", () => {
         expect(signUpEmail).toHaveBeenCalledWith({ body: user, headers: expect.any(Headers) });
     });
 
-    it("ignora callbackUrl externo e vai para /dashboard", async () => {
+    it("ignora callbackUrl externo e vai para /grupos", async () => {
         await expect(signUpAction({}, form({ ...signUpForm, callbackUrl: "https://site-falso.com" }))).rejects.toThrow(
-            "REDIRECT:/dashboard",
+            "REDIRECT:/grupos",
         );
     });
 
@@ -96,20 +96,20 @@ describe("signInAction", () => {
     });
 
     it("repassa o 'Lembrar de mim' para o Better Auth", async () => {
-        await expect(signInAction({}, form({ ...credentials, rememberMe: "on" }))).rejects.toThrow("REDIRECT:/dashboard");
+        await expect(signInAction({}, form({ ...credentials, rememberMe: "on" }))).rejects.toThrow("REDIRECT:/grupos");
         expect(signInEmail).toHaveBeenCalledWith({
             body: { ...credentials, rememberMe: true },
             headers: expect.any(Headers),
         });
     });
 
-    it("vai para /dashboard quando não há callbackUrl", async () => {
-        await expect(signInAction({}, form(credentials))).rejects.toThrow("REDIRECT:/dashboard");
+    it("vai para /grupos quando não há callbackUrl", async () => {
+        await expect(signInAction({}, form(credentials))).rejects.toThrow("REDIRECT:/grupos");
     });
 
-    it("ignora callbackUrl externo e vai para /dashboard", async () => {
+    it("ignora callbackUrl externo e vai para /grupos", async () => {
         await expect(signInAction({}, form({ ...credentials, callbackUrl: "//site-falso.com" }))).rejects.toThrow(
-            "REDIRECT:/dashboard",
+            "REDIRECT:/grupos",
         );
     });
 

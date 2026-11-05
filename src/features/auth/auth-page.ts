@@ -14,7 +14,8 @@ export async function getCallbackUrl(searchParams: AuthSearchParams): Promise<st
 // A regra fica na página, e não no proxy, para não criar loop com cookie expirado.
 export async function redirectIfAuthenticated(searchParams: AuthSearchParams): Promise<void> {
     const session = await getSession();
+
     if (session) {
-        redirect(safeCallbackUrl(await getCallbackUrl(searchParams)));
+        redirect(safeCallbackUrl(await getCallbackUrl(searchParams)) ?? "/grupos");
     }
 }
