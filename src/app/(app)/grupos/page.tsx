@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 
 import Button from "@/components/ui/button";
+import Link from "next/link";
 import GroupEmptyState from "@/components/groups/GroupEmptyState";
 import GroupList from "@/components/groups/GroupList";
 import GroupListSkeleton from "@/components/groups/GroupListSkeleton";
@@ -136,19 +137,27 @@ export default function GroupsPage() {
   return (
     <div className="min-h-screen bg-bg-canvas">
       <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
-        <header className="mb-8">
-          <p className="mb-2 text-overline uppercase text-text-brand">
-            Comunidade
-          </p>
+     <header className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
+  <div>
+    <p className="mb-2 text-overline uppercase text-text-brand">
+      Comunidade
+    </p>
 
-          <h1 className="text-h1 text-text-primary">
-            Grupos de estudo
-          </h1>
+    <h1 className="text-h1 text-text-primary">
+      Grupos de estudo
+    </h1>
 
-          <p className="mt-2 text-body-md text-text-secondary">
-            Encontre grupos, compartilhe conhecimento e evolua junto.
-          </p>
-        </header>
+    <p className="mt-2 text-body-md text-text-secondary">
+      Encontre grupos, compartilhe conhecimento e evolua junto.
+    </p>
+  </div>
+
+  <Link href="/grupos/novo" className="shrink-0">
+    <Button>
+      Criar grupo
+    </Button>
+  </Link>
+</header>
 
         {loading && <GroupListSkeleton />}
 
