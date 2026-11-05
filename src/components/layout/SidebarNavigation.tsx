@@ -8,6 +8,7 @@ import {
   Target,
   Trophy,
   Swords,
+  UserRound,
 } from "lucide-react";
 
 const navigation = [
@@ -27,14 +28,19 @@ const navigation = [
     icon: Target,
   },
   {
+    label: "Desafios",
+    href: "/desafios",
+    icon: Swords,
+  },
+  {
     label: "Conquistas",
     href: "/conquistas",
     icon: Trophy,
   },
   {
-    label: "Desafios",
-    href: "/desafios",
-    icon: Swords,
+    label: "Perfil",
+    href: "/profile",
+    icon: UserRound,
   },
 ];
 
@@ -49,6 +55,7 @@ export function SidebarNavigation({ onNavigate }: Props) {
     <nav className="space-y-1">
       {navigation.map((item) => {
         const Icon = item.icon;
+
         const active =
           pathname === item.href ||
           pathname.startsWith(`${item.href}/`);

@@ -7,6 +7,8 @@ import { requireSession } from "@/lib/session";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileSidebar } from "@/components/layout/MobileSidebar";
 
+export const instant = false;
+
 type Props = {
   children: ReactNode;
 };
