@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -8,10 +7,7 @@ import { Crown, LogIn, LogOut, UserRoundCog } from "lucide-react";
 import Button from "@/components/ui/button";
 import GroupConfirmationDialog from "./GroupConfirmationDialog";
 
-import type {
-  GroupDetails,
-
-} from "@/types/group";
+import type { GroupDetails } from "@/types/group";
 
 type Props = {
   group: GroupDetails;
@@ -103,6 +99,9 @@ export default function GroupActions({
       const result = (await response.json()) as {
         error?: string;
         message?: string;
+        data?: {
+          status?: string;
+        };
       };
 
       if (!response.ok) {
@@ -113,13 +112,14 @@ export default function GroupActions({
 
       setPendingAction(null);
 
-      if (result.message?.includes("grupo foi encerrado")) {
+      if (result.data?.status === "CLOSED") {
         router.push("/grupos");
         router.refresh();
         return;
       }
 
-      onUpdated();
+      router.push("/grupos");
+      router.refresh();
     } catch (error) {
       setError(
         error instanceof Error
@@ -285,7 +285,7 @@ export default function GroupActions({
           </div>
         )}
 
-        {error && (
+        {error && !pendingAction && (
           <p
             role="alert"
             className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700"
@@ -310,6 +310,7 @@ export default function GroupActions({
         }
         loading={loading}
         danger={pendingAction?.type === "leave"}
+        error={error}
         onCancel={() => setPendingAction(null)}
         onConfirm={() => {
           if (pendingAction?.type === "leave") {
