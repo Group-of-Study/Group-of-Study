@@ -135,6 +135,7 @@ export async function GET(
         createdAt: group.createdAt,
         status: group.status,
         visibility: group.visibility,
+        currentUserId: user.id,
         creator: group.creator,
         leader: group.leader,
         members: group.members.map((member) => ({
