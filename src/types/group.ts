@@ -58,6 +58,7 @@ export type GroupDetails = {
   visibility: GroupVisibility;
   creator: GroupPerson | null;
   leader: GroupPerson | null;
+  currentUserId: string;
   members: GroupMemberDetails[];
   _count: {
     members: number;

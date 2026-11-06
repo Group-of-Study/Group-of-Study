@@ -14,6 +14,6 @@ export function proxy(request: NextRequest) {
 
 // Rotas privadas. Criou uma página privada nova? Adicione aqui.
 export const config = {
-   
+
     matcher: ["/dashboard/:path*", "/grupos/:path*", "/configuracoes/:path*"],
 };

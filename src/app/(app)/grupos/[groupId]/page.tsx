@@ -1,5 +1,5 @@
 
-import { Suspense, type ReactNode } from "react";
+import { Suspense } from "react";
 
 import GroupDetailsPage from "@/components/groups/GroupDetailsPage";
 
