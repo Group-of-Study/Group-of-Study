@@ -39,7 +39,7 @@ const navigation = [
   },
   {
     label: "Perfil",
-    href: "/profile",
+    href: "/perfil",
     icon: UserRound,
   },
 ];

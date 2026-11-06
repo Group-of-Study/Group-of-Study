@@ -51,7 +51,7 @@ export default function ProfileGroupCard({
       <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-body-sm text-text-secondary">
         <span className="inline-flex items-center gap-1.5">
           <Users size={15} />
-          {group.membersCount} membros
+         {group.membersCount} {group.membersCount === 1 ? "membro" : "membros"}
         </span>
 
         {group.leader && (
