@@ -13,7 +13,7 @@ export default function SectionHeader({
 }: SectionHeaderProps) {
   return (
     <div className={`flex flex-col items-center text-center gap-2 ${className}`}>
-      <span className="text-[11px] font-bold uppercase tracking-wider text-[#0969DA]">
+      <span className="text-[11px] font-bold uppercase tracking-wider text-[#03499E]">
         {badge}
       </span>
       <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-zinc-900">

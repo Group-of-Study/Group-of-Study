@@ -37,7 +37,7 @@ export function Sidebar({ groups, onNavigate }: Props) {
 
       <div className="flex-1 space-y-8 overflow-y-auto px-4 py-6">
         <section className="space-y-3">
-          <h2 className="px-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          <h2 className="px-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">
             Menu principal
           </h2>
 

@@ -18,7 +18,7 @@ export default function Footer() {
                 Group of Study
               </span>
             </Link>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-zinc-600">
               Aprender juntos. Evoluir juntos.
             </p>
           </div>
@@ -26,7 +26,7 @@ export default function Footer() {
           {/* Nav Columns */}
           <div className="grid grid-cols-2 gap-8 text-xs sm:grid-cols-3 md:gap-16">
             <div className="flex flex-col gap-2.5">
-              <span className="font-bold text-zinc-400 uppercase tracking-wider text-[10px]">
+              <span className="font-bold text-zinc-600 uppercase tracking-wider text-[10px]">
                 PRODUTO
               </span>
               <Link href="#recursos" className="text-zinc-600 hover:text-zinc-900">Recursos</Link>
@@ -35,7 +35,7 @@ export default function Footer() {
             </div>
 
             <div className="flex flex-col gap-2.5">
-              <span className="font-bold text-zinc-400 uppercase tracking-wider text-[10px]">
+              <span className="font-bold text-zinc-600 uppercase tracking-wider text-[10px]">
                 PROJETO
               </span>
               <Link href="#sobre" className="text-zinc-600 hover:text-zinc-900">Sobre</Link>
@@ -44,7 +44,7 @@ export default function Footer() {
             </div>
 
             <div className="flex flex-col gap-2.5">
-              <span className="font-bold text-zinc-400 uppercase tracking-wider text-[10px]">
+              <span className="font-bold text-zinc-600 uppercase tracking-wider text-[10px]">
                 CONTA
               </span>
               <Link href="/login" className="text-zinc-600 hover:text-zinc-900">Entrar</Link>
@@ -53,7 +53,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-zinc-100 pt-6 text-[11px] text-zinc-400 sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-zinc-100 pt-6 text-[11px] text-zinc-600 sm:flex-row">
           <p>© 2026 Group of Study — Seu progresso, nossa jornada.</p>
           <p>Feito por Matheus, Miguel, Gabriel, Eduardo e Talys</p>
         </div>

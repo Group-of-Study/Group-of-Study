@@ -16,7 +16,7 @@ export default function Badge({
 
   const variants = {
     success: "bg-emerald-100/80 text-emerald-700",
-    info: "bg-blue-50 text-[#0969DA] border border-blue-100",
+    info: "bg-blue-50 text-[#03499E] border border-blue-100",
     dark: "bg-zinc-900 text-white",
     outline: "bg-white text-zinc-600 border border-zinc-200",
   };

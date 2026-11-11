@@ -4,13 +4,13 @@ export default function Philosophy() {
       <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-5 sm:px-6 md:px-12 lg:grid-cols-2">
        
         <div className="flex flex-col items-start gap-6 text-left">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#0969DA]">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#60A5FA]">
             NOSSA FILOSOFIA
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.15]">
             A gamificação deve motivar, não pressionar.
           </h2>
-          <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-lg">
+          <p className="text-sm sm:text-base text-zinc-300 leading-relaxed max-w-lg">
             Cada pessoa tem seu ritmo, e todo progresso importa. Por isso o Group of Study tem:
           </p>
 
@@ -68,7 +68,7 @@ export default function Philosophy() {
             <div className="flex items-center justify-between">
               <div className="text-left">
                 <h4 className="text-sm font-bold text-zinc-900">Constância</h4>
-                <p className="text-[10px] text-zinc-400">88 dias com estudo nas últimas 19 semanas</p>
+                <p className="text-[10px] text-zinc-600">88 dias com estudo nas últimas 19 semanas</p>
               </div>
               <span className="rounded-md border border-zinc-200 px-2 py-1 text-[10px] font-medium text-zinc-500">
                 Últimos meses
@@ -100,7 +100,7 @@ export default function Philosophy() {
               ))}
             </div>
 
-            <div className="mt-4 flex items-center justify-between text-[10px] text-zinc-400">
+            <div className="mt-4 flex items-center justify-between text-[10px] text-zinc-600">
               <span>Sequência atual: 12 dias · Recorde: 21 dias</span>
               <div className="flex items-center gap-1">
                 <span>Menos</span>
@@ -115,29 +115,29 @@ export default function Philosophy() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col items-center justify-center rounded-2xl bg-white p-5 text-center shadow-xl">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#0969DA] text-[#0969DA]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#0969DA] text-[#03499E]">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
               <h5 className="mt-3 text-sm font-bold text-zinc-900">Sequência de 7</h5>
-              <p className="text-[10px] text-zinc-400">7 dias seguidos de estudo.</p>
-              <span className="mt-3 text-[10px] font-bold text-[#0969DA]">Desbloqueada em 28/09</span>
+              <p className="text-[10px] text-zinc-600">7 dias seguidos de estudo.</p>
+              <span className="mt-3 text-[10px] font-bold text-[#03499E]">Desbloqueada em 28/09</span>
             </div>
 
             <div className="flex flex-col items-center justify-center rounded-2xl bg-white p-5 text-center shadow-xl">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-zinc-300 text-zinc-400">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-zinc-300 text-zinc-600">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
               <h5 className="mt-3 text-sm font-bold text-zinc-900">Mentor</h5>
-              <p className="text-[10px] text-zinc-400">Ajude 10 colegas no mural.</p>
+              <p className="text-[10px] text-zinc-600">Ajude 10 colegas no mural.</p>
               <div className="mt-3 w-full px-2">
                 <div className="h-1.5 w-full rounded-full bg-zinc-100">
                   <div className="h-1.5 w-[30%] rounded-full bg-[#0969DA]"></div>
                 </div>
-                <span className="mt-1 block text-[9px] text-zinc-400">3 de 10</span>
+                <span className="mt-1 block text-[9px] text-zinc-600">3 de 10</span>
               </div>
             </div>
           </div>

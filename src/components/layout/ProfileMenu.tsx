@@ -40,8 +40,8 @@ export function ProfileMenu({ onNavigate }: Props) {
             onClick={onNavigate}
             className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
               active
-                ? "bg-blue-50 text-blue-700"
-                : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                ? "bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-200"
+                : "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
             }`}
           >
             <Icon size={19} />
@@ -53,7 +53,7 @@ export function ProfileMenu({ onNavigate }: Props) {
       <form action={signOutAction}>
         <button
           type="submit"
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/50"
         >
           <LogOut size={19} />
           Sair

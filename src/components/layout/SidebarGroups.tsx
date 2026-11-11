@@ -20,7 +20,7 @@ export function SidebarGroups({ groups, onNavigate }: Props) {
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between px-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-600">
           Seus grupos
         </h2>
 
@@ -28,7 +28,7 @@ export function SidebarGroups({ groups, onNavigate }: Props) {
           href="/grupos"
           onClick={onNavigate}
           aria-label="Ver grupos"
-          className="rounded p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+          className="rounded p-1 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-700"
         >
           <Plus size={16} />
         </Link>
@@ -60,7 +60,7 @@ export function SidebarGroups({ groups, onNavigate }: Props) {
           })}
         </div>
       ) : (
-        <p className="px-3 py-2 text-sm text-zinc-400">
+        <p className="px-3 py-2 text-sm text-zinc-600">
           Você ainda não participa de grupos.
         </p>
       )}

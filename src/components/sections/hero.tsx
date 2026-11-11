@@ -12,7 +12,7 @@ export default function Hero() {
 
                 <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-5xl lg:text-6xl leading-[1.15]">
                     Aprender juntos. <br />
-                    <span className="text-[#0969DA]">Evoluir juntos.</span>
+                    <span className="text-[#03499E]">Evoluir juntos.</span>
                 </h1>
 
                 <p className="max-w-lg text-sm sm:text-base leading-relaxed text-zinc-500">
@@ -25,7 +25,7 @@ export default function Hero() {
                     <Button
                         variant="primary"
                         size="md"
-                        className="w-full sm:w-auto justify-center px-5 py-3 text-sm font-semibold"
+                        className="w-full sm:w-auto justify-center px-5 py-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                         icon={
                             <svg
                                 className="h-4 w-4"
@@ -48,7 +48,7 @@ export default function Hero() {
                     <Button
                         variant="secondary"
                         size="md"
-                        className="w-full sm:w-auto justify-center px-5 py-3 text-sm font-semibold"
+                        className="w-full sm:w-auto justify-center px-5 py-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                     >
                         Já tenho conta
                     </Button>
@@ -56,23 +56,23 @@ export default function Hero() {
 
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-2">
                     <div className="flex -space-x-2">
-                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-[9px] font-bold text-[#0969DA] ring-2 ring-white">
+                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-[9px] font-bold text-[#03499E] ring-2 ring-white">
                             AN
                         </span>
                         <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-[9px] font-bold text-indigo-600 ring-2 ring-white">
                             GB
                         </span>
-                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[9px] font-bold text-emerald-600 ring-2 ring-white">
+                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[9px] font-bold text-emerald-800 ring-2 ring-white">
                             TS
                         </span>
-                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-[9px] font-bold text-amber-600 ring-2 ring-white">
+                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-[9px] font-bold text-amber-800 ring-2 ring-white">
                             ED
                         </span>
                         <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-[9px] font-bold text-zinc-600 ring-2 ring-white">
                             +4
                         </span>
                     </div>
-                    <span className="text-[11px] font-medium text-zinc-400">
+                    <span className="text-[11px] font-medium text-zinc-600">
                         Feito por estudantes, para estudantes.
                     </span>
                 </div>
@@ -88,7 +88,7 @@ export default function Hero() {
                             7
                         </div>
                         <div className="text-left">
-                            <span className="text-[9px] font-semibold uppercase tracking-wider text-zinc-400">
+                            <span className="text-[9px] font-semibold uppercase tracking-wider text-zinc-300">
                                 SEU NÍVEL
                             </span>
                             <h3 className="text-lg font-bold">Nível 7 · Explorador</h3>
@@ -96,7 +96,7 @@ export default function Hero() {
                     </div>
 
                     <div className="mt-4">
-                        <div className="mb-1.5 flex justify-between text-xs font-medium text-zinc-400">
+                        <div className="mb-1.5 flex justify-between text-xs font-medium text-zinc-300">
                             <span>1.240 / 1.500 XP</span>
                             <span>83%</span>
                         </div>
@@ -105,7 +105,7 @@ export default function Hero() {
                         </div>
                     </div>
 
-                    <p className="mt-3 text-[11px] text-zinc-400 text-left">
+                    <p className="mt-3 text-[11px] text-zinc-300 text-left">
                         Faltam 260 XP para o nível 8 · Mentor. Conclua 2 metas para chegar lá!
                     </p>
                 </div>
@@ -119,12 +119,13 @@ export default function Hero() {
                                 checked
                                 readOnly
                                 className="h-4 w-4 shrink-0 rounded bg-[#0969DA] accent-[#0969DA]"
+                                aria-label="Item concluído" 
                             />
                             <div className="text-left">
                                 <p className="text-xs font-medium text-zinc-500 line-through">
                                     Assistir aula 6 — Present Perfect
                                 </p>
-                                <div className="flex items-center gap-2 text-[10px] text-zinc-400 mt-0.5">
+                                <div className="flex items-center gap-2 text-[10px] text-zinc-600 mt-0.5">
                                     <span className="flex items-center gap-1">
                                         <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
                                         Inglês para TI
@@ -141,10 +142,10 @@ export default function Hero() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
                                 ✓ +15 XP
                             </span>
-                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[8px] font-bold text-[#0969DA]">
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[8px] font-bold text-[#03499E]">
                                 MA
                             </span>
                         </div>
@@ -156,12 +157,13 @@ export default function Hero() {
                                 type="checkbox"
                                 readOnly
                                 className="h-4 w-4 shrink-0 rounded border-zinc-300"
+                                aria-label="Item concluído"
                             />
                             <div className="text-left">
                                 <p className="text-xs font-bold text-zinc-800">
                                     Resolver a lista 4 de derivadas
                                 </p>
-                                <div className="flex items-center gap-2 text-[10px] text-zinc-400 mt-0.5">
+                                <div className="flex items-center gap-2 text-[10px] text-zinc-600 mt-0.5">
                                     <span className="flex items-center gap-1">
                                         <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
                                         Cálculo I — Turma B
@@ -178,10 +180,10 @@ export default function Hero() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-[#0969DA]">
+                            <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-[#03499E]">
                                 ⚡ +30 XP
                             </span>
-                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[8px] font-bold text-[#0969DA]">
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[8px] font-bold text-[#03499E]">
                                 MA
                             </span>
                         </div>
@@ -193,12 +195,12 @@ export default function Hero() {
                             <span className="flex h-5 w-5 items-center justify-center rounded border border-zinc-200 text-xs font-bold text-zinc-600">
                                 3
                             </span>
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-[9px] font-bold text-[#0969DA]">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-[9px] font-bold text-[#03499E]">
                                 MA
                             </span>
                             <div className="text-left">
                                 <p className="text-xs font-bold text-zinc-800">Você</p>
-                                <p className="text-[9px] text-zinc-400">Nível 7</p>
+                                <p className="text-[9px] text-zinc-600">Nível 7</p>
                             </div>
                         </div>
 
@@ -214,7 +216,7 @@ export default function Hero() {
                     </div>
                     <div className="text-left">
                         <p className="text-xs font-bold">+15 XP!</p>
-                        <p className="text-[9px] text-zinc-400">Sequência de 12 dias mantida</p>
+                        <p className="text-[9px] text-zinc-300">Sequência de 12 dias mantida</p>
                     </div>
                 </div>
 

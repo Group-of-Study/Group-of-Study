@@ -16,7 +16,8 @@ export default function CTA() {
           <Button
             variant="primary"
             size="md"
-            className="w-full sm:w-auto px-6 py-3.5 font-semibold justify-center text-sm shadow-md"
+            className="w-full sm:w-auto justify-center px-5 py-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+
             icon={
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -28,7 +29,7 @@ export default function CTA() {
 
           <button
             type="button"
-            className="w-full sm:w-auto text-sm font-bold text-zinc-900 hover:text-[#0969DA] transition-colors py-2 px-3"
+            className="w-full sm:w-auto text-sm font-bold text-zinc-900 hover:text-[#03499E] transition-colors py-2 px-3"
           >
             Ver como funciona
           </button>

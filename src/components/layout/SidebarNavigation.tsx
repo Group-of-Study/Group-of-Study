@@ -60,8 +60,8 @@ export function SidebarNavigation({ onNavigate }: Props) {
             onClick={onNavigate}
             className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
               active
-                ? "bg-blue-50 text-blue-700"
-                : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                ? "bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-200"
+                : "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
             }`}
           >
             <Icon size={19} />

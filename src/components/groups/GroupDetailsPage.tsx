@@ -133,7 +133,7 @@ export default function GroupDetailsPage({ groupId }: Props) {
     return (
       <div className="mx-auto max-w-7xl px-5 py-16 text-center sm:px-8">
         <AlertCircle
-          className="mx-auto mb-4 text-zinc-400"
+          className="mx-auto mb-4 text-zinc-600"
           size={40}
         />
 
