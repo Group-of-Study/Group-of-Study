@@ -54,6 +54,7 @@ model User {
   receivedInvites GroupInvite[] @relation("GroupInviteRecipient")
 
   notifications  Notification[]
+  studySessions  StudySession[] @relation("StudySessionCreator")
   memberships    GroupMember[]
   authoredGoals  Goal[]         @relation("GoalAuthor")
   createdInvites GroupInvite[]  @relation("GroupInviteCreator")
@@ -141,9 +142,10 @@ model Group {
   leader     User?           @relation("GroupLeader", fields: [leaderId], references: [id], onDelete: SetNull)
   visibility GroupVisibility @default(PUBLIC)
 
-  invites GroupInvite[]
-  members GroupMember[]
-  goals   Goal[]
+  invites       GroupInvite[]
+  members       GroupMember[]
+  goals         Goal[]
+  studySessions StudySession[]
 
   @@index([creatorId])
   @@index([leaderId])
@@ -183,6 +185,30 @@ model Goal {
   @@index([groupId, status])
   @@index([authorId])
   @@map("study_goal")
+}
+
+// Agenda do grupo (GOS-042): encontros de estudo marcados pelo líder.
+model StudySession {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startsAt    DateTime
+  endsAt      DateTime
+  // Onde: um lugar ("Biblioteca, sala 3"), um link (Meet, Discord...) ou os dois.
+  location    String?
+  link        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  groupId     String
+  createdById String?
+
+  group     Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdBy User? @relation("StudySessionCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([groupId, startsAt])
+  @@index([createdById])
+  @@map("study_session")
 }
 
 model GroupInvite {
