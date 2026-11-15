@@ -1,6 +1,7 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { leaveGroup } from "@/features/groups/leave";
+import { recordAuditLog } from "@/lib/audit-log";
 import { prisma } from "@/lib/prisma";
 
 // Exclusão de conta (GOS-036, LGPD). Em duas etapas:
@@ -21,7 +22,13 @@ export function anonymizedEmail(userId: string): string {
     return `excluida-${userId}@contas.invalid`;
 }
 
-export async function softDeleteAccount(userId: string, now: Date = new Date()): Promise<void> {
+export type SoftDeleteOptions = {
+    // IP de quem pediu a exclusão, para o audit log (GOS-037).
+    ipAddress: string | null;
+    now?: Date;
+};
+
+export async function softDeleteAccount(userId: string, { ipAddress, now = new Date() }: SoftDeleteOptions): Promise<void> {
     await prisma.$transaction(
         async (tx) => {
             // Um soft delete não dispara os onDelete do banco: sair dos grupos é feito
@@ -53,6 +60,15 @@ export async function softDeleteAccount(userId: string, now: Date = new Date()):
                     twoFactorEnabled: false,
                     deletedAt: now,
                 },
+            });
+
+            await recordAuditLog(tx, {
+                action: "ACCOUNT_DELETED",
+                actorId: userId,
+                targetType: "USER",
+                targetId: userId,
+                metadata: { groupsLeft: memberships.length },
+                ipAddress,
             });
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },

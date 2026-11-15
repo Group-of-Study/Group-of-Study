@@ -19,6 +19,9 @@ const {
     notification: {
       create: vi.fn(),
     },
+    auditLog: {
+      create: vi.fn(),
+    },
   },
 }));
 
@@ -36,6 +39,10 @@ vi.mock("@/lib/prisma", () => ({
     $transaction: transactionMock,
   },
 }));
+
+
+// O audit log (GOS-037) lê o IP com as opções do Better Auth.
+vi.mock("@/lib/auth", () => ({ auth: { options: {} } }));
 
 import { DELETE } from "./route";
 
@@ -154,6 +161,29 @@ describe("DELETE /api/groups/[groupId]/members/[userId]", () => {
 
     expect(response.status).toBe(403);
     expect(txMocks.groupMember.delete).not.toHaveBeenCalled();
+    expect(txMocks.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it("registra a remoção no audit log, com o IP de quem pediu (GOS-037)", async () => {
+    const response = await DELETE(
+      new Request("http://localhost", {
+        method: "DELETE",
+        headers: { "x-forwarded-for": "203.0.113.7" },
+      }),
+      createContext(),
+    );
+
+    expect(response.status).toBe(200);
+    expect(txMocks.auditLog.create).toHaveBeenCalledWith({
+      data: {
+        action: "GROUP_MEMBER_REMOVED",
+        actorId: leader.id,
+        targetType: "GROUP",
+        targetId: "group-1",
+        metadata: { removedUserId: "member-1" },
+        ipAddress: "203.0.113.7",
+      },
+    });
   });
 
   it("retorna 404 quando o grupo não existe", async () => {

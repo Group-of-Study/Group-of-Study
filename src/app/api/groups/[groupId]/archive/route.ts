@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { getSession, unauthorized } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { recordAuditLog, requestIp } from "@/lib/audit-log";
 
 type RouteContext = {
   params: Promise<{ groupId: string }>;
@@ -10,7 +11,7 @@ type RouteContext = {
 
 // POST: arquivar grupo (somente o líder)
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: RouteContext,
 ) {
   try {
@@ -60,20 +61,39 @@ export async function POST(
       );
     }
 
+    const ipAddress = requestIp(request.headers);
+
     // Arquiva somente se o usuário continuar sendo o líder
-    // e o grupo ainda estiver ativo.
-    const result = await prisma.group.updateMany({
-      where: {
-        id: groupId,
-        leaderId: user.id,
-        status: "ACTIVE",
-      },
-      data: {
-        status: "ARCHIVED",
-      },
+    // e o grupo ainda estiver ativo. O registro no audit log
+    // (GOS-037) entra na mesma transação.
+    const archived = await prisma.$transaction(async (tx) => {
+      const result = await tx.group.updateMany({
+        where: {
+          id: groupId,
+          leaderId: user.id,
+          status: "ACTIVE",
+        },
+        data: {
+          status: "ARCHIVED",
+        },
+      });
+
+      if (result.count === 0) {
+        return false;
+      }
+
+      await recordAuditLog(tx, {
+        action: "GROUP_ARCHIVED",
+        actorId: user.id,
+        targetType: "GROUP",
+        targetId: groupId,
+        ipAddress,
+      });
+
+      return true;
     });
 
-    if (result.count === 0) {
+    if (!archived) {
       return NextResponse.json(
         { error: "O grupo não está mais disponível para arquivamento." },
         { status: 409 },
