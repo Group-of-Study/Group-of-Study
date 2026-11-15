@@ -1,5 +1,6 @@
 import { APIError } from "better-auth/api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { DEFAULT_REDIRECT } from "./callback-url";
 
 const { signUpEmail, signInEmail, signOut, verifyTOTP, verifyBackupCode, checkAuthRateLimit } = vi.hoisted(() => ({
     signUpEmail: vi.fn(),
@@ -225,7 +226,7 @@ describe("login com verificação em duas etapas (GOS-034)", () => {
 
     it("código de recuperação usa o verifyBackupCode", async () => {
         await expect(verifyTwoFactorAction({}, form({ method: "backup", code: " AbCd1-23EfG " }))).rejects.toThrow(
-            "REDIRECT:/grupos",
+            `REDIRECT:${DEFAULT_REDIRECT}`,
         );
         expect(verifyBackupCode).toHaveBeenCalledWith({
             body: { code: "AbCd1-23EfG", trustDevice: false },
