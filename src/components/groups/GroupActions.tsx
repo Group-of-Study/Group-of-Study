@@ -72,6 +72,8 @@ export default function GroupActions({
       }
 
       onUpdated();
+      // O sidebar (Seus grupos) vem do layout no servidor: refresh para o grupo novo aparecer.
+      router.refresh();
     } catch (error) {
       setError(
         error instanceof Error
