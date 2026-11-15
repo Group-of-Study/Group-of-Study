@@ -5,3 +5,7 @@ import type { AuthFormState } from "@/features/auth/errors";
 export type AccountFormState = AuthFormState & {
     success?: string;
 };
+
+// Valor do botão "Encerrar todas as outras" (os outros botões mandam o id da sessão).
+// Fica aqui, e não em actions.ts, porque um arquivo "use server" só exporta funções async.
+export const REVOKE_OTHERS = "outras";

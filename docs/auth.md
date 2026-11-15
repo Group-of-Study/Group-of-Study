@@ -150,18 +150,22 @@ A página `/configuracoes` (Figma: App / 10 · Configurações e Mobile / 13 · 
 | `updateProfileAction` | troca o nome e recarrega a página (`refresh()`) | `updateUser` |
 | `changeEmailAction` | confere a senha atual e troca o e-mail | `verifyPassword` + `changeEmail` |
 | `changePasswordAction` | troca a senha; com "Desconectar dos outros dispositivos" marcado, encerra as outras sessões | `changePassword` (`revokeOtherSessions`) |
+| `revokeSessionAction` | encerra uma sessão (`target` = id da sessão) ou todas as outras (`target` = `REVOKE_OTHERS`) | `revokeSession` / `revokeOtherSessions` |
 
 | Arquivo | Papel |
 |---|---|
 | `src/app/(app)/configuracoes/page.tsx` | Página: título, menu das seções e os painéis dentro do `<Suspense>` |
 | `src/features/account/components/` | Painéis (`ProfileForm`, `AccountSecurityPanel`, `DangerZonePanel`), `SettingsNav` e partes reaproveitáveis (`SettingsPanel`, `SettingRow`, `ComingSoon`) |
+| `src/features/account/sessions.ts` | `listActiveSessions()`: sessões ativas do usuário, já prontas para a tela (dispositivo, IP, data), sem o token |
+| `src/features/account/user-agent.ts` | Transforma o user agent em "Chrome no macOS" (só para exibir, não serve para segurança) |
 | `src/features/account/schemas.ts` | Validação; nome, e-mail e senha usam os mesmos campos do cadastro (`src/features/auth/schemas.ts`) |
 
 - **Todas as actions começam com `requireSession()`**: sem sessão, redirecionam para o login antes de ler o formulário.
 - **Troca de e-mail sem confirmação:** ainda não há envio de e-mail, então `user.changeEmail.updateEmailWithoutVerification` está ligado em `src/lib/auth.ts` e o e-mail muda na hora. Para compensar, a action pede a senha atual. Quando a verificação de e-mail entrar (GOS-031/GOS-032), trocar para o fluxo com link de confirmação.
 - **E-mail já cadastrado:** o Better Auth responde sucesso sem trocar nada, para não revelar quem tem conta. Como o cadastro já avisa "Este email já está cadastrado", a action confere antes no banco e avisa também, em vez de mostrar um sucesso falso. Se um dia o cadastro deixar de revelar isso, esta checagem sai junto.
 - **Senha:** a nova precisa ser diferente da atual. "Desconectar dos outros dispositivos" vem marcado; a sessão atual continua (o Better Auth cria uma nova e troca o cookie).
-- **O que ainda não existe aparece como "Em breve"**: verificação em duas etapas (GOS-034), sessões ativas (GOS-035) e excluir conta (GOS-036). Gamificação, Notificações, Privacidade, foto e bio estão no Figma, mas ficam para quando as funcionalidades existirem (foto e bio: GOS-039).
+- **Sessões ativas (GOS-035):** a lista é lida direto do banco (`listActiveSessions`), não pelo `listSessions` do Better Auth, porque ele exige uma sessão "fresca" (login há menos de 24 h, o `freshAge` padrão) e daria erro para quem está logado há mais tempo. O token da sessão nunca vai para o navegador: o botão manda o id, e a action busca o token só entre as sessões do próprio usuário (trocar o id no HTML não encerra a sessão de outra pessoa). A sessão atual não tem botão de encerrar; para ela existe o "Sair". Rodando local, sem proxy, o IP fica "desconhecido".
+- **O que ainda não existe aparece como "Em breve"**: verificação em duas etapas (GOS-034) e excluir conta (GOS-036). Gamificação, Notificações, Privacidade, foto e bio estão no Figma, mas ficam para quando as funcionalidades existirem (foto e bio: GOS-039).
 - **Sem sidebar e topbar:** o `(app)` ainda não tem a moldura do app; a página mostra só a área de conteúdo do Figma.
 
 ## Testes
@@ -213,4 +217,4 @@ Os tokens do Figma (Foundations) ficam no `@theme` do `src/app/globals.css`, **c
 - "Esqueci minha senha": está no Figma, mas fica de fora até existir a recuperação de senha (precisa de envio de email).
 - Página de termos de uso (o checkbox do cadastro ainda não tem link).
 - Tema escuro: os tokens do escuro já existem no Figma; hoje só o claro está no `globals.css`.
-- Configurações: confirmação por e-mail na troca de e-mail (GOS-031/GOS-032), 2FA (GOS-034), sessões ativas (GOS-035), excluir conta (GOS-036), foto e bio (GOS-039).
+- Configurações: confirmação por e-mail na troca de e-mail (GOS-031/GOS-032), 2FA (GOS-034), excluir conta (GOS-036), foto e bio (GOS-039).
