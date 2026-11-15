@@ -30,6 +30,15 @@ const MESSAGES: Record<string, string> = {
     // Configurações da conta (senha atual errada, conta sem senha cadastrada).
     INVALID_PASSWORD: "Senha atual incorreta.",
     CREDENTIAL_ACCOUNT_NOT_FOUND: "Sua conta não tem senha cadastrada.",
+    // Verificação em duas etapas (GOS-034).
+    INVALID_CODE: "Código incorreto. Confira o app autenticador e tente de novo.",
+    INVALID_BACKUP_CODE: "Código de recuperação incorreto.",
+    INVALID_TWO_FACTOR_COOKIE: "A verificação expirou. Entre de novo com seu e-mail e senha.",
+    TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE: "Muitas tentativas. Entre de novo com seu e-mail e senha.",
+    ACCOUNT_TEMPORARILY_LOCKED: "Muitos códigos errados. Por segurança, espere alguns minutos e tente de novo.",
+    TOTP_ALREADY_ENABLED: "A verificação em duas etapas já está ativada.",
+    TOTP_NOT_ENABLED: "A verificação em duas etapas não está ativada.",
+    TWO_FACTOR_NOT_ENABLED: "A verificação em duas etapas não está ativada.",
 };
 
 // Erro conhecido do Better Auth vira mensagem amigável. Erro inesperado

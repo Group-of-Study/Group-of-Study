@@ -33,15 +33,18 @@ enum NotificationType {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  id               String      @id
+  name             String
+  email            String      @unique
+  emailVerified    Boolean     @default(false)
+  // 2FA (GOS-034): só vira true depois que a pessoa confirma o primeiro código.
+  twoFactorEnabled Boolean?    @default(false)
+  image            String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  sessions         Session[]
+  twoFactors       TwoFactor[]
+  accounts         Account[]
 
   createdGroups   Group[]       @relation("GroupCreator")
   ledGroups       Group[]       @relation("GroupLeader")
@@ -53,6 +56,24 @@ model User {
   createdInvites GroupInvite[]  @relation("GroupInviteCreator")
 
   @@map("user")
+}
+
+// Plugin twoFactor do Better Auth (GOS-034). secret e backupCodes ficam
+// criptografados pelo próprio Better Auth (com o BETTER_AUTH_SECRET).
+model TwoFactor {
+  id                      String    @id
+  secret                  String
+  backupCodes             String
+  // false enquanto a pessoa não confirmou o primeiro código do app.
+  verified                Boolean?  @default(true)
+  failedVerificationCount Int?      @default(0)
+  lockedUntil             DateTime?
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([secret])
+  @@index([userId])
+  @@map("two_factor")
 }
 
 model Session {

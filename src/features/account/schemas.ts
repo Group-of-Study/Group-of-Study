@@ -9,6 +9,19 @@ const checkbox = z
     .optional()
     .transform((value) => value === "on");
 
+// 2FA (GOS-034): ativar, desativar e gerar novos códigos pedem a senha atual.
+export const twoFactorPasswordSchema = z.object({
+    currentPassword,
+});
+
+// Confirmação da ativação: o primeiro código do app autenticador.
+export const twoFactorConfirmSchema = z.object({
+    code: z
+        .string()
+        .transform((code) => code.replace(/\s/g, ""))
+        .pipe(z.string().regex(/^\d{6}$/, "Digite os 6 números do app autenticador")),
+});
+
 export const updateProfileSchema = z.object({
     name: nameField,
 });
