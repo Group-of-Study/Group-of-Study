@@ -2,6 +2,7 @@ import "server-only";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { twoFactor } from "better-auth/plugins";
 import { accountRateLimitHook } from "@/lib/account-rate-limit";
 import { prisma } from "@/lib/prisma";
 import { AUTH_RATE_LIMITS, isRateLimitEnabled, rateLimitStorage } from "@/lib/rate-limit";
@@ -37,5 +38,11 @@ export const auth = betterAuth({
         // Limite de login por conta (email), além do limite por IP acima.
         before: accountRateLimitHook,
     },
-    plugins: [nextCookies()],
+    plugins: [
+        // 2FA por app autenticador (TOTP) e códigos de recuperação (GOS-034). Só fica
+        // ligado depois que a pessoa confirma o primeiro código (verifyTOTP).
+        // O nextCookies() precisa ser o último: ele grava os cookies dos outros plugins.
+        twoFactor({ issuer: "Group of Study" }),
+        nextCookies(),
+    ],
 });

@@ -8,6 +8,10 @@ const {
     changePassword,
     revokeSession,
     revokeOtherSessions,
+    enableTwoFactor,
+    verifyTOTP,
+    disableTwoFactor,
+    generateBackupCodes,
     checkAuthRateLimit,
     findUnique,
     findFirstSession,
@@ -20,6 +24,10 @@ const {
     changePassword: vi.fn(),
     revokeSession: vi.fn(),
     revokeOtherSessions: vi.fn(),
+    enableTwoFactor: vi.fn(),
+    verifyTOTP: vi.fn(),
+    disableTwoFactor: vi.fn(),
+    generateBackupCodes: vi.fn(),
     checkAuthRateLimit: vi.fn(),
     findUnique: vi.fn(),
     findFirstSession: vi.fn(),
@@ -30,7 +38,20 @@ const {
 }));
 
 vi.mock("@/lib/auth", () => ({
-    auth: { api: { updateUser, verifyPassword, changeEmail, changePassword, revokeSession, revokeOtherSessions } },
+    auth: {
+        api: {
+            updateUser,
+            verifyPassword,
+            changeEmail,
+            changePassword,
+            revokeSession,
+            revokeOtherSessions,
+            enableTwoFactor,
+            verifyTOTP,
+            disableTwoFactor,
+            generateBackupCodes,
+        },
+    },
 }));
 vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique }, session: { findFirst: findFirstSession } } }));
 vi.mock("@/features/auth/rate-limit", () => ({ checkAuthRateLimit }));
@@ -46,7 +67,16 @@ vi.mock("@/lib/session", () => ({
     },
 }));
 
-import { changeEmailAction, changePasswordAction, revokeSessionAction, updateProfileAction } from "./actions";
+import {
+    changeEmailAction,
+    changePasswordAction,
+    confirmTwoFactorAction,
+    disableTwoFactorAction,
+    enableTwoFactorAction,
+    regenerateBackupCodesAction,
+    revokeSessionAction,
+    updateProfileAction,
+} from "./actions";
 import { REVOKE_OTHERS } from "./form-state";
 
 function form(data: Record<string, string>): FormData {
@@ -72,6 +102,14 @@ beforeEach(() => {
     revokeSession.mockResolvedValue({ status: true });
     revokeOtherSessions.mockResolvedValue({ status: true });
     findFirstSession.mockResolvedValue({ token: "token-da-outra" });
+    enableTwoFactor.mockResolvedValue({
+        method: "totp",
+        totpURI: "otpauth://totp/Group%20of%20Study:miguel%40exemplo.com?secret=JBSWY3DPEHPK3PXP&issuer=Group%20of%20Study",
+        backupCodes: ["AbCd1-23EfG", "HiJk4-56LmN"],
+    });
+    verifyTOTP.mockResolvedValue({ token: "nova", user: {} });
+    disableTwoFactor.mockResolvedValue({ status: true });
+    generateBackupCodes.mockResolvedValue({ status: true, backupCodes: ["Novo1-Cod1g", "Novo2-Cod2g"] });
     checkAuthRateLimit.mockResolvedValue(null);
     findUnique.mockResolvedValue(null);
     vi.spyOn(console, "error").mockImplementation(() => {});
@@ -83,6 +121,10 @@ describe("sem sessão", () => {
         ["changeEmailAction", changeEmailAction],
         ["changePasswordAction", changePasswordAction],
         ["revokeSessionAction", revokeSessionAction],
+        ["enableTwoFactorAction", enableTwoFactorAction],
+        ["confirmTwoFactorAction", confirmTwoFactorAction],
+        ["disableTwoFactorAction", disableTwoFactorAction],
+        ["regenerateBackupCodesAction", regenerateBackupCodesAction],
     ])("%s redireciona para o login sem chamar o Better Auth", async (_name, action) => {
         session.current = null;
         await expect(action({}, form({}))).rejects.toThrow("REDIRECT:/login");
@@ -91,6 +133,10 @@ describe("sem sessão", () => {
         expect(changePassword).not.toHaveBeenCalled();
         expect(revokeSession).not.toHaveBeenCalled();
         expect(revokeOtherSessions).not.toHaveBeenCalled();
+        expect(enableTwoFactor).not.toHaveBeenCalled();
+        expect(verifyTOTP).not.toHaveBeenCalled();
+        expect(disableTwoFactor).not.toHaveBeenCalled();
+        expect(generateBackupCodes).not.toHaveBeenCalled();
     });
 });
 
@@ -299,5 +345,77 @@ describe("revokeSessionAction", () => {
 
         expect(refresh).not.toHaveBeenCalled();
         expect(state).toEqual({ error: "Algo deu errado. Tente novamente." });
+    });
+});
+
+describe("verificação em duas etapas (GOS-034)", () => {
+    it("ativar confere a senha e devolve QR code, chave e códigos", async () => {
+        const state = await enableTwoFactorAction({}, form({ currentPassword: "senha-atual" }));
+
+        expect(checkAuthRateLimit).toHaveBeenCalledWith("/two-factor/enable");
+        expect(enableTwoFactor).toHaveBeenCalledWith({
+            body: { password: "senha-atual", method: "totp" },
+            headers: expect.any(Headers),
+        });
+        expect(state.setup?.qrCode).toMatch(/^data:image\/png;base64,/);
+        expect(state.setup?.secret).toBe("JBSWY3DPEHPK3PXP");
+        expect(state.setup?.backupCodes).toEqual(["AbCd1-23EfG", "HiJk4-56LmN"]);
+    });
+
+    it("ativar sem senha não chama o Better Auth", async () => {
+        // O formulário sempre envia o campo; vazio quando a pessoa não digita nada.
+        const state = await enableTwoFactorAction({}, form({ currentPassword: "" }));
+
+        expect(state.fieldErrors?.currentPassword).toEqual(["Informe a senha atual"]);
+        expect(enableTwoFactor).not.toHaveBeenCalled();
+    });
+
+    it("ativar com senha errada mostra a mensagem em português", async () => {
+        enableTwoFactor.mockRejectedValue(invalidPassword());
+
+        const state = await enableTwoFactorAction({}, form({ currentPassword: "errada" }));
+
+        expect(state).toEqual({ error: "Senha atual incorreta." });
+    });
+
+    it("confirmar com o código do app ativa, sem recarregar a página antes de mostrar os códigos", async () => {
+        const state = await confirmTwoFactorAction({}, form({ code: "123 456" }));
+
+        expect(verifyTOTP).toHaveBeenCalledWith({ body: { code: "123456" }, headers: expect.any(Headers) });
+        expect(refresh).not.toHaveBeenCalled();
+        expect(state).toEqual({ success: "Verificação em duas etapas ativada." });
+    });
+
+    it("confirmar com código errado não ativa", async () => {
+        verifyTOTP.mockRejectedValue(new APIError("UNAUTHORIZED", { code: "INVALID_CODE", message: "Invalid code" }));
+
+        const state = await confirmTwoFactorAction({}, form({ code: "000000" }));
+
+        expect(state.error).toBe("Código incorreto. Confira o app autenticador e tente de novo.");
+    });
+
+    it("desativar confere a senha e recarrega a página", async () => {
+        const state = await disableTwoFactorAction({}, form({ currentPassword: "senha-atual" }));
+
+        expect(checkAuthRateLimit).toHaveBeenCalledWith("/two-factor/disable");
+        expect(disableTwoFactor).toHaveBeenCalledWith({ body: { password: "senha-atual" }, headers: expect.any(Headers) });
+        expect(refresh).toHaveBeenCalled();
+        expect(state).toEqual({ success: "Verificação em duas etapas desativada." });
+    });
+
+    it("gerar novos códigos devolve os códigos novos", async () => {
+        const state = await regenerateBackupCodesAction({}, form({ currentPassword: "senha-atual" }));
+
+        expect(checkAuthRateLimit).toHaveBeenCalledWith("/two-factor/generate-backup-codes");
+        expect(state.backupCodes).toEqual(["Novo1-Cod1g", "Novo2-Cod2g"]);
+    });
+
+    it("rate limit bloqueia antes de conferir a senha", async () => {
+        checkAuthRateLimit.mockResolvedValue({ error: "Muitas tentativas. Tente novamente em 1 minuto." });
+
+        const state = await disableTwoFactorAction({}, form({ currentPassword: "senha-atual" }));
+
+        expect(disableTwoFactor).not.toHaveBeenCalled();
+        expect(state.error).toMatch(/Muitas tentativas/);
     });
 });
