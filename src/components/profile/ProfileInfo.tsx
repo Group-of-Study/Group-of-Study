@@ -11,8 +11,11 @@ type ProfileInfoProps = {
   createdAt: Date;
 };
 
+// Formatado no servidor: sem timeZone, usaria o fuso do servidor (UTC no Docker)
+// e a data poderia sair um dia adiantada.
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
     day: "2-digit",
     month: "long",
     year: "numeric",
