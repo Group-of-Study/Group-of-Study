@@ -649,7 +649,7 @@ export default function GroupDetailsPage({ groupId }: Props) {
         )}
       </div>
 
-      <GroupGoalDialogs controller={goals} />
+      <GroupGoalDialogs controller={goals} groupId={group.id} />
     </div>
   );
 }

@@ -3,12 +3,12 @@
 import { ChevronRight, Plus, RefreshCw, Target } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { GroupDetails } from "@/types/group";
 import { sortGoals, weekGoals } from "../dates";
 import type { Goal } from "../types";
 import type { GroupGoalsController } from "../use-group-goals";
+import { GoalDeleteDialog } from "./goal-delete-dialog";
 import { GoalFormDialog } from "./goal-form-dialog";
 import { GoalItem } from "./goal-item";
 
@@ -228,28 +228,13 @@ export function GroupWeekGoals({ controller, group, isMember, isLeader, onSeeAll
 }
 
 // Modais de criar/editar e de confirmar a exclusão (uma vez por página).
-export function GroupGoalDialogs({ controller }: { controller: GroupGoalsController }) {
+export function GroupGoalDialogs({ controller, groupId }: { controller: GroupGoalsController; groupId: string }) {
     const { form, removal } = controller;
 
     return (
         <>
-            <GoalFormDialog open={form.open} goal={form.editing} onClose={form.close} onSubmit={(input) => form.submit(input)} />
-            <Dialog
-                open={removal.goal !== null}
-                busy={removal.busy}
-                onClose={removal.cancel}
-                title="Excluir meta?"
-                description={removal.goal ? `"${removal.goal.title}" some para todo o grupo. Isso não pode ser desfeito.` : undefined}
-            >
-                <div className="flex justify-end gap-2">
-                    <Button variant="ds-secondary" size="ds-md" onClick={removal.cancel} disabled={removal.busy}>
-                        Cancelar
-                    </Button>
-                    <Button variant="danger" size="ds-md" onClick={removal.confirm} disabled={removal.busy}>
-                        {removal.busy ? "Excluindo..." : "Excluir meta"}
-                    </Button>
-                </div>
-            </Dialog>
+            <GoalFormDialog open={form.open} goal={form.editing} onClose={form.close} onSubmit={(input) => form.submit(input, groupId)} />
+            <GoalDeleteDialog removal={removal} />
         </>
     );
 }

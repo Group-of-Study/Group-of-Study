@@ -19,3 +19,17 @@ export const GOAL_SELECT = {
         },
     },
 } satisfies Prisma.GoalSelect;
+
+// Página /metas: a meta mais o grupo dela (nome para a tela; status e líder para saber
+// se dá para concluir, editar e excluir).
+export const GOAL_WITH_GROUP_SELECT = {
+    ...GOAL_SELECT,
+    group: {
+        select: {
+            id: true,
+            name: true,
+            status: true,
+            leaderId: true,
+        },
+    },
+} satisfies Prisma.GoalSelect;

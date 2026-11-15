@@ -21,3 +21,13 @@ export type GoalInput = {
     description: string | null;
     dueDate: string | null;
 };
+
+// Página /metas: cada meta vem com o grupo dela (GOAL_WITH_GROUP_SELECT na API).
+export type GoalGroup = {
+    id: string;
+    name: string;
+    status: "ACTIVE" | "ARCHIVED" | "CLOSED";
+    leaderId: string | null;
+};
+
+export type GoalWithGroup = Goal & { group: GoalGroup };

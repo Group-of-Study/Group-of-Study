@@ -1,5 +1,5 @@
 import { type ApiResult, fetchApi } from "@/lib/api-client";
-import type { Goal, GoalInput } from "./types";
+import type { Goal, GoalInput, GoalWithGroup } from "./types";
 
 // Chamadas às rotas de metas (src/app/api/groups/[groupId]/goals) a partir dos Client
 // Components. Como o fetchApi, nunca lançam erro: devolvem { ok, data } ou { ok, error }.
@@ -11,6 +11,11 @@ function goalsUrl(groupId: string, goalId?: string): string {
 
 export function listGroupGoals(groupId: string, signal?: AbortSignal): Promise<ApiResult<Goal[]>> {
     return fetchApi<Goal[]>(goalsUrl(groupId), { signal, cache: "no-store" });
+}
+
+// Todas as metas dos meus grupos (página /metas): pendentes e concluídas dos últimos 30 dias.
+export function listMyGoals(signal?: AbortSignal): Promise<ApiResult<GoalWithGroup[]>> {
+    return fetchApi<GoalWithGroup[]>("/api/goals", { signal, cache: "no-store" });
 }
 
 export function createGoal(groupId: string, input: GoalInput): Promise<ApiResult<Goal>> {

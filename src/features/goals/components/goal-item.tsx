@@ -6,8 +6,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { formatDueLabel, isOverdue } from "../dates";
 import type { Goal } from "../types";
 
-type GoalItemProps = {
-    goal: Goal;
+type GoalItemProps<T extends Goal> = {
+    goal: T;
     now: Date;
     // Primeiro item da linha de detalhes: "Grupo X" na página /metas, "Responsável: Ana" no grupo.
     context: string;
@@ -16,13 +16,23 @@ type GoalItemProps = {
     // Editar/excluir (autor ou líder).
     canEdit: boolean;
     busy?: boolean;
-    onToggle: (goal: Goal) => void;
-    onEdit: (goal: Goal) => void;
-    onDelete: (goal: Goal) => void;
+    onToggle: (goal: T) => void;
+    onEdit: (goal: T) => void;
+    onDelete: (goal: T) => void;
 };
 
 // Figma: linha de meta (Metas e Grupo — Visão geral).
-export function GoalItem({ goal, now, context, canToggle, canEdit, busy = false, onToggle, onEdit, onDelete }: GoalItemProps) {
+export function GoalItem<T extends Goal>({
+    goal,
+    now,
+    context,
+    canToggle,
+    canEdit,
+    busy = false,
+    onToggle,
+    onEdit,
+    onDelete,
+}: GoalItemProps<T>) {
     const done = goal.status === "COMPLETED";
     const late = isOverdue(goal, now);
     const authorName = goal.author?.name ?? "Conta excluída";

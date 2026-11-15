@@ -9,13 +9,18 @@ vi.hoisted(() => {
 import {
     combineDueDate,
     formatDay,
+    formatDayHeading,
     formatDueLabel,
+    goalViews,
+    groupByDueDay,
     isOverdue,
     sortGoals,
     toDateInputValue,
     toTimeInputValue,
+    undatedGoals,
     weekGoals,
     weekRange,
+    weekRhythm,
 } from "./dates";
 import type { Goal } from "./types";
 
@@ -147,5 +152,53 @@ describe("campos de data e hora", () => {
         // Fim do dia aparece como "sem horário".
         expect(toTimeInputValue("2026-10-25T02:59:00.000Z")).toBe("");
         expect(toDateInputValue(null)).toBe("");
+    });
+});
+
+describe("página /metas", () => {
+    const goals = [
+        goal({ id: "late", dueDate: at(20, 18, 0) }),
+        goal({ id: "today-late", dueDate: at(21, 9, 0) }),
+        goal({ id: "today", dueDate: at(21, 19, 0) }),
+        goal({ id: "today-done", dueDate: at(21, 8, 0), status: "COMPLETED", completedAt: at(21, 7, 0) }),
+        goal({ id: "friday", dueDate: at(23, 19, 0) }),
+        goal({ id: "last-week", dueDate: at(16, 19, 0) }),
+        goal({ id: "next-week", dueDate: at(27, 19, 0) }),
+        goal({ id: "undated" }),
+        goal({ id: "done-monday", dueDate: at(30), status: "COMPLETED", completedAt: at(19, 10, 0) }),
+    ];
+    const ids = (list: Goal[]) => list.map((g) => g.id);
+
+    it("Esta semana: prazo de segunda a domingo, por ordem de prazo", () => {
+        expect(ids(goalViews.week(goals, NOW))).toEqual(["late", "today-done", "today-late", "today", "friday"]);
+    });
+
+    it("Hoje: prazo hoje, pendente ou concluída", () => {
+        expect(ids(goalViews.today(goals, NOW))).toEqual(["today-done", "today-late", "today"]);
+    });
+
+    it("Atrasadas: pendentes com prazo vencido, de qualquer semana", () => {
+        expect(ids(goalViews.overdue(goals, NOW))).toEqual(["last-week", "late", "today-late"]);
+    });
+
+    it("Concluídas: a mais recente primeiro", () => {
+        expect(ids(goalViews.completed(goals))).toEqual(["today-done", "done-monday"]);
+    });
+
+    it("sem prazo fica à parte", () => {
+        expect(ids(undatedGoals(goals))).toEqual(["undated"]);
+    });
+
+    it("agrupa por dia do prazo", () => {
+        const days = groupByDueDay(goalViews.week(goals, NOW));
+        expect(days.map((d) => [formatDayHeading(d.day, NOW), ids(d.goals)])).toEqual([
+            ["Ontem · ter, 20/10", ["late"]],
+            ["Hoje · qua, 21/10", ["today-done", "today-late", "today"]],
+            ["Sexta · 23/10", ["friday"]],
+        ]);
+    });
+
+    it("ritmo da semana: feitas/total das metas da semana e conclusões por dia (seg a dom)", () => {
+        expect(weekRhythm(goals, NOW)).toEqual({ done: 1, total: 5, perDay: [1, 0, 1, 0, 0, 0, 0] });
     });
 });
