@@ -44,18 +44,18 @@ export default function GroupConfirmationDialog({
         aria-modal="true"
         aria-labelledby="group-confirmation-title"
         aria-describedby="group-confirmation-description"
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        className="w-full max-w-md rounded-2xl border border-border-default bg-bg-surface p-6 shadow-xl"
       >
         <h2
           id="group-confirmation-title"
-          className="text-lg font-semibold text-zinc-900"
+          className="text-lg font-semibold text-text-primary"
         >
           {title}
         </h2>
 
         <p
           id="group-confirmation-description"
-          className="mt-3 text-sm leading-6 text-zinc-600"
+          className="mt-3 text-sm leading-6 text-text-secondary"
         >
           {message}
         </p>
@@ -63,7 +63,7 @@ export default function GroupConfirmationDialog({
         {error && (
           <p
             role="alert"
-            className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700"
+            className="mt-4 rounded-lg bg-bg-danger-subtle p-3 text-sm text-text-danger"
           >
             {error}
           </p>

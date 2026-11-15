@@ -67,8 +67,8 @@ export function SidebarNavigation({ onNavigate }: Props) {
             onClick={onNavigate}
             className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
               active
-                ? "bg-blue-50 text-blue-700"
-                : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                ? "bg-bg-brand-subtle text-text-brand"
+                : "text-text-secondary hover:bg-bg-subtle hover:text-text-primary"
             }`}
           >
             <Icon size={19} />
