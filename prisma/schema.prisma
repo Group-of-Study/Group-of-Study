@@ -33,15 +33,18 @@ enum NotificationType {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  id               String    @id
+  name             String
+  email            String    @unique
+  emailVerified    Boolean   @default(false)
+  image            String?
+  // Onboarding "Primeiros passos" (GOS-040): quando a pessoa pulou ou concluiu.
+  // Preenchido, o checklist do Início não aparece mais, em nenhum aparelho.
+  onboardingDoneAt DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  sessions         Session[]
+  accounts         Account[]
 
   createdGroups   Group[]       @relation("GroupCreator")
   ledGroups       Group[]       @relation("GroupLeader")

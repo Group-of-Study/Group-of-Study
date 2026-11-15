@@ -1,5 +1,6 @@
 import { APIError } from "better-auth/api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { DEFAULT_REDIRECT } from "./callback-url";
 
 const { signUpEmail, signInEmail, signOut, checkAuthRateLimit } = vi.hoisted(() => ({
     signUpEmail: vi.fn(),
@@ -47,9 +48,9 @@ describe("signUpAction", () => {
         expect(signUpEmail).toHaveBeenCalledWith({ body: user, headers: expect.any(Headers) });
     });
 
-    it("ignora callbackUrl externo e vai para /grupos", async () => {
+    it("ignora callbackUrl externo e vai para o Início", async () => {
         await expect(signUpAction({}, form({ ...signUpForm, callbackUrl: "https://site-falso.com" }))).rejects.toThrow(
-            "REDIRECT:/grupos",
+            `REDIRECT:${DEFAULT_REDIRECT}`,
         );
     });
 
@@ -96,20 +97,20 @@ describe("signInAction", () => {
     });
 
     it("repassa o 'Lembrar de mim' para o Better Auth", async () => {
-        await expect(signInAction({}, form({ ...credentials, rememberMe: "on" }))).rejects.toThrow("REDIRECT:/grupos");
+        await expect(signInAction({}, form({ ...credentials, rememberMe: "on" }))).rejects.toThrow(`REDIRECT:${DEFAULT_REDIRECT}`);
         expect(signInEmail).toHaveBeenCalledWith({
             body: { ...credentials, rememberMe: true },
             headers: expect.any(Headers),
         });
     });
 
-    it("vai para /grupos quando não há callbackUrl", async () => {
-        await expect(signInAction({}, form(credentials))).rejects.toThrow("REDIRECT:/grupos");
+    it("vai para o Início quando não há callbackUrl", async () => {
+        await expect(signInAction({}, form(credentials))).rejects.toThrow(`REDIRECT:${DEFAULT_REDIRECT}`);
     });
 
-    it("ignora callbackUrl externo e vai para /grupos", async () => {
+    it("ignora callbackUrl externo e vai para o Início", async () => {
         await expect(signInAction({}, form({ ...credentials, callbackUrl: "//site-falso.com" }))).rejects.toThrow(
-            "REDIRECT:/grupos",
+            `REDIRECT:${DEFAULT_REDIRECT}`,
         );
     });
 
