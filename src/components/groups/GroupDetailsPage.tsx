@@ -28,6 +28,14 @@ import GroupMembers from "./GroupMembers";
 import GroupStatusAlert from "./GroupStatusAlert";
 import GroupActions from "./GroupActions";
 
+import {
+  goalCounts,
+  GroupGoalDialogs,
+  GroupGoalsTab,
+  GroupWeekGoals,
+} from "@/features/goals/components/group-goals";
+import { useGroupGoals } from "@/features/goals/use-group-goals";
+
 import type {
   GroupDetails,
   GroupDetailsResponse,
@@ -115,6 +123,9 @@ export default function GroupDetailsPage({ groupId }: Props) {
   const [notFound, setNotFound] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  // Metas do grupo: recarregam junto com o grupo (entrar, sair, remover alguém).
+  const goals = useGroupGoals(groupId, retryKey);
+  const counts = goalCounts(goals);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -347,6 +358,11 @@ export default function GroupDetailsPage({ groupId }: Props) {
                 >
                   <Icon size={17} />
                   {tab.label}
+                  {tab.id === "goals" && counts && (
+                    <span className="rounded-full bg-bg-muted px-2 py-0.5 text-caption text-text-secondary">
+                      {counts.total}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -379,11 +395,13 @@ export default function GroupDetailsPage({ groupId }: Props) {
                       <p className="text-sm text-text-secondary">Metas</p>
 
                       <p className="mt-1 text-2xl font-bold text-text-primary">
-                        —
+                        {counts ? counts.total : "—"}
                       </p>
 
                       <p className="mt-1 text-xs text-text-tertiary">
-                        Metas cadastradas
+                        {counts
+                          ? `${counts.completed} ${counts.completed === 1 ? "concluída" : "concluídas"}`
+                          : "Metas cadastradas"}
                       </p>
                     </div>
 
@@ -421,28 +439,14 @@ export default function GroupDetailsPage({ groupId }: Props) {
                   </div>
                 </section>
 
-                {/* Metas */}
-                <section className="rounded-2xl border border-border-default bg-bg-surface p-5 sm:p-6">
-                  <div className="mb-5 flex items-center justify-between">
-                    <div>
-                      <h2 className="text-base font-bold text-text-primary">
-                        Metas do grupo
-                      </h2>
-
-                      <p className="mt-1 text-sm text-text-secondary">
-                        Objetivos que orientam os estudos.
-                      </p>
-                    </div>
-
-                    <Target className="text-text-brand" size={21} />
-                  </div>
-
-                  <EmptyPanel
-                    icon={Target}
-                    title="Nenhuma meta disponível"
-                    description="Quando uma meta for criada, ela aparecerá aqui para que todos possam acompanhar o progresso."
-                  />
-                </section>
+                {/* Metas da semana */}
+                <GroupWeekGoals
+                  controller={goals}
+                  group={group}
+                  isMember={isMember}
+                  isLeader={isLeader}
+                  onSeeAll={() => setActiveTab("goals")}
+                />
 
                 {/* Tarefas */}
                 <section className="rounded-2xl border border-border-default bg-bg-surface p-5 sm:p-6">
@@ -569,10 +573,11 @@ export default function GroupDetailsPage({ groupId }: Props) {
           )}
 
           {activeTab === "goals" && (
-            <EmptyPanel
-              icon={Target}
-              title="Metas do grupo"
-              description="As metas cadastradas para este grupo serão exibidas nesta área."
+            <GroupGoalsTab
+              controller={goals}
+              group={group}
+              isMember={isMember}
+              isLeader={isLeader}
             />
           )}
 
@@ -643,6 +648,8 @@ export default function GroupDetailsPage({ groupId }: Props) {
           </p>
         )}
       </div>
+
+      <GroupGoalDialogs controller={goals} />
     </div>
   );
 }
