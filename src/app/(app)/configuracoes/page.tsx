@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AccountSecurityPanel } from "@/features/account/components/account-security-panel";
+import { AppearancePanel } from "@/features/account/components/appearance-panel";
 import { DangerZonePanel } from "@/features/account/components/danger-zone-panel";
 import { ProfileForm } from "@/features/account/components/profile-form";
 import { SettingsNav } from "@/features/account/components/settings-nav";
@@ -40,6 +41,7 @@ async function SettingsPanels() {
     return (
         <div className="flex min-w-0 flex-1 flex-col gap-6 lg:max-w-190">
             <ProfileForm name={user.name} email={user.email} />
+            <AppearancePanel />
             <AccountSecurityPanel
                 email={user.email}
                 twoFactorEnabled={user.twoFactorEnabled ?? false}

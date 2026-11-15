@@ -6,6 +6,8 @@ import { useSyncExternalStore } from "react";
 // Notificações e Privacidade entram junto com as funcionalidades.
 const ITEMS = [
     { href: "#perfil", label: "Perfil", icon: "/icons/nav-user.svg" },
+    // "Aparência" não está no Figma (GOS-016); ícone no mesmo estilo dos outros.
+    { href: "#aparencia", label: "Aparência", icon: "/icons/nav-theme.svg" },
     { href: "#conta", label: "Conta e segurança", icon: "/icons/nav-lock.svg" },
 ] as const;
 

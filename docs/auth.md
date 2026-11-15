@@ -237,5 +237,4 @@ Telas de erro, 404 e carregamento, `EmptyState`, links com visual de botão (`bu
 ## Pendente
 - "Esqueci minha senha": está no Figma, mas fica de fora até existir a recuperação de senha (precisa de envio de email).
 - Página de termos de uso (o checkbox do cadastro ainda não tem link).
-- Tema escuro: os tokens do escuro já existem no Figma; hoje só o claro está no `globals.css`.
 - Configurações: confirmação por e-mail na troca de e-mail (GOS-031/GOS-032), excluir conta (GOS-036), foto e bio (GOS-039).

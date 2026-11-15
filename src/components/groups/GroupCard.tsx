@@ -1,7 +1,6 @@
 
 import Link from "next/link";
 
-import Badge from "@/components/ui/badge";
 import type { Group } from "@/types/group";
 
 type GroupCardProps = {
@@ -29,7 +28,10 @@ export default function GroupCard({ group }: GroupCardProps) {
             </p>
           </div>
 
-          <Badge variant="success">Ativo</Badge>
+          {/* Tokens em vez do Badge: o Badge ainda tem as cores fixas da landing. */}
+          <span className="shrink-0 rounded-full bg-bg-success-subtle px-2.5 py-0.5 text-caption font-semibold text-text-success">
+            Ativo
+          </span>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle pt-4">

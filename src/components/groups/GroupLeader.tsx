@@ -9,8 +9,8 @@ type Props = {
 
 export default function GroupLeader({ leader }: Props) {
   return (
-    <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-      <div className="mb-4 flex items-center gap-2 text-amber-800">
+    <section className="rounded-2xl border border-border-default bg-bg-surface p-5">
+      <div className="mb-4 flex items-center gap-2 text-text-level">
         <Crown size={20} />
 
         <h2 className="font-semibold">
@@ -20,22 +20,22 @@ export default function GroupLeader({ leader }: Props) {
 
       {leader ? (
         <div className="flex items-center gap-3">
-          <div className="flex size-12 items-center justify-center rounded-full bg-amber-200 text-lg font-bold text-amber-900">
+          <div className="flex size-12 items-center justify-center rounded-full bg-bg-level-subtle text-lg font-bold text-text-level">
             {leader.name.charAt(0).toUpperCase()}
           </div>
 
           <div>
-            <p className="font-semibold text-zinc-900">
+            <p className="font-semibold text-text-primary">
               {leader.name}
             </p>
 
-            <p className="text-sm text-amber-800">
+            <p className="text-sm text-text-secondary">
               Responsável pelo grupo
             </p>
           </div>
         </div>
       ) : (
-        <p className="text-sm text-amber-800">
+        <p className="text-sm text-text-secondary">
           Este grupo está sem um líder definido.
         </p>
       )}
