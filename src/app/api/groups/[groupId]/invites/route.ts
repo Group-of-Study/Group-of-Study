@@ -109,8 +109,9 @@ export async function POST(
         );
       }
 
+      // Conta excluída (GOS-036) conta como inexistente: não recebe convite.
       const recipient = await prisma.user.findUnique({
-        where: { id: recipientId },
+        where: { id: recipientId, deletedAt: null },
         select: { id: true },
       });
 

@@ -22,6 +22,12 @@ export const twoFactorConfirmSchema = z.object({
         .pipe(z.string().regex(/^\d{6}$/, "Digite os 6 números do app autenticador")),
 });
 
+// Excluir conta (GOS-036): senha atual e a caixa "Entendo que não dá para desfazer".
+export const deleteAccountSchema = z.object({
+    currentPassword,
+    confirm: z.literal("on", { error: "Marque para confirmar a exclusão" }),
+});
+
 export const updateProfileSchema = z.object({
     name: nameField,
 });

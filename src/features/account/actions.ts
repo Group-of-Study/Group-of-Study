@@ -2,18 +2,22 @@
 
 import { refresh } from "next/cache";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import QRCode from "qrcode";
 import { z } from "zod";
 import { GENERIC_ERROR, handleAuthError } from "@/features/auth/errors";
+import { Prisma } from "@/generated/prisma/client";
 import { pickFormValues } from "@/features/auth/form-values";
 import { checkAuthRateLimit } from "@/features/auth/rate-limit";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
+import { softDeleteAccount } from "./deletion";
 import { type AccountFormState, REVOKE_OTHERS, type TwoFactorFormState } from "./form-state";
 import {
     changeEmailSchema,
     changePasswordSchema,
+    deleteAccountSchema,
     twoFactorConfirmSchema,
     twoFactorPasswordSchema,
     updateProfileSchema,
@@ -241,4 +245,45 @@ export async function regenerateBackupCodesAction(
     } catch (error) {
         return handleAuthError("generateBackupCodes", error);
     }
+}
+
+// ---- Excluir conta (GOS-036) ----
+// Pede a senha, faz o soft delete (src/features/account/deletion.ts), limpa o cookie
+// e manda para a página inicial. Não usa o deleteUser do Better Auth: ele apaga a
+// linha na hora, e aqui a regra de saída dos grupos e a anonimização vêm antes.
+export async function deleteAccountAction(_prev: AccountFormState, formData: FormData): Promise<AccountFormState> {
+    const { user } = await requireSession();
+    const parsed = deleteAccountSchema.safeParse(Object.fromEntries(formData));
+    if (!parsed.success) {
+        return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+    }
+    const limited = await checkAuthRateLimit("/delete-account");
+    if (limited) {
+        return limited;
+    }
+    const requestHeaders = await headers();
+    try {
+        await auth.api.verifyPassword({ body: { password: parsed.data.currentPassword }, headers: requestHeaders });
+    } catch (error) {
+        return handleAuthError("deleteAccount", error);
+    }
+
+    try {
+        await softDeleteAccount(user.id);
+    } catch (error) {
+        // Outra pessoa mexeu num dos grupos ao mesmo tempo (transação Serializable).
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {
+            return { error: "Um dos seus grupos mudou neste instante. Tente excluir de novo." };
+        }
+        return handleAuthError("deleteAccount", error);
+    }
+
+    // As sessões já foram apagadas no banco; o signOut só tira o cookie do navegador
+    // (ele não falha quando a sessão não existe mais).
+    try {
+        await auth.api.signOut({ headers: requestHeaders });
+    } catch (error) {
+        console.error("[auth] signOut depois de excluir a conta falhou", error);
+    }
+    redirect("/");
 }

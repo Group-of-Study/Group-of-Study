@@ -4,6 +4,7 @@ import { Prisma } from "@/generated/prisma/client";
 
 import { getSession, unauthorized } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { leaveGroup } from "@/features/groups/leave";
 
 type RouteContext = {
   params: Promise<{ groupId: string }>;
@@ -72,84 +73,16 @@ export async function POST(
           };
         }
 
-        await tx.groupMember.delete({
-          where: {
-            userId_groupId: { userId, groupId },
-          },
-        });
-
-        // Busca os participantes restantes, do mais antigo ao mais recente.
-        const remainingMembers = await tx.groupMember.findMany({
-          where: { groupId },
-          select: { userId: true },
-          orderBy: [
-            { joinedAt: "asc" },
-            { userId: "asc" },
-          ],
-        });
-
-        // Se não restar ninguém, encerra o grupo.
-        if (remainingMembers.length === 0) {
-          await tx.group.update({
-            where: { id: groupId },
-            data: {
-              status: "CLOSED",
-              leaderId: null,
-            },
-          });
-
-          return {
-            status: 200,
-            body: {
-              message:
-                "Você saiu do grupo. Como não restaram participantes, o grupo foi encerrado.",
-              data: {
-                groupId,
-                status: "CLOSED",
-                leaderId: null,
-                remainingMembers: 0,
-              },
-            },
-          };
-        }
-
-        let newLeaderId = group.leaderId;
-
-        // Se o líder sair, o participante mais antigo assume a liderança.
-        if (group.leaderId === userId) {
-          newLeaderId = remainingMembers[0].userId;
-
-          await tx.group.update({
-            where: { id: groupId },
-            data: {
-              leaderId: newLeaderId,
-            },
-          });
-
-          // Notifica o novo líder dentro da mesma transação.
-          await tx.notification.create({
-            data: {
-              userId: newLeaderId,
-              type: "BECAME_LEADER",
-              data: {
-                groupId: group.id,
-                groupName: group.name,
-                previousLeaderId: userId,
-              },
-            },
-          });
-        }
+        const outcome = await leaveGroup(tx, group, userId);
 
         return {
           status: 200,
           body: {
-            message: "Você saiu do grupo com sucesso.",
-            data: {
-              groupId,
-              status: group.status,
-              leaderId: newLeaderId,
-              remainingMembers: remainingMembers.length,
-            },
+            message:
+              outcome.status === "CLOSED"
+                ? "Você saiu do grupo. Como não restaram participantes, o grupo foi encerrado."
+                : "Você saiu do grupo com sucesso.",
+            data: { groupId, ...outcome },
           },
         };
       },
