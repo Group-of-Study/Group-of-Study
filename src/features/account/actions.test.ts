@@ -1,20 +1,38 @@
 import { APIError } from "better-auth/api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { updateUser, verifyPassword, changeEmail, changePassword, checkAuthRateLimit, findUnique, refresh, session } =
-    vi.hoisted(() => ({
-        updateUser: vi.fn(),
-        verifyPassword: vi.fn(),
-        changeEmail: vi.fn(),
-        changePassword: vi.fn(),
-        checkAuthRateLimit: vi.fn(),
-        findUnique: vi.fn(),
-        refresh: vi.fn(),
-        session: { current: null as { user: { id: string; email: string } } | null },
-    }));
+const {
+    updateUser,
+    verifyPassword,
+    changeEmail,
+    changePassword,
+    revokeSession,
+    revokeOtherSessions,
+    checkAuthRateLimit,
+    findUnique,
+    findFirstSession,
+    refresh,
+    session,
+} = vi.hoisted(() => ({
+    updateUser: vi.fn(),
+    verifyPassword: vi.fn(),
+    changeEmail: vi.fn(),
+    changePassword: vi.fn(),
+    revokeSession: vi.fn(),
+    revokeOtherSessions: vi.fn(),
+    checkAuthRateLimit: vi.fn(),
+    findUnique: vi.fn(),
+    findFirstSession: vi.fn(),
+    refresh: vi.fn(),
+    session: {
+        current: null as { user: { id: string; email: string }; session: { id: string } } | null,
+    },
+}));
 
-vi.mock("@/lib/auth", () => ({ auth: { api: { updateUser, verifyPassword, changeEmail, changePassword } } }));
-vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique } } }));
+vi.mock("@/lib/auth", () => ({
+    auth: { api: { updateUser, verifyPassword, changeEmail, changePassword, revokeSession, revokeOtherSessions } },
+}));
+vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique }, session: { findFirst: findFirstSession } } }));
 vi.mock("@/features/auth/rate-limit", () => ({ checkAuthRateLimit }));
 vi.mock("next/cache", () => ({ refresh }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
@@ -28,7 +46,8 @@ vi.mock("@/lib/session", () => ({
     },
 }));
 
-import { changeEmailAction, changePasswordAction, updateProfileAction } from "./actions";
+import { changeEmailAction, changePasswordAction, revokeSessionAction, updateProfileAction } from "./actions";
+import { REVOKE_OTHERS } from "./form-state";
 
 function form(data: Record<string, string>): FormData {
     const formData = new FormData();
@@ -44,12 +63,15 @@ function invalidPassword() {
 
 beforeEach(() => {
     vi.clearAllMocks();
-    session.current = { user: { id: "user-1", email: "miguel@exemplo.com" } };
+    session.current = { user: { id: "user-1", email: "miguel@exemplo.com" }, session: { id: "sessao-atual" } };
     // clearAllMocks não desfaz mockRejectedValue de um teste anterior: redefine aqui.
     updateUser.mockResolvedValue({ status: true });
     verifyPassword.mockResolvedValue({ status: true });
     changeEmail.mockResolvedValue({ status: true });
     changePassword.mockResolvedValue({ token: null });
+    revokeSession.mockResolvedValue({ status: true });
+    revokeOtherSessions.mockResolvedValue({ status: true });
+    findFirstSession.mockResolvedValue({ token: "token-da-outra" });
     checkAuthRateLimit.mockResolvedValue(null);
     findUnique.mockResolvedValue(null);
     vi.spyOn(console, "error").mockImplementation(() => {});
@@ -60,12 +82,15 @@ describe("sem sessão", () => {
         ["updateProfileAction", updateProfileAction],
         ["changeEmailAction", changeEmailAction],
         ["changePasswordAction", changePasswordAction],
+        ["revokeSessionAction", revokeSessionAction],
     ])("%s redireciona para o login sem chamar o Better Auth", async (_name, action) => {
         session.current = null;
         await expect(action({}, form({}))).rejects.toThrow("REDIRECT:/login");
         expect(updateUser).not.toHaveBeenCalled();
         expect(changeEmail).not.toHaveBeenCalled();
         expect(changePassword).not.toHaveBeenCalled();
+        expect(revokeSession).not.toHaveBeenCalled();
+        expect(revokeOtherSessions).not.toHaveBeenCalled();
     });
 });
 
@@ -217,5 +242,62 @@ describe("changePasswordAction", () => {
         expect(json).not.toContain(valid.currentPassword);
         expect(json).not.toContain(valid.newPassword);
         expect(json).not.toContain("diferente-123");
+    });
+});
+
+describe("revokeSessionAction", () => {
+    it("encerra uma sessão buscando o token só entre as sessões do próprio usuário", async () => {
+        const state = await revokeSessionAction({}, form({ target: "outra-sessao" }));
+
+        expect(findFirstSession).toHaveBeenCalledWith({
+            where: { id: "outra-sessao", userId: "user-1" },
+            select: { token: true },
+        });
+        expect(revokeSession).toHaveBeenCalledWith({ body: { token: "token-da-outra" }, headers: expect.any(Headers) });
+        expect(refresh).toHaveBeenCalled();
+        expect(state).toEqual({ success: "Sessão encerrada." });
+    });
+
+    it("não encerra sessão de outra pessoa (o id não é encontrado entre as do usuário)", async () => {
+        findFirstSession.mockResolvedValue(null);
+
+        const state = await revokeSessionAction({}, form({ target: "sessao-de-outro-usuario" }));
+
+        expect(revokeSession).not.toHaveBeenCalled();
+        expect(state).toEqual({ error: "Essa sessão já tinha sido encerrada." });
+    });
+
+    it("não encerra a sessão atual por aqui (para isso existe o Sair)", async () => {
+        const state = await revokeSessionAction({}, form({ target: "sessao-atual" }));
+
+        expect(findFirstSession).not.toHaveBeenCalled();
+        expect(revokeSession).not.toHaveBeenCalled();
+        expect(state.error).toMatch(/use Sair/);
+    });
+
+    it("sem target devolve o erro genérico", async () => {
+        const state = await revokeSessionAction({}, form({}));
+
+        expect(revokeSession).not.toHaveBeenCalled();
+        expect(revokeOtherSessions).not.toHaveBeenCalled();
+        expect(state).toEqual({ error: "Algo deu errado. Tente novamente." });
+    });
+
+    it("encerra todas as outras sessões", async () => {
+        const state = await revokeSessionAction({}, form({ target: REVOKE_OTHERS }));
+
+        expect(revokeOtherSessions).toHaveBeenCalledWith({ headers: expect.any(Headers) });
+        expect(revokeSession).not.toHaveBeenCalled();
+        expect(refresh).toHaveBeenCalled();
+        expect(state).toEqual({ success: "As outras sessões foram encerradas." });
+    });
+
+    it("erro inesperado do Better Auth vira a mensagem genérica", async () => {
+        revokeSession.mockRejectedValue(new Error("banco fora do ar"));
+
+        const state = await revokeSessionAction({}, form({ target: "outra-sessao" }));
+
+        expect(refresh).not.toHaveBeenCalled();
+        expect(state).toEqual({ error: "Algo deu errado. Tente novamente." });
     });
 });

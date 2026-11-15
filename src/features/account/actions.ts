@@ -3,13 +3,13 @@
 import { refresh } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
-import { handleAuthError } from "@/features/auth/errors";
+import { GENERIC_ERROR, handleAuthError } from "@/features/auth/errors";
 import { pickFormValues } from "@/features/auth/form-values";
 import { checkAuthRateLimit } from "@/features/auth/rate-limit";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
-import type { AccountFormState } from "./form-state";
+import { type AccountFormState, REVOKE_OTHERS } from "./form-state";
 import { changeEmailSchema, changePasswordSchema, updateProfileSchema } from "./schemas";
 
 // Campos devolvidos ao formulário (senhas ficam de fora).
@@ -93,4 +93,48 @@ export async function changePasswordAction(_prev: AccountFormState, formData: Fo
         success: revokeOtherSessions ? "Senha alterada. As outras sessões foram encerradas." : "Senha alterada.",
         values,
     };
+}
+
+// Encerra uma sessão (pelo id) ou todas as outras. O formulário nunca recebe o token
+// da sessão: ele manda o id, e o token é buscado aqui, só entre as sessões da própria
+// pessoa. Assim ninguém encerra a sessão de outro usuário trocando o id no HTML.
+export async function revokeSessionAction(_prev: AccountFormState, formData: FormData): Promise<AccountFormState> {
+    const { user, session } = await requireSession();
+    const target = formData.get("target");
+    const requestHeaders = await headers();
+
+    if (target === REVOKE_OTHERS) {
+        try {
+            await auth.api.revokeOtherSessions({ headers: requestHeaders });
+        } catch (error) {
+            return handleAuthError("revokeOtherSessions", error);
+        }
+        refresh();
+        return { success: "As outras sessões foram encerradas." };
+    }
+
+    if (typeof target !== "string" || target === "") {
+        return { error: GENERIC_ERROR };
+    }
+    if (target === session.id) {
+        return { error: "Esta é a sessão que você está usando. Para encerrá-la, use Sair." };
+    }
+
+    const found = await prisma.session.findFirst({
+        where: { id: target, userId: user.id },
+        select: { token: true },
+    });
+    if (!found) {
+        // Já expirou ou foi encerrada em outra aba: atualiza a lista.
+        refresh();
+        return { error: "Essa sessão já tinha sido encerrada." };
+    }
+
+    try {
+        await auth.api.revokeSession({ body: { token: found.token }, headers: requestHeaders });
+    } catch (error) {
+        return handleAuthError("revokeSession", error);
+    }
+    refresh();
+    return { success: "Sessão encerrada." };
 }
