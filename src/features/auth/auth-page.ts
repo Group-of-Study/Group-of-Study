@@ -16,6 +16,6 @@ export async function redirectIfAuthenticated(searchParams: AuthSearchParams): P
     const session = await getSession();
 
     if (session) {
-        redirect(safeCallbackUrl(await getCallbackUrl(searchParams)) ?? "/grupos");
+        redirect(safeCallbackUrl(await getCallbackUrl(searchParams)));
     }
 }

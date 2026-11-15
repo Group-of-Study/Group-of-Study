@@ -1,4 +1,5 @@
-export const DEFAULT_REDIRECT = "/grupos";
+// Início (GOS-040): é onde fica o checklist "Primeiros passos" de quem acabou de chegar.
+export const DEFAULT_REDIRECT = "/dashboard";
 
 const INTERNAL_ORIGIN = "http://internal.invalid";
 

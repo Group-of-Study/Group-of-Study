@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { DEFAULT_REDIRECT } from "./callback-url";
 
 const { getSession } = vi.hoisted(() => ({ getSession: vi.fn() }));
 
@@ -45,11 +46,11 @@ describe("redirectIfAuthenticated", () => {
         );
     });
 
-    it("manda para /grupos quando não há callbackUrl ou ele é externo", async () => {
+    it("manda para o Início quando não há callbackUrl ou ele é externo", async () => {
         getSession.mockResolvedValue({ user: { id: "user-1" } });
-        await expect(redirectIfAuthenticated(params())).rejects.toThrow("REDIRECT:/grupos");
+        await expect(redirectIfAuthenticated(params())).rejects.toThrow(`REDIRECT:${DEFAULT_REDIRECT}`);
         await expect(redirectIfAuthenticated(params({ callbackUrl: "//site-falso.com" }))).rejects.toThrow(
-            "REDIRECT:/grupos",
+            `REDIRECT:${DEFAULT_REDIRECT}`,
         );
     });
 });
