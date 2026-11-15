@@ -4,11 +4,11 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { safeCallbackUrl } from "./callback-url";
+import { readCallbackUrl, safeCallbackUrl, withCallbackUrl } from "./callback-url";
 import { handleAuthError, type AuthFormState } from "./errors";
 import { pickFormValues } from "./form-values";
 import { checkAuthRateLimit } from "./rate-limit";
-import { signInSchema, signUpSchema } from "./schemas";
+import { signInSchema, signUpSchema, twoFactorSchema } from "./schemas";
 
 // Campos devolvidos ao formulário em caso de erro (senhas ficam de fora).
 const SIGN_UP_FIELDS = ["name", "email", "terms"] as const;
@@ -45,10 +45,46 @@ export async function signInAction(_prev: AuthFormState, formData: FormData): Pr
     if (limited) {
         return { ...limited, values };
     }
+    let result: Awaited<ReturnType<typeof auth.api.signInEmail>>;
     try {
-        await auth.api.signInEmail({ body: parsed.data, headers: await headers() });
+        result = await auth.api.signInEmail({ body: parsed.data, headers: await headers() });
     } catch (error) {
         return { ...handleAuthError("signIn", error), values };
+    }
+    // Conta com 2FA (GOS-034): o Better Auth ainda não criou a sessão. Ele grava um
+    // cookie temporário (10 min) e a pessoa termina o login com o código do app.
+    if ("twoFactorRedirect" in result && result.twoFactorRedirect) {
+        // readCallbackUrl descarta destino externo (o campo vem do formulário).
+        const callbackUrl = formData.get("callbackUrl");
+        redirect(withCallbackUrl("/login/verificacao", readCallbackUrl(typeof callbackUrl === "string" ? callbackUrl : undefined)));
+    }
+    redirect(safeCallbackUrl(formData.get("callbackUrl")));
+}
+
+const TWO_FACTOR_FIELDS = ["method", "trustDevice"] as const;
+
+// Segunda etapa do login: código do app autenticador ou um código de recuperação.
+// Quem diz de qual conta é o cookie temporário do Better Auth, não o formulário.
+export async function verifyTwoFactorAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+    const values = pickFormValues(formData, TWO_FACTOR_FIELDS);
+    const parsed = twoFactorSchema.safeParse(Object.fromEntries(formData));
+    if (!parsed.success) {
+        return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
+    }
+    const limited = await checkAuthRateLimit("/two-factor/verify");
+    if (limited) {
+        return { ...limited, values };
+    }
+    const { method, code, trustDevice } = parsed.data;
+    try {
+        const body = { code, trustDevice };
+        if (method === "totp") {
+            await auth.api.verifyTOTP({ body, headers: await headers() });
+        } else {
+            await auth.api.verifyBackupCode({ body, headers: await headers() });
+        }
+    } catch (error) {
+        return { ...handleAuthError("verifyTwoFactor", error), values };
     }
     redirect(safeCallbackUrl(formData.get("callbackUrl")));
 }

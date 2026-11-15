@@ -4,6 +4,7 @@ import { AccountSecurityPanel } from "@/features/account/components/account-secu
 import { DangerZonePanel } from "@/features/account/components/danger-zone-panel";
 import { ProfileForm } from "@/features/account/components/profile-form";
 import { SettingsNav } from "@/features/account/components/settings-nav";
+import { listActiveSessions } from "@/features/account/sessions";
 import { requireSession } from "@/lib/session";
 
 export const metadata: Metadata = {
@@ -14,7 +15,8 @@ export const metadata: Metadata = {
 // sidebar e topbar do app ainda não existem).
 export default function SettingsPage() {
     return (
-        <main className="mx-auto flex w-full max-w-278 flex-1 flex-col gap-6 px-4 py-6 lg:gap-8 lg:px-8 lg:py-8">
+        // <div>, não <main>: o layout do (app) já tem o <main> da página.
+        <div className="mx-auto flex w-full max-w-278 flex-1 flex-col gap-6 px-4 py-6 lg:gap-8 lg:px-8 lg:py-8">
             <header className="flex flex-col gap-1">
                 <h1 className="text-h2 text-foreground">Configurações</h1>
                 <p className="text-body-sm text-text-secondary">Seu perfil, seu e-mail, sua senha e a segurança da conta.</p>
@@ -27,17 +29,22 @@ export default function SettingsPage() {
                     <SettingsPanels />
                 </Suspense>
             </div>
-        </main>
+        </div>
     );
 }
 
 async function SettingsPanels() {
-    const { user } = await requireSession();
+    const { user, session } = await requireSession();
+    const sessions = await listActiveSessions(user.id, session.id);
 
     return (
         <div className="flex min-w-0 flex-1 flex-col gap-6 lg:max-w-190">
             <ProfileForm name={user.name} email={user.email} />
-            <AccountSecurityPanel email={user.email} />
+            <AccountSecurityPanel
+                email={user.email}
+                twoFactorEnabled={user.twoFactorEnabled ?? false}
+                sessions={sessions}
+            />
             <DangerZonePanel />
         </div>
     );
