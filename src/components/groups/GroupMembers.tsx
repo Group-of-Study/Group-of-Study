@@ -181,6 +181,7 @@ export default function GroupMembers({
         confirmLabel="Remover participante"
         danger
         loading={loading}
+        error={error}
         onCancel={() => setSelectedMember(null)}
         onConfirm={handleRemoveMember}
       />

@@ -10,6 +10,7 @@ type Props = {
   confirmLabel: string;
   loading?: boolean;
   danger?: boolean;
+  error?: string | null;
   onConfirm: () => void;
   onCancel: () => void;
 };
@@ -21,6 +22,7 @@ export default function GroupConfirmationDialog({
   confirmLabel,
   loading = false,
   danger = false,
+  error,
   onConfirm,
   onCancel,
 }: Props) {
@@ -57,6 +59,15 @@ export default function GroupConfirmationDialog({
         >
           {message}
         </p>
+
+        {error && (
+          <p
+            role="alert"
+            className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700"
+          >
+            {error}
+          </p>
+        )}
 
         <div className="mt-7 flex flex-col-reverse justify-end gap-3 sm:flex-row">
           <Button

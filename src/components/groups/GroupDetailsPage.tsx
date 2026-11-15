@@ -247,7 +247,7 @@ export default function GroupDetailsPage({ groupId }: Props) {
   const isLeader = group.leader?.id === group.currentUserId;
 
   return (
-    <main className="min-h-screen bg-[#f5f7fb]">
+    <div className="min-h-screen bg-[#f5f7fb]">
       <div className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
         <Link
           href="/grupos"
@@ -643,6 +643,6 @@ export default function GroupDetailsPage({ groupId }: Props) {
           </p>
         )}
       </div>
-    </main>
+    </div>
   );
 }
