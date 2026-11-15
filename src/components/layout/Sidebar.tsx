@@ -18,18 +18,18 @@ type Props = {
 
 export function Sidebar({ groups, onNavigate }: Props) {
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-zinc-200 bg-white">
-      <div className="flex h-20 items-center border-b border-zinc-200 px-6">
+    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-border-default bg-bg-surface">
+      <div className="flex h-20 items-center border-b border-border-default px-6">
         <Link
           href="/dashboard"
           onClick={onNavigate}
           className="flex items-center gap-3"
         >
-          <div className="flex size-10 items-center justify-center rounded-xl bg-blue-900 text-white">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-bg-brand text-text-on-brand">
             <GraduationCap size={23} />
           </div>
 
-          <span className="text-lg font-bold tracking-tight text-zinc-900">
+          <span className="text-lg font-bold tracking-tight text-text-primary">
             Group of Study
           </span>
         </Link>
@@ -37,7 +37,7 @@ export function Sidebar({ groups, onNavigate }: Props) {
 
       <div className="flex-1 space-y-8 overflow-y-auto px-4 py-6">
         <section className="space-y-3">
-          <h2 className="px-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          <h2 className="px-3 text-xs font-semibold uppercase tracking-wider text-text-tertiary">
             Menu principal
           </h2>
 

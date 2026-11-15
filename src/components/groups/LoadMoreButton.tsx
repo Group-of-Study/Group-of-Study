@@ -13,8 +13,9 @@ export default function LoadMoreButton({
   return (
     <div className="flex justify-center py-8">
       <Button
-        variant="secondary"
-        size="md"
+        // ds-*: segue os tokens (e o tema escuro); "secondary" é o da landing.
+        variant="ds-secondary"
+        size="ds-md"
         onClick={onClick}
         disabled={loading}
       >

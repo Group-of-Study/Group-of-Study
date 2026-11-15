@@ -18,17 +18,17 @@ export function MobileSidebar({ groups }: Props) {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center border-b border-zinc-200 bg-white px-4 lg:hidden">
+      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center border-b border-border-default bg-bg-surface px-4 lg:hidden">
         <button
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Abrir menu"
-          className="rounded-lg p-2 text-zinc-700 hover:bg-zinc-100"
+          className="rounded-lg p-2 text-text-secondary hover:bg-bg-subtle"
         >
           <Menu size={23} />
         </button>
 
-        <span className="ml-3 font-bold text-zinc-900">
+        <span className="ml-3 font-bold text-text-primary">
           Group of Study
         </span>
       </header>
@@ -42,12 +42,12 @@ export function MobileSidebar({ groups }: Props) {
             className="absolute inset-0 bg-black/40"
           />
 
-          <div className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-xl">
+          <div className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-bg-surface shadow-xl">
             <button
               type="button"
               onClick={closeSidebar}
               aria-label="Fechar menu"
-              className="absolute right-3 top-5 z-10 rounded-lg p-2 text-zinc-500 hover:bg-zinc-100"
+              className="absolute right-3 top-5 z-10 rounded-lg p-2 text-text-tertiary hover:bg-bg-subtle"
             >
               <X size={21} />
             </button>

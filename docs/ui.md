@@ -65,3 +65,18 @@ export function JoinGroupButton({ groupId }: { groupId: string }) {
 - No máximo 3 toasts na tela. Sucesso some em 5 s, erro em 8 s, e os dois têm botão de fechar. Os toasts ficam numa região `aria-live`, então leitores de tela anunciam.
 - **Erros de campo (`issues`) não vão para o toast:** mostre cada um no campo dele (`TextField` com `error`).
 - **Server Actions** (login, cadastro, configurações) continuam com o `Alert` dentro do formulário: o aviso fica perto de onde a pessoa está olhando.
+
+## Tema claro e escuro (GOS-016)
+Os tokens do escuro vêm do Figma (Foundations, coleção "Color Dark") e ficam em `src/app/globals.css`, num bloco `:root[data-theme="dark"]` logo depois do `@theme`: **mesmos nomes, outros valores**. Por isso, quem usa os tokens (`bg-bg-surface`, `text-text-primary`, `border-border-default`...) ganha o escuro de graça; quem usa cor fixa (`bg-white`, `text-zinc-900`, `bg-[#f5f7fb]`) fica claro no tema escuro.
+
+| Arquivo | Papel |
+|---|---|
+| `src/lib/theme.ts` | Preferência (`light`, `dark`, `system`), salva no `localStorage` (`gos-theme`), e o script que aplica o tema |
+| `src/app/layout.tsx` | `<html data-theme="light">` + o script no `<head>`, que troca para o tema certo **antes da página aparecer** (guia "Preventing Flash" do Next) |
+| `src/components/theme/theme-watcher.tsx` | Mantém o tema certo depois do carregamento: no modo "Sistema", quando o aparelho troca entre claro e escuro, e quando outra aba muda a escolha |
+| `src/features/account/components/appearance-panel.tsx` | Configurações › Aparência: Claro, Escuro ou Sistema (padrão) |
+
+- **A escolha é do navegador, não da conta:** fica no `localStorage`, então o celular e o computador podem ter temas diferentes. Sem escolha salva, vale o tema do aparelho (`prefers-color-scheme`).
+- **Variante `dark:` do Tailwind** segue o `data-theme` (`@custom-variant dark`), para os raros casos em que um token não resolve.
+- **Sombras:** o Figma só define sombras para o claro; no escuro elas ficam iguais (quase invisíveis). Se precisar, combinar com o design antes de inventar.
+- **O que ainda não segue o tema:** a landing (`src/components/sections`, `landing`, `PublicNavbar`, que usam cor fixa e ficam sempre claras), o `Badge` e as variantes `secondary`/`ghost` do `Button` (usados pela landing). As telas de grupo e perfil dos PRs #25/#26 entram numa task depois do merge deles.

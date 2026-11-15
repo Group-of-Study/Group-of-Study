@@ -16,7 +16,7 @@ export default function GroupStatusAlert({ status }: Props) {
     return (
       <div
         role="alert"
-        className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900"
+        className="flex gap-3 rounded-xl border border-border-default bg-bg-subtle p-4 text-text-primary"
       >
         <Archive className="mt-0.5 shrink-0" size={20} />
 
@@ -35,7 +35,7 @@ export default function GroupStatusAlert({ status }: Props) {
   return (
     <div
       role="alert"
-      className="flex gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-900"
+      className="flex gap-3 rounded-xl border border-border-danger bg-bg-danger-subtle p-4 text-text-danger"
     >
       <CircleStop className="mt-0.5 shrink-0" size={20} />
 
