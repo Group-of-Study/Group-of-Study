@@ -35,6 +35,12 @@ import {
   GroupWeekGoals,
 } from "@/features/goals/components/group-goals";
 import { useGroupGoals } from "@/features/goals/use-group-goals";
+import {
+  GroupAgendaTab,
+  GroupSessionDialogs,
+  NextSessionCard,
+} from "@/features/sessions/components/group-agenda";
+import { useGroupSessions } from "@/features/sessions/use-group-sessions";
 
 import type {
   GroupDetails,
@@ -49,6 +55,7 @@ type Props = {
 type Tab =
   | "overview"
   | "goals"
+  | "agenda"
   | "tasks"
   | "challenges"
   | "members"
@@ -62,6 +69,7 @@ const tabs: {
 }[] = [
   { id: "overview", label: "Visão geral", icon: LayoutDashboard },
   { id: "goals", label: "Metas", icon: Target },
+  { id: "agenda", label: "Agenda", icon: CalendarDays },
   { id: "tasks", label: "Tarefas", icon: ClipboardList },
   { id: "challenges", label: "Desafios", icon: Trophy },
   { id: "members", label: "Membros", icon: Users },
@@ -125,6 +133,8 @@ export default function GroupDetailsPage({ groupId }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   // Metas do grupo: recarregam junto com o grupo (entrar, sair, remover alguém).
   const goals = useGroupGoals(groupId, retryKey);
+  // Agenda (GOS-042): também recarrega junto com o grupo.
+  const sessions = useGroupSessions(groupId, retryKey);
   const counts = goalCounts(goals);
 
   useEffect(() => {
@@ -477,6 +487,14 @@ export default function GroupDetailsPage({ groupId }: Props) {
 
               {/* Coluna lateral */}
               <aside className="space-y-6">
+                <NextSessionCard
+                  controller={sessions}
+                  group={group}
+                  isMember={isMember}
+                  isLeader={isLeader}
+                  onSeeAgenda={() => setActiveTab("agenda")}
+                />
+
                 <GroupLeader leader={group.leader} />
 
                 <section className="rounded-2xl border border-border-default bg-bg-surface p-5">
@@ -572,6 +590,15 @@ export default function GroupDetailsPage({ groupId }: Props) {
             </div>
           )}
 
+          {activeTab === "agenda" && (
+            <GroupAgendaTab
+              controller={sessions}
+              group={group}
+              isMember={isMember}
+              isLeader={isLeader}
+            />
+          )}
+
           {activeTab === "goals" && (
             <GroupGoalsTab
               controller={goals}
@@ -650,6 +677,7 @@ export default function GroupDetailsPage({ groupId }: Props) {
       </div>
 
       <GroupGoalDialogs controller={goals} groupId={group.id} />
+      <GroupSessionDialogs controller={sessions} />
     </div>
   );
 }

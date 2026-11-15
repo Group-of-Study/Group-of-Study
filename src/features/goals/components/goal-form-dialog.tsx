@@ -4,6 +4,7 @@ import { Sparkles } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { TextAreaField } from "@/components/ui/text-area-field";
 import { TextField } from "@/components/ui/text-field";
 import type { ApiResult } from "@/lib/api-client";
 import { combineDueDate, toDateInputValue, toTimeInputValue } from "../dates";
@@ -175,7 +176,7 @@ function GoalForm({
             <TextAreaField
                 label="Detalhes (opcional)"
                 value={description}
-                onChange={setDescription}
+                onChange={(event) => setDescription(event.target.value)}
                 maxLength={DESCRIPTION_MAX}
                 placeholder="Questões 1 a 12. Quem terminar posta a resolução no mural."
                 error={errors.description}
@@ -204,7 +205,7 @@ function GoalForm({
     );
 }
 
-// Mesmo visual do TextField (rótulo, borda, foco, erro), para <select> e <textarea>.
+// Mesmo visual do TextField (rótulo, borda, foco, erro), para o <select>.
 const FIELD_BOX =
     "w-full rounded-md border bg-bg-surface px-3 text-body-sm text-foreground outline-none placeholder:text-text-tertiary disabled:bg-bg-subtle disabled:text-text-disabled";
 
@@ -245,38 +246,6 @@ function SelectField({
                     </option>
                 ))}
             </select>
-            {error && <span className="text-caption text-text-danger">{error}</span>}
-        </label>
-    );
-}
-
-function TextAreaField({
-    label,
-    value,
-    onChange,
-    maxLength,
-    placeholder,
-    error,
-}: {
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-    maxLength: number;
-    placeholder: string;
-    error?: string;
-}) {
-    return (
-        <label className="flex flex-col gap-1.5">
-            <span className="text-label-sm text-foreground">{label}</span>
-            <textarea
-                value={value}
-                onChange={(event) => onChange(event.target.value)}
-                maxLength={maxLength}
-                placeholder={placeholder}
-                rows={4}
-                aria-invalid={error ? true : undefined}
-                className={`resize-y py-2.5 ${FIELD_BOX} ${fieldBorder(error)}`}
-            />
             {error && <span className="text-caption text-text-danger">{error}</span>}
         </label>
     );

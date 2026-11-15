@@ -51,6 +51,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 - O conteúdo só é montado com o modal aberto: um formulário dentro dele começa do zero a cada abertura.
 - Exemplo completo: o modal de metas (`src/features/goals/components/goal-form-dialog.tsx`, ver [metas.md](metas.md)).
 
+## TextAreaField
+`TextAreaField` (`src/components/ui/text-area-field.tsx`) é o campo de texto longo com o mesmo visual do `TextField` (rótulo, borda, foco, `error` e `helper`). Usado em "Detalhes" das metas e da agenda.
+
 ## Toast e chamadas à API
 Para Client Components que chamam as rotas de `src/app/api`. O `ToastProvider` já está no `src/app/layout.tsx`.
 

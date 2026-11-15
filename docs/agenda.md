@@ -2,6 +2,23 @@
 
 Encontros de estudo marcados pelo líder do grupo: plantão de dúvidas, revisão para a prova, leitura em dupla. Cada encontro tem início, fim e **onde** acontece (um local, um link ou os dois).
 
+## Na tela
+
+Página do grupo (`/grupos/[groupId]`):
+
+- **Visão geral › "Próximo encontro"** (coluna da direita, como no Figma): o próximo encontro com o selo de data, horário, local e o botão **Entrar no link**. Sem encontros, o líder vê "Marcar encontro". "Ver agenda" abre a aba.
+- **Aba "Agenda"**: os próximos encontros, com o que está **acontecendo agora** em verde. O líder marca, edita e exclui. **"Ver encontros anteriores"** busca os que já aconteceram só quando a pessoa pede.
+- **Modal "Marcar encontro"** (segue o "Nova meta"; não há tela de agenda no Figma): nome, dia, início, fim, local, link e detalhes. O fim é no mesmo dia do início.
+- **Links** abrem em outra aba com `rel="noopener noreferrer"`. Na lista aparece só o domínio ("meet.google.com").
+
+| Arquivo | Papel |
+|---|---|
+| `src/features/sessions/use-group-sessions.ts` | Estado da agenda e dos modais (o card e a aba dividem o mesmo) |
+| `src/features/sessions/components/group-agenda.tsx` | Card "Próximo encontro", aba "Agenda" e os modais |
+| `src/features/sessions/components/session-form-dialog.tsx` | Modal de marcar/editar; valida com o mesmo `sessionInputSchema` da API antes de enviar |
+| `src/features/sessions/dates.ts` | "Hoje · 19h–20h30", "Acontecendo agora · até 20h30", selo "NOV 20" e os campos de dia/horário |
+| `src/features/sessions/api.ts` | Chamadas à API (sobre o `fetchApi`) |
+
 ## Quem pode o quê
 
 | Ação | Quem | Grupo |
