@@ -13,23 +13,23 @@ type Props = {
 
 function AppLayoutSkeleton() {
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <aside className="fixed inset-y-0 left-0 hidden w-64 animate-pulse border-r border-zinc-200 bg-white p-6 lg:block">
-        <div className="mb-10 h-10 w-40 rounded-lg bg-zinc-200" />
+    <div className="min-h-screen bg-bg-canvas">
+      <aside className="fixed inset-y-0 left-0 hidden w-64 animate-pulse border-r border-border-default bg-bg-surface p-6 lg:block">
+        <div className="mb-10 h-10 w-40 rounded-lg bg-bg-muted" />
 
         <div className="space-y-5">
           {Array.from({ length: 5 }).map((_, index) => (
             <div
               key={index}
-              className="h-10 rounded-lg bg-zinc-100"
+              className="h-10 rounded-lg bg-bg-subtle"
             />
           ))}
         </div>
       </aside>
 
       <main className="min-h-screen animate-pulse p-6 pt-20 lg:ml-64 lg:pt-6">
-        <div className="h-8 w-52 rounded-lg bg-zinc-200" />
-        <div className="mt-4 h-5 w-80 rounded-lg bg-zinc-100" />
+        <div className="h-8 w-52 rounded-lg bg-bg-muted" />
+        <div className="mt-4 h-5 w-80 rounded-lg bg-bg-subtle" />
       </main>
     </div>
   );
@@ -65,7 +65,7 @@ async function AuthenticatedAppLayout({ children }: Props) {
   }));
 
   return (
-    <div className="min-h-screen bg-zinc-50">
+    <div className="min-h-screen bg-bg-canvas">
       <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:block">
         <Sidebar groups={groups} />
       </div>

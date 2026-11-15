@@ -3,7 +3,8 @@
 /*
  * Tokens do Design System (Figma: "Group of Study — Design System → App",
  * página Foundations). Os nomes são os mesmos do Figma.
- * Por enquanto só o tema claro; o escuro já existe no Figma.
+ * Aqui fica o tema claro (coleção "Color"); o escuro ("Color Dark") vem logo
+ * depois do @theme e troca só os valores, com os mesmos nomes.
  */
 @theme {
     /* Base */
@@ -126,6 +127,76 @@
     --shadow-lg: 0 12px 28px -6px rgb(13 17 23 / 0.16), 0 2px 6px -2px rgb(13 17 23 / 0.06);
     --shadow-focus: 0 0 0 3px rgb(9 105 218 / 0.22);
 }
+
+/*
+ * Tema escuro (Figma: Foundations, coleção "Color Dark"). O <html> recebe
+ * data-theme="dark" do script em src/app/layout.tsx, antes da página aparecer:
+ * pela escolha da pessoa (Configurações › Aparência) ou, no modo "Sistema",
+ * pelo prefers-color-scheme do aparelho.
+ * :root[data-theme] ganha do :root do @theme (seletor mais específico).
+ */
+:root[data-theme="dark"] {
+    /* Barras de rolagem, campos de formulário e o fundo padrão do navegador no escuro. */
+    color-scheme: dark;
+
+    /* Base */
+    --color-background: #010409;
+    --color-foreground: #f6f8fa;
+
+    /* Fundo */
+    --color-bg-canvas: #010409;
+    --color-bg-surface: #0d1117;
+    --color-bg-subtle: #161b22;
+    --color-bg-muted: #21262d;
+    --color-bg-brand: #1f6feb;
+    --color-bg-brand-hover: #2f81f7;
+    --color-bg-brand-subtle: #071d3f;
+    --color-bg-brand-strong: #161b22;
+    --color-bg-accent: #58a6ff;
+    --color-bg-accent-subtle: #071d3f;
+    --color-bg-streak: #1f6feb;
+    --color-bg-streak-subtle: #071d3f;
+    --color-bg-level: #1f6feb;
+    --color-bg-level-subtle: #0a3069;
+    --color-bg-danger: #e5534b;
+    --color-bg-danger-subtle: #2d1214;
+    --color-bg-success-subtle: #0f2a17;
+    --color-bg-info-subtle: #071d3f;
+    --color-bg-inverse: #32383f;
+
+    /* Texto */
+    --color-text-primary: #f6f8fa;
+    --color-text-secondary: #cdd3da;
+    --color-text-tertiary: #8c959f;
+    --color-text-disabled: #57606a;
+    --color-text-on-brand: #ffffff;
+    --color-text-brand: #58a6ff;
+    --color-text-accent: #58a6ff;
+    --color-text-streak: #58a6ff;
+    --color-text-level: #80b6ff;
+    --color-text-danger: #ff7b72;
+    --color-text-success: #3fb950;
+    --color-text-info: #58a6ff;
+    --color-text-inverse: #ffffff;
+
+    /* Borda */
+    --color-border-subtle: #161b22;
+    --color-border-default: #21262d;
+    --color-border-strong: #32383f;
+    --color-border-brand: #2f81f7;
+    --color-border-focus: #58a6ff;
+    --color-border-danger: #e5534b;
+
+    /* Heatmap */
+    --color-heat-0: #161b22;
+    --color-heat-1: #0a3069;
+    --color-heat-2: #0550ae;
+    --color-heat-3: #2f81f7;
+    --color-heat-4: #80b6ff;
+}
+
+/* dark:... do Tailwind segue o data-theme (e não o prefers-color-scheme direto). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @layer base {
     body {
