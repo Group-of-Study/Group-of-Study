@@ -91,6 +91,8 @@ Limita tentativas por IP para dificultar ataques de força bruta. **Só fica ati
 | Cadastro (`/sign-up/email`) | 3 tentativas por minuto por IP |
 | Troca de senha (`/change-password`) | 5 tentativas por minuto por IP |
 | Troca de e-mail (`/change-email`) | 5 tentativas por minuto por IP |
+| 2FA: ativar, desativar, gerar códigos (`/two-factor/enable`, `/disable`, `/generate-backup-codes`) | 5 tentativas por minuto por IP (pedem a senha) |
+| 2FA: código no login (`/two-factor/verify`) | 10 tentativas por minuto por IP, além do limite do Better Auth: 5 códigos errados por tentativa de login |
 | Demais rotas de `/api/auth/*` | 100 requisições por minuto por IP |
 
 - Os limites ficam em `src/lib/rate-limit.ts` (`AUTH_RATE_LIMITS` e `ACCOUNT_SIGN_IN_LIMIT`).
@@ -108,7 +110,8 @@ Ficam em `src/features/auth/actions.ts`, no formato do `useActionState`:
 | Action | Sucesso | Erro |
 |---|---|---|
 | `signUpAction` | cria a conta, inicia a sessão e redireciona para o `callbackUrl` | devolve `{ error }` ou `{ fieldErrors }`, sempre com `values` |
-| `signInAction` | inicia a sessão e redireciona para o `callbackUrl` | devolve `{ error }` ou `{ fieldErrors }`, sempre com `values` |
+| `signInAction` | inicia a sessão e redireciona para o `callbackUrl`; com 2FA ativado, redireciona para `/login/verificacao` (levando o `callbackUrl`) | devolve `{ error }` ou `{ fieldErrors }`, sempre com `values` |
+| `verifyTwoFactorAction` | confere o código do app (`method=totp`) ou de recuperação (`method=backup`), inicia a sessão e redireciona para o `callbackUrl` | devolve `{ error }` ou `{ fieldErrors }`, com `values` |
 | `signOutAction` | encerra a sessão e redireciona para `/login` | — |
 
 Exemplo mínimo (a versão completa, com o visual do Figma, está em `src/features/auth/components/login-form.tsx`):
@@ -165,8 +168,24 @@ A página `/configuracoes` (Figma: App / 10 · Configurações e Mobile / 13 · 
 - **E-mail já cadastrado:** o Better Auth responde sucesso sem trocar nada, para não revelar quem tem conta. Como o cadastro já avisa "Este email já está cadastrado", a action confere antes no banco e avisa também, em vez de mostrar um sucesso falso. Se um dia o cadastro deixar de revelar isso, esta checagem sai junto.
 - **Senha:** a nova precisa ser diferente da atual. "Desconectar dos outros dispositivos" vem marcado; a sessão atual continua (o Better Auth cria uma nova e troca o cookie).
 - **Sessões ativas (GOS-035):** a lista é lida direto do banco (`listActiveSessions`), não pelo `listSessions` do Better Auth, porque ele exige uma sessão "fresca" (login há menos de 24 h, o `freshAge` padrão) e daria erro para quem está logado há mais tempo. O token da sessão nunca vai para o navegador: o botão manda o id, e a action busca o token só entre as sessões do próprio usuário (trocar o id no HTML não encerra a sessão de outra pessoa). A sessão atual não tem botão de encerrar; para ela existe o "Sair". Rodando local, sem proxy, o IP fica "desconhecido".
-- **O que ainda não existe aparece como "Em breve"**: verificação em duas etapas (GOS-034) e excluir conta (GOS-036). Gamificação, Notificações, Privacidade, foto e bio estão no Figma, mas ficam para quando as funcionalidades existirem (foto e bio: GOS-039).
+- **O que ainda não existe aparece como "Em breve"**: excluir conta (GOS-036). Gamificação, Notificações, Privacidade, foto e bio estão no Figma, mas ficam para quando as funcionalidades existirem (foto e bio: GOS-039).
 - **Sem sidebar e topbar:** o `(app)` ainda não tem a moldura do app; a página mostra só a área de conteúdo do Figma.
+
+## Verificação em duas etapas (GOS-034)
+Plugin `twoFactor` do Better Auth (`src/lib/auth.ts`), só com app autenticador (TOTP) e códigos de recuperação. Tabela `two_factor` e campo `user.twoFactorEnabled` (migration `add_two_factor`).
+
+**Ativar** (Configurações › Conta e segurança, `src/features/account/components/two-factor-settings.tsx`):
+1. A pessoa digita a senha → `enableTwoFactorAction` chama `enableTwoFactor` e devolve o QR code (gerado no servidor com a lib `qrcode`, como data URL), a chave para digitar à mão e os 10 códigos de recuperação.
+2. Escaneia o QR code e digita o primeiro código → `confirmTwoFactorAction` chama `verifyTOTP`. **Só aqui o 2FA passa a valer**: antes disso o login continua pedindo só a senha. O Better Auth troca a sessão atual por uma nova.
+3. A tela mostra os códigos de recuperação uma única vez (ficam criptografados no banco). A action não chama `refresh()`; a página só é atualizada quando a pessoa clica em "Já guardei", senão os códigos sumiriam.
+
+Ativado, dá para **gerar novos códigos** (os antigos param de valer) ou **desativar**; os dois pedem a senha.
+
+**Login:** o `signInEmail` não cria a sessão de quem tem 2FA. Ele devolve `twoFactorRedirect: true` e grava um cookie temporário (`two_factor`, 10 minutos); o `signInAction` manda para `/login/verificacao`. Lá, `verifyTwoFactorAction` aceita o código do app (espaços são ignorados) ou um código de recuperação (cada um vale uma vez). Marcando "Não pedir código neste dispositivo por 30 dias", o Better Auth grava o cookie `trust_device` e pula a etapa nesse navegador.
+
+- Sem o cookie temporário (expirou ou a pessoa abriu `/login/verificacao` direto), o código é recusado com "A verificação expirou. Entre de novo com seu e-mail e senha."
+- O Better Auth limita a 5 códigos errados por tentativa de login e bloqueia a conta por alguns minutos depois de muitos erros.
+- Perdeu o celular e os códigos de recuperação? Ainda não existe recuperação pela interface: alguém com acesso ao banco precisa apagar a linha em `two_factor` e pôr `twoFactorEnabled = false` no usuário.
 
 ## Testes
 - `npm test` roda os testes (Vitest) uma vez; `npm run test:watch` roda a cada alteração.
@@ -217,4 +236,4 @@ Os tokens do Figma (Foundations) ficam no `@theme` do `src/app/globals.css`, **c
 - "Esqueci minha senha": está no Figma, mas fica de fora até existir a recuperação de senha (precisa de envio de email).
 - Página de termos de uso (o checkbox do cadastro ainda não tem link).
 - Tema escuro: os tokens do escuro já existem no Figma; hoje só o claro está no `globals.css`.
-- Configurações: confirmação por e-mail na troca de e-mail (GOS-031/GOS-032), 2FA (GOS-034), excluir conta (GOS-036), foto e bio (GOS-039).
+- Configurações: confirmação por e-mail na troca de e-mail (GOS-031/GOS-032), excluir conta (GOS-036), foto e bio (GOS-039).

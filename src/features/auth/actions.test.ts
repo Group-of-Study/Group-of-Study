@@ -1,14 +1,16 @@
 import { APIError } from "better-auth/api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { signUpEmail, signInEmail, signOut, checkAuthRateLimit } = vi.hoisted(() => ({
+const { signUpEmail, signInEmail, signOut, verifyTOTP, verifyBackupCode, checkAuthRateLimit } = vi.hoisted(() => ({
     signUpEmail: vi.fn(),
     signInEmail: vi.fn(),
     signOut: vi.fn(),
+    verifyTOTP: vi.fn(),
+    verifyBackupCode: vi.fn(),
     checkAuthRateLimit: vi.fn(),
 }));
 
-vi.mock("@/lib/auth", () => ({ auth: { api: { signUpEmail, signInEmail, signOut } } }));
+vi.mock("@/lib/auth", () => ({ auth: { api: { signUpEmail, signInEmail, signOut, verifyTOTP, verifyBackupCode } } }));
 vi.mock("./rate-limit", () => ({ checkAuthRateLimit }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 // O redirect() do Next lança uma exceção; aqui ela carrega o destino.
@@ -18,7 +20,7 @@ vi.mock("next/navigation", () => ({
     },
 }));
 
-import { signInAction, signOutAction, signUpAction } from "./actions";
+import { signInAction, signOutAction, signUpAction, verifyTwoFactorAction } from "./actions";
 
 function form(data: Record<string, string>): FormData {
     const formData = new FormData();
@@ -37,6 +39,10 @@ const signUpValues = { name: user.name, email: user.email, terms: "on" };
 beforeEach(() => {
     vi.clearAllMocks();
     checkAuthRateLimit.mockResolvedValue(null);
+    // Formato real da resposta de login sem 2FA.
+    signInEmail.mockResolvedValue({ redirect: false, token: "token", user: { id: "user-1" } });
+    verifyTOTP.mockResolvedValue({ token: "token", user: { id: "user-1" } });
+    verifyBackupCode.mockResolvedValue({ token: "token", user: { id: "user-1" } });
     vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -186,5 +192,81 @@ describe("rate limit nas actions", () => {
     it("logout não tem rate limit", async () => {
         await expect(signOutAction()).rejects.toThrow("REDIRECT:/login");
         expect(checkAuthRateLimit).not.toHaveBeenCalled();
+    });
+});
+
+describe("login com verificação em duas etapas (GOS-034)", () => {
+    const login = { email: user.email, password: user.password };
+
+    it("conta com 2FA vai para a verificação, levando o callbackUrl", async () => {
+        signInEmail.mockResolvedValue({ twoFactorRedirect: true, twoFactorMethods: ["totp"] });
+
+        await expect(signInAction({}, form({ ...login, callbackUrl: "/grupos/1" }))).rejects.toThrow(
+            "REDIRECT:/login/verificacao?callbackUrl=%2Fgrupos%2F1",
+        );
+    });
+
+    it("não leva callbackUrl externo para a verificação", async () => {
+        signInEmail.mockResolvedValue({ twoFactorRedirect: true, twoFactorMethods: ["totp"] });
+
+        await expect(signInAction({}, form({ ...login, callbackUrl: "https://site-falso.com" }))).rejects.toThrow(
+            "REDIRECT:/login/verificacao",
+        );
+    });
+
+    it("código do app certo termina o login e vai para o callbackUrl", async () => {
+        await expect(
+            verifyTwoFactorAction({}, form({ method: "totp", code: "123 456", trustDevice: "on", callbackUrl: "/grupos/1" })),
+        ).rejects.toThrow("REDIRECT:/grupos/1");
+        // Espaço ignorado ("123 456") e "confiar no dispositivo" repassado.
+        expect(verifyTOTP).toHaveBeenCalledWith({ body: { code: "123456", trustDevice: true }, headers: expect.any(Headers) });
+        expect(verifyBackupCode).not.toHaveBeenCalled();
+    });
+
+    it("código de recuperação usa o verifyBackupCode", async () => {
+        await expect(verifyTwoFactorAction({}, form({ method: "backup", code: " AbCd1-23EfG " }))).rejects.toThrow(
+            "REDIRECT:/grupos",
+        );
+        expect(verifyBackupCode).toHaveBeenCalledWith({
+            body: { code: "AbCd1-23EfG", trustDevice: false },
+            headers: expect.any(Headers),
+        });
+        expect(verifyTOTP).not.toHaveBeenCalled();
+    });
+
+    it("código com formato errado não chega no Better Auth", async () => {
+        const state = await verifyTwoFactorAction({}, form({ method: "totp", code: "12ab" }));
+
+        expect(state.fieldErrors?.code).toEqual(["Digite os 6 números do app autenticador"]);
+        expect(verifyTOTP).not.toHaveBeenCalled();
+    });
+
+    it("código errado mostra a mensagem em português", async () => {
+        verifyTOTP.mockRejectedValue(new APIError("UNAUTHORIZED", { code: "INVALID_CODE", message: "Invalid code" }));
+
+        const state = await verifyTwoFactorAction({}, form({ method: "totp", code: "000000" }));
+
+        expect(state.error).toBe("Código incorreto. Confira o app autenticador e tente de novo.");
+        expect(state.values).toEqual({ method: "totp" });
+    });
+
+    it("sem o cookie temporário (expirou) pede para entrar de novo", async () => {
+        verifyTOTP.mockRejectedValue(
+            new APIError("UNAUTHORIZED", { code: "INVALID_TWO_FACTOR_COOKIE", message: "Invalid two factor cookie" }),
+        );
+
+        const state = await verifyTwoFactorAction({}, form({ method: "totp", code: "123456" }));
+
+        expect(state.error).toBe("A verificação expirou. Entre de novo com seu e-mail e senha.");
+    });
+
+    it("respeita o rate limit", async () => {
+        checkAuthRateLimit.mockResolvedValue({ error: "Muitas tentativas. Tente novamente em 1 minuto." });
+
+        const state = await verifyTwoFactorAction({}, form({ method: "totp", code: "123456" }));
+
+        expect(checkAuthRateLimit).toHaveBeenCalledWith("/two-factor/verify");
+        expect(verifyTOTP).not.toHaveBeenCalled();
+        expect(state.error).toMatch(/Muitas tentativas/);
     });
 });

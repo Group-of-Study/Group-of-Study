@@ -27,6 +27,30 @@ export const signUpSchema = passwords
         when: (payload) => passwords.safeParse(payload.value).success,
     });
 
+// Segunda etapa do login (GOS-034). O código do app tem 6 dígitos (espaços são
+// ignorados: alguns apps mostram "123 456"); o de recuperação vem no formato "AbCd1-23EfG".
+export const twoFactorSchema = z.discriminatedUnion("method", [
+    z.object({
+        method: z.literal("totp"),
+        code: z
+            .string()
+            .transform((code) => code.replace(/\s/g, ""))
+            .pipe(z.string().regex(/^\d{6}$/, "Digite os 6 números do app autenticador")),
+        trustDevice: z
+            .literal("on")
+            .optional()
+            .transform((value) => value === "on"),
+    }),
+    z.object({
+        method: z.literal("backup"),
+        code: z.string().trim().min(1, "Digite um código de recuperação"),
+        trustDevice: z
+            .literal("on")
+            .optional()
+            .transform((value) => value === "on"),
+    }),
+]);
+
 export const signInSchema = z.object({
     email: emailField,
     password: z.string().min(1, "Informe a senha"),

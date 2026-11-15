@@ -14,6 +14,12 @@ export const AUTH_RATE_LIMITS = {
     // Configurações da conta: pedem a senha atual, então também são alvo de força bruta.
     "/change-password": { window: 60, max: 5 },
     "/change-email": { window: 60, max: 5 },
+    // 2FA (GOS-034): ativar, desativar e gerar códigos pedem a senha; o código do
+    // login já tem limite próprio do Better Auth (5 erros por tentativa de login).
+    "/two-factor/enable": { window: 60, max: 5 },
+    "/two-factor/disable": { window: 60, max: 5 },
+    "/two-factor/generate-backup-codes": { window: 60, max: 5 },
+    "/two-factor/verify": { window: 60, max: 10 },
 } satisfies Record<string, RateLimitRule>;
 
 // Limite por conta (email) no login, somando API e Server Actions. Protege a
