@@ -176,6 +176,9 @@ model Goal {
   description String?
   dueDate     DateTime?
   status      GoalStatus @default(PENDING)
+  // Quando foi concluída ("Concluída hoje", ritmo da semana). Volta a null se a meta
+  // for reaberta.
+  completedAt DateTime?
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 

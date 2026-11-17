@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { getSession, unauthorized } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { GOAL_SELECT } from "@/features/goals/goal-select";
 
 type RouteContext = {
   params: Promise<{ groupId: string }>;
@@ -86,21 +87,7 @@ export async function GET(
       orderBy: {
         createdAt: "desc",
       },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        dueDate: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        author: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+      select: GOAL_SELECT,
     });
 
     return NextResponse.json({
@@ -197,7 +184,7 @@ export async function POST(
         {
           error: "Dados inválidos.",
           issues: validation.error.issues.map((issue) => ({
-            path: issue.path.join("."),
+            field: issue.path.join("."),
             message: issue.message,
           })),
         },
@@ -216,21 +203,7 @@ export async function POST(
         groupId,
         authorId: user.id,
       },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        dueDate: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        author: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+      select: GOAL_SELECT,
     });
 
     return NextResponse.json(

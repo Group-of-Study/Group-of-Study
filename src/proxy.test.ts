@@ -15,7 +15,7 @@ function request(path: string, cookie?: string) {
 }
 
 describe("proxy: quais rotas ele protege", () => {
-    it.each(["/dashboard", "/dashboard/config", "/grupos", "/grupos/123/membros", "/configuracoes"])("roda em %s", (url) => {
+    it.each(["/dashboard", "/dashboard/config", "/grupos", "/grupos/123/membros", "/configuracoes", "/metas"])("roda em %s", (url) => {
         expect(matches(url)).toBe(true);
     });
 
