@@ -9,6 +9,7 @@ import { GENERIC_ERROR, handleAuthError } from "@/features/auth/errors";
 import { Prisma } from "@/generated/prisma/client";
 import { pickFormValues } from "@/features/auth/form-values";
 import { checkAuthRateLimit } from "@/features/auth/rate-limit";
+import { requestIp } from "@/lib/audit-log";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
@@ -269,7 +270,7 @@ export async function deleteAccountAction(_prev: AccountFormState, formData: For
     }
 
     try {
-        await softDeleteAccount(user.id);
+        await softDeleteAccount(user.id, { ipAddress: requestIp(requestHeaders) });
     } catch (error) {
         // Outra pessoa mexeu num dos grupos ao mesmo tempo (transação Serializable).
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {

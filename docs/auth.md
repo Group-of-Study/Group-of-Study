@@ -198,6 +198,7 @@ Configurações › Zona de perigo › **Excluir conta** abre a confirmação no
    - a pessoa sai de todos os grupos com a **mesma regra do "Sair do grupo"** (`leaveGroup` em `src/features/groups/leave.ts`): onde ela é líder, o participante mais antigo assume e é notificado; onde ela é a única, o grupo é encerrado. Um soft delete não dispara os `onDelete` do banco, por isso isso é feito à mão;
    - sessões, senha (`account`), 2FA, notificações e convites recebidos são apagados: ninguém entra mais na conta;
    - nome vira "Conta excluída", e-mail vira `excluida-<id>@contas.invalid` (o domínio `.invalid` nunca recebe e-mail) e `deletedAt` é preenchido. O e-mail original fica livre para um cadastro novo.
+   - a exclusão fica registrada no audit log (`ACCOUNT_DELETED`, só com ids e o IP; ver [auditoria.md](auditoria.md)).
    - Fica: a linha do usuário, para não quebrar o que ficou nos grupos (metas e grupos criados por ela aparecem como "Conta excluída").
 2. **Depois de 30 dias** (`purgeDeletedAccounts`): a linha é apagada de vez e os `onDelete` do schema fazem o resto (Cascade nas tabelas da pessoa, SetNull em grupos, metas e convites criados).
 

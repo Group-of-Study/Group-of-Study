@@ -62,6 +62,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique }, session: { find
 vi.mock("@/features/auth/rate-limit", () => ({ checkAuthRateLimit }));
 vi.mock("next/cache", () => ({ refresh }));
 vi.mock("./deletion", () => ({ softDeleteAccount }));
+vi.mock("@/lib/audit-log", () => ({ requestIp: () => "203.0.113.7" }));
 // Como no Next, redirect() interrompe a action lançando uma exceção.
 vi.mock("next/navigation", () => ({
     redirect: (url: string) => {
@@ -443,7 +444,7 @@ describe("excluir conta (GOS-036)", () => {
     it("confere a senha, exclui, tira o cookie e manda para a página inicial", async () => {
         await expect(deleteAccountAction({}, form(valid))).rejects.toThrow("REDIRECT:/");
         expect(verifyPassword).toHaveBeenCalledWith(expect.objectContaining({ body: { password: "senha-atual" } }));
-        expect(softDeleteAccount).toHaveBeenCalledWith("user-1");
+        expect(softDeleteAccount).toHaveBeenCalledWith("user-1", { ipAddress: "203.0.113.7" });
         expect(signOut).toHaveBeenCalled();
         // A senha é conferida antes de qualquer dado ser apagado.
         expect(verifyPassword.mock.invocationCallOrder[0]).toBeLessThan(softDeleteAccount.mock.invocationCallOrder[0]);

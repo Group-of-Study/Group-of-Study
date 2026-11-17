@@ -3,6 +3,7 @@ import { Prisma } from "@/generated/prisma/client";
 
 import { getSession, unauthorized } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { recordAuditLog, requestIp } from "@/lib/audit-log";
 
 type RouteContext = {
   params: Promise<{
@@ -13,7 +14,7 @@ type RouteContext = {
 
 // DELETE: remover participante do grupo (somente o líder)
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: RouteContext,
 ) {
   try {
@@ -32,6 +33,8 @@ export async function DELETE(
         { status: 400 },
       );
     }
+
+    const ipAddress = requestIp(request.headers);
 
     const result = await prisma.$transaction(
       async (tx) => {
@@ -116,6 +119,15 @@ export async function DELETE(
               removedById: currentUserId,
             },
           },
+        });
+
+        await recordAuditLog(tx, {
+          action: "GROUP_MEMBER_REMOVED",
+          actorId: currentUserId,
+          targetType: "GROUP",
+          targetId: groupId,
+          metadata: { removedUserId: userId },
+          ipAddress,
         });
 
         // Conta os participantes restantes.
