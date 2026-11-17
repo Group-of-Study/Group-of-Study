@@ -9,13 +9,26 @@ export function getInitials(name: string): string {
     return `${first}${last}`.toLocaleUpperCase("pt-BR");
 }
 
-// Figma: Components › Avatar (Size=lg). Por enquanto só as iniciais; a foto
-// entra na página de perfil (GOS-039).
-export function Avatar({ name, className = "" }: { name: string; className?: string }) {
+// Figma: Components › Avatar. lg é o padrão; sm é o das linhas de meta (Metas). Por
+// enquanto só as iniciais; a foto entra na página de perfil (GOS-039).
+const SIZES = {
+    sm: "size-7 text-caption font-semibold",
+    lg: "size-12 text-h4",
+} as const;
+
+export function Avatar({
+    name,
+    size = "lg",
+    className = "",
+}: {
+    name: string;
+    size?: keyof typeof SIZES;
+    className?: string;
+}) {
     return (
         <span
             aria-hidden
-            className={`inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-bg-brand-subtle text-h4 text-text-brand ${className}`}
+            className={`inline-flex shrink-0 items-center justify-center rounded-full bg-bg-brand-subtle text-text-brand ${SIZES[size]} ${className}`}
         >
             {getInitials(name)}
         </span>
