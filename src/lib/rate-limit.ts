@@ -20,6 +20,9 @@ export const AUTH_RATE_LIMITS = {
     "/two-factor/disable": { window: 60, max: 5 },
     "/two-factor/generate-backup-codes": { window: 60, max: 5 },
     "/two-factor/verify": { window: 60, max: 10 },
+    // Excluir conta (GOS-036): só existe como Server Action (o deleteUser do Better
+    // Auth não é usado), mas também pede a senha.
+    "/delete-account": { window: 60, max: 5 },
 } satisfies Record<string, RateLimitRule>;
 
 // Limite por conta (email) no login, somando API e Server Actions. Protege a

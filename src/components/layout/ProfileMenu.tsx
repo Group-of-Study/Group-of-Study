@@ -17,14 +17,14 @@ export function ProfileMenu({ onNavigate }: Props) {
     pathname.startsWith("/configuracoes/");
 
   return (
-    <div className="space-y-1 border-t border-zinc-200 pt-4">
+    <div className="space-y-1 border-t border-border-default pt-4">
       <Link
         href="/configuracoes"
         onClick={onNavigate}
         className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
           active
-            ? "bg-blue-50 text-blue-700"
-            : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+            ? "bg-bg-brand-subtle text-text-brand"
+            : "text-text-secondary hover:bg-bg-subtle hover:text-text-primary"
         }`}
       >
         <Settings size={19} />
@@ -34,7 +34,7 @@ export function ProfileMenu({ onNavigate }: Props) {
       <form action={signOutAction}>
         <button
           type="submit"
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-danger transition-colors hover:bg-bg-danger-subtle"
         >
           <LogOut size={19} />
           Sair

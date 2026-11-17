@@ -43,6 +43,10 @@ model User {
   // Onboarding "Primeiros passos" (GOS-040): quando a pessoa pulou ou concluiu.
   // Preenchido, o checklist do Início não aparece mais, em nenhum aparelho.
   onboardingDoneAt DateTime?
+  // Exclusão de conta (GOS-036): preenchido quando a pessoa exclui a conta. Nome e
+  // e-mail já são anonimizados na hora; a linha some de vez depois do prazo
+  // (purgeDeletedAccounts em src/features/account/deletion.ts).
+  deletedAt        DateTime?
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
   sessions         Session[]
@@ -58,6 +62,7 @@ model User {
   authoredGoals  Goal[]         @relation("GoalAuthor")
   createdInvites GroupInvite[]  @relation("GroupInviteCreator")
 
+  @@index([deletedAt])
   @@map("user")
 }
 

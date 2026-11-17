@@ -78,27 +78,27 @@ export default function GroupMembers({
 
   return (
     <>
-      <section className="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6">
+      <section className="rounded-2xl border border-border-default bg-bg-surface p-5 sm:p-6">
         <div className="mb-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Users size={20} className="text-zinc-500" />
+            <Users size={20} className="text-text-secondary" />
 
-            <h2 className="text-lg font-semibold text-zinc-900">
+            <h2 className="text-lg font-semibold text-text-primary">
               Membros
             </h2>
           </div>
 
-          <span className="rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600">
+          <span className="rounded-full bg-bg-subtle px-3 py-1 text-sm font-medium text-text-secondary">
             {members.length}
           </span>
         </div>
 
         {members.length === 0 ? (
-          <p className="py-6 text-center text-sm text-zinc-500">
+          <p className="py-6 text-center text-sm text-text-secondary">
             Nenhum membro encontrado.
           </p>
         ) : (
-          <div className="divide-y divide-zinc-100">
+          <div className="divide-y divide-border-subtle">
             {members.map((member) => {
               const isMemberLeader = member.user.id === leaderId;
               const isCurrentUser = member.user.id === currentUserId;
@@ -109,22 +109,22 @@ export default function GroupMembers({
                   className="flex items-center justify-between gap-3 py-4 first:pt-0 last:pb-0"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-800">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-bg-brand-subtle font-semibold text-text-brand">
                       {member.user.name.charAt(0).toUpperCase()}
                     </div>
 
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-zinc-900">
+                      <p className="truncate text-sm font-medium text-text-primary">
                         {member.user.name}
 
                         {isCurrentUser && (
-                          <span className="ml-2 text-xs text-zinc-400">
+                          <span className="ml-2 text-xs text-text-tertiary">
                             Você
                           </span>
                         )}
                       </p>
 
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-text-secondary">
                         Participa desde {formatDate(member.joinedAt)}
                       </p>
                     </div>
@@ -132,7 +132,7 @@ export default function GroupMembers({
 
                   <div className="flex shrink-0 items-center gap-2">
                     {isMemberLeader && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-bg-level-subtle px-2.5 py-1 text-xs font-medium text-text-level">
                         <Crown size={13} />
                         Líder
                       </span>
@@ -163,7 +163,7 @@ export default function GroupMembers({
         {error && (
           <p
             role="alert"
-            className="mt-4 text-sm text-red-600"
+            className="mt-4 text-sm text-text-danger"
           >
             {error}
           </p>

@@ -191,14 +191,14 @@ export default function GroupActions({
 
   return (
     <>
-      <section className="mb-6 rounded-2xl border border-zinc-200 bg-white p-5">
+      <section className="mb-6 rounded-2xl border border-border-default bg-bg-surface p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="font-semibold text-zinc-900">
+            <h2 className="font-semibold text-text-primary">
               Ações do grupo
             </h2>
 
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-text-secondary">
               {isLeader
                 ? "Você é o líder deste grupo."
                 : isMember
@@ -235,17 +235,17 @@ export default function GroupActions({
         </div>
 
         {isLeader && group.status !== "CLOSED" && (
-          <div className="mt-5 border-t border-zinc-100 pt-5">
+          <div className="mt-5 border-t border-border-subtle pt-5">
             <div className="mb-3 flex items-center gap-2">
-              <Crown size={18} className="text-amber-600" />
+              <Crown size={18} className="text-text-level" />
 
-              <h3 className="font-medium text-zinc-900">
+              <h3 className="font-medium text-text-primary">
                 Transferir liderança
               </h3>
             </div>
 
             {otherMembers.length === 0 ? (
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-text-secondary">
                 É necessário ter outro participante para transferir a liderança.
               </p>
             ) : (
@@ -254,7 +254,7 @@ export default function GroupActions({
                   value={selectedLeader}
                   onChange={(event) => setSelectedLeader(event.target.value)}
                   disabled={loading}
-                  className="min-w-0 flex-1 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 outline-none focus:border-blue-700"
+                  className="min-w-0 flex-1 rounded-xl border border-border-default bg-bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:border-border-focus"
                 >
                   <option value="">Selecione o novo líder</option>
 
@@ -290,7 +290,7 @@ export default function GroupActions({
         {error && !pendingAction && (
           <p
             role="alert"
-            className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700"
+            className="mt-4 rounded-lg bg-bg-danger-subtle p-3 text-sm text-text-danger"
           >
             {error}
           </p>

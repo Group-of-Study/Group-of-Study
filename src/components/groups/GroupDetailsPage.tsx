@@ -70,13 +70,13 @@ function formatDate(value: string) {
 function LoadingSkeleton() {
   return (
     <div className="mx-auto w-full max-w-7xl animate-pulse px-5 py-10 sm:px-8">
-      <div className="mb-8 h-5 w-32 rounded bg-zinc-200" />
-      <div className="mb-4 h-40 rounded-3xl bg-zinc-200" />
-      <div className="mb-6 h-14 rounded-xl bg-zinc-200" />
+      <div className="mb-8 h-5 w-32 rounded bg-bg-muted" />
+      <div className="mb-4 h-40 rounded-3xl bg-bg-muted" />
+      <div className="mb-6 h-14 rounded-xl bg-bg-muted" />
 
       <div className="grid gap-6 lg:grid-cols-[1.5fr_0.8fr]">
-        <div className="h-72 rounded-2xl bg-zinc-200" />
-        <div className="h-72 rounded-2xl bg-zinc-200" />
+        <div className="h-72 rounded-2xl bg-bg-muted" />
+        <div className="h-72 rounded-2xl bg-bg-muted" />
       </div>
     </div>
   );
@@ -92,16 +92,16 @@ function EmptyPanel({
   description: string;
 }) {
   return (
-    <div className="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center">
-      <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-800">
+    <div className="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-border-strong bg-bg-surface px-6 py-12 text-center">
+      <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-bg-brand-subtle text-text-brand">
         <Icon size={26} />
       </div>
 
-      <h3 className="text-base font-semibold text-zinc-900">
+      <h3 className="text-base font-semibold text-text-primary">
         {title}
       </h3>
 
-      <p className="mt-2 max-w-md text-sm leading-6 text-zinc-500">
+      <p className="mt-2 max-w-md text-sm leading-6 text-text-secondary">
         {description}
       </p>
     </div>
@@ -189,21 +189,21 @@ export default function GroupDetailsPage({ groupId }: Props) {
     return (
       <div className="mx-auto max-w-7xl px-5 py-16 text-center sm:px-8">
         <AlertCircle
-          className="mx-auto mb-4 text-zinc-400"
+          className="mx-auto mb-4 text-text-tertiary"
           size={40}
         />
 
-        <h1 className="text-xl font-semibold text-zinc-900">
+        <h1 className="text-xl font-semibold text-text-primary">
           Grupo não encontrado
         </h1>
 
-        <p className="mt-2 text-sm text-zinc-500">
+        <p className="mt-2 text-sm text-text-secondary">
           O grupo não existe ou você não tem acesso a ele.
         </p>
 
         <Link
           href="/grupos"
-          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-blue-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-800"
+          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-bg-brand px-4 py-2.5 text-sm font-medium text-text-on-brand transition hover:bg-bg-brand-hover"
         >
           <ArrowLeft size={17} />
           Voltar para grupos
@@ -216,22 +216,22 @@ export default function GroupDetailsPage({ groupId }: Props) {
     return (
       <div className="mx-auto max-w-7xl px-5 py-16 text-center sm:px-8">
         <AlertCircle
-          className="mx-auto mb-4 text-red-500"
+          className="mx-auto mb-4 text-text-danger"
           size={40}
         />
 
-        <h1 className="text-xl font-semibold text-zinc-900">
+        <h1 className="text-xl font-semibold text-text-primary">
           Não foi possível carregar o grupo
         </h1>
 
-        <p className="mt-2 text-sm text-zinc-500">
+        <p className="mt-2 text-sm text-text-secondary">
           {error ?? "Ocorreu um erro inesperado."}
         </p>
 
         <button
           type="button"
           onClick={() => setRetryKey((current) => current + 1)}
-          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-blue-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-800"
+          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-bg-brand px-4 py-2.5 text-sm font-medium text-text-on-brand transition hover:bg-bg-brand-hover"
         >
           <RefreshCw size={16} />
           Tentar novamente
@@ -247,11 +247,11 @@ export default function GroupDetailsPage({ groupId }: Props) {
   const isLeader = group.leader?.id === group.currentUserId;
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb]">
+    <div className="min-h-screen bg-bg-canvas">
       <div className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
         <Link
           href="/grupos"
-          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-zinc-500 transition hover:text-blue-900"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-text-secondary transition hover:text-text-brand"
         >
           <ArrowLeft size={17} />
           Voltar para grupos
@@ -260,19 +260,19 @@ export default function GroupDetailsPage({ groupId }: Props) {
         <GroupStatusAlert status={group.status} />
 
         {/* Cabeçalho do grupo */}
-        <section className="relative mt-5 overflow-hidden rounded-3xl bg-[#14294f] p-6 text-white shadow-lg sm:p-9">
-          <div className="pointer-events-none absolute -right-16 -top-24 size-72 rounded-full border-[40px] border-white/5" />
+        <section className="relative mt-5 overflow-hidden rounded-3xl bg-bg-brand-strong p-6 text-text-inverse shadow-lg sm:p-9">
+          <div className="pointer-events-none absolute -right-16 -top-24 size-72 rounded-full border-[40px] border-text-inverse/5" />
 
-          <div className="pointer-events-none absolute -bottom-36 right-32 size-72 rounded-full bg-blue-400/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-36 right-32 size-72 rounded-full bg-bg-accent/10 blur-3xl" />
 
           <div className="relative z-10">
             <div className="mb-5 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-blue-100">
+              <span className="inline-flex items-center gap-2 rounded-full bg-text-inverse/10 px-3 py-1.5 text-xs font-medium text-text-inverse/80">
                 <BookOpen size={14} />
                 Grupo de estudos
               </span>
 
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-blue-100">
+              <span className="inline-flex items-center gap-2 rounded-full bg-text-inverse/10 px-3 py-1.5 text-xs font-medium text-text-inverse/80">
                 {group.visibility === "PUBLIC" ? (
                   <Globe size={14} />
                 ) : (
@@ -287,12 +287,12 @@ export default function GroupDetailsPage({ groupId }: Props) {
               {group.name}
             </h1>
 
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-blue-100/80 sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-text-inverse/80 sm:text-base">
               {group.description ||
                 "Este grupo ainda não possui uma descrição."}
             </p>
 
-            <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-blue-100/80">
+            <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-text-inverse/80">
               <span className="inline-flex items-center gap-2">
                 <Users size={17} />
 
@@ -328,7 +328,7 @@ export default function GroupDetailsPage({ groupId }: Props) {
         </section>
 
         {/* Navegação */}
-        <nav className="mt-8 overflow-x-auto border-b border-zinc-200">
+        <nav className="mt-8 overflow-x-auto border-b border-border-default">
           <div className="flex min-w-max items-center gap-1">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -341,8 +341,8 @@ export default function GroupDetailsPage({ groupId }: Props) {
                   onClick={() => setActiveTab(tab.id)}
                   className={`inline-flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${
                     selected
-                      ? "border-blue-800 text-blue-900"
-                      : "border-transparent text-zinc-500 hover:text-zinc-800"
+                      ? "border-border-brand text-text-brand"
+                      : "border-transparent text-text-secondary hover:text-text-primary"
                   }`}
                 >
                   <Icon size={17} />
@@ -361,60 +361,60 @@ export default function GroupDetailsPage({ groupId }: Props) {
                 {/* Indicadores */}
                 <section>
                   <div className="mb-4">
-                    <h2 className="text-lg font-bold text-zinc-900">
+                    <h2 className="text-lg font-bold text-text-primary">
                       Visão geral
                     </h2>
 
-                    <p className="mt-1 text-sm text-zinc-500">
+                    <p className="mt-1 text-sm text-text-secondary">
                       Acompanhe as atividades e o desenvolvimento do grupo.
                     </p>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-zinc-200 bg-white p-5">
-                      <div className="mb-4 flex size-10 items-center justify-center rounded-xl bg-blue-50 text-blue-800">
+                    <div className="rounded-2xl border border-border-default bg-bg-surface p-5">
+                      <div className="mb-4 flex size-10 items-center justify-center rounded-xl bg-bg-brand-subtle text-text-brand">
                         <Target size={20} />
                       </div>
 
-                      <p className="text-sm text-zinc-500">Metas</p>
+                      <p className="text-sm text-text-secondary">Metas</p>
 
-                      <p className="mt-1 text-2xl font-bold text-zinc-900">
+                      <p className="mt-1 text-2xl font-bold text-text-primary">
                         —
                       </p>
 
-                      <p className="mt-1 text-xs text-zinc-400">
+                      <p className="mt-1 text-xs text-text-tertiary">
                         Metas cadastradas
                       </p>
                     </div>
 
-                    <div className="rounded-2xl border border-zinc-200 bg-white p-5">
-                      <div className="mb-4 flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                    <div className="rounded-2xl border border-border-default bg-bg-surface p-5">
+                      <div className="mb-4 flex size-10 items-center justify-center rounded-xl bg-bg-success-subtle text-text-success">
                         <CheckCircle2 size={20} />
                       </div>
 
-                      <p className="text-sm text-zinc-500">Tarefas</p>
+                      <p className="text-sm text-text-secondary">Tarefas</p>
 
-                      <p className="mt-1 text-2xl font-bold text-zinc-900">
+                      <p className="mt-1 text-2xl font-bold text-text-primary">
                         —
                       </p>
 
-                      <p className="mt-1 text-xs text-zinc-400">
+                      <p className="mt-1 text-xs text-text-tertiary">
                         Tarefas concluídas
                       </p>
                     </div>
 
-                    <div className="rounded-2xl border border-zinc-200 bg-white p-5">
-                      <div className="mb-4 flex size-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+                    <div className="rounded-2xl border border-border-default bg-bg-surface p-5">
+                      <div className="mb-4 flex size-10 items-center justify-center rounded-xl bg-bg-level-subtle text-text-level">
                         <Trophy size={20} />
                       </div>
 
-                      <p className="text-sm text-zinc-500">Desafios</p>
+                      <p className="text-sm text-text-secondary">Desafios</p>
 
-                      <p className="mt-1 text-2xl font-bold text-zinc-900">
+                      <p className="mt-1 text-2xl font-bold text-text-primary">
                         —
                       </p>
 
-                      <p className="mt-1 text-xs text-zinc-400">
+                      <p className="mt-1 text-xs text-text-tertiary">
                         Desafios ativos
                       </p>
                     </div>
@@ -422,19 +422,19 @@ export default function GroupDetailsPage({ groupId }: Props) {
                 </section>
 
                 {/* Metas */}
-                <section className="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6">
+                <section className="rounded-2xl border border-border-default bg-bg-surface p-5 sm:p-6">
                   <div className="mb-5 flex items-center justify-between">
                     <div>
-                      <h2 className="text-base font-bold text-zinc-900">
+                      <h2 className="text-base font-bold text-text-primary">
                         Metas do grupo
                       </h2>
 
-                      <p className="mt-1 text-sm text-zinc-500">
+                      <p className="mt-1 text-sm text-text-secondary">
                         Objetivos que orientam os estudos.
                       </p>
                     </div>
 
-                    <Target className="text-blue-800" size={21} />
+                    <Target className="text-text-brand" size={21} />
                   </div>
 
                   <EmptyPanel
@@ -445,20 +445,20 @@ export default function GroupDetailsPage({ groupId }: Props) {
                 </section>
 
                 {/* Tarefas */}
-                <section className="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6">
+                <section className="rounded-2xl border border-border-default bg-bg-surface p-5 sm:p-6">
                   <div className="mb-5 flex items-center justify-between">
                     <div>
-                      <h2 className="text-base font-bold text-zinc-900">
+                      <h2 className="text-base font-bold text-text-primary">
                         Tarefas recentes
                       </h2>
 
-                      <p className="mt-1 text-sm text-zinc-500">
+                      <p className="mt-1 text-sm text-text-secondary">
                         Organização das atividades de estudo.
                       </p>
                     </div>
 
                     <ClipboardList
-                      className="text-blue-800"
+                      className="text-text-brand"
                       size={21}
                     />
                   </div>
@@ -475,16 +475,16 @@ export default function GroupDetailsPage({ groupId }: Props) {
               <aside className="space-y-6">
                 <GroupLeader leader={group.leader} />
 
-                <section className="rounded-2xl border border-zinc-200 bg-white p-5">
+                <section className="rounded-2xl border border-border-default bg-bg-surface p-5">
                   <div className="mb-4 flex items-center justify-between">
-                    <h2 className="font-bold text-zinc-900">
+                    <h2 className="font-bold text-text-primary">
                       Participantes
                     </h2>
 
                     <button
                       type="button"
                       onClick={() => setActiveTab("members")}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-blue-800 hover:text-blue-950"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-text-brand hover:underline"
                     >
                       Ver todos
                       <ChevronRight size={15} />
@@ -492,49 +492,49 @@ export default function GroupDetailsPage({ groupId }: Props) {
                   </div>
 
                   <div className="mb-4 flex items-center gap-3">
-                    <div className="flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-800">
+                    <div className="flex size-11 items-center justify-center rounded-xl bg-bg-brand-subtle text-text-brand">
                       <Users size={21} />
                     </div>
 
                     <div>
-                      <p className="text-2xl font-bold text-zinc-900">
+                      <p className="text-2xl font-bold text-text-primary">
                         {group._count.members}
                       </p>
 
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-text-secondary">
                         Pessoas neste grupo
                       </p>
                     </div>
                   </div>
 
-                  <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
-                    <div className="h-full w-full rounded-full bg-blue-800" />
+                  <div className="h-2 overflow-hidden rounded-full bg-bg-muted">
+                    <div className="h-full w-full rounded-full bg-bg-brand" />
                   </div>
 
-                  <p className="mt-2 text-xs text-zinc-400">
+                  <p className="mt-2 text-xs text-text-tertiary">
                     Comunidade de estudos
                   </p>
                 </section>
 
-                <section className="rounded-2xl border border-zinc-200 bg-white p-5">
+                <section className="rounded-2xl border border-border-default bg-bg-surface p-5">
                   <div className="mb-3 flex items-center gap-2">
                     <CalendarDays
                       size={19}
-                      className="text-blue-800"
+                      className="text-text-brand"
                     />
 
-                    <h2 className="font-bold text-zinc-900">
+                    <h2 className="font-bold text-text-primary">
                       Sobre o grupo
                     </h2>
                   </div>
 
                   <div className="space-y-4 text-sm">
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-zinc-500">
+                      <span className="text-text-secondary">
                         Visibilidade
                       </span>
 
-                      <span className="font-medium text-zinc-800">
+                      <span className="font-medium text-text-primary">
                         {group.visibility === "PUBLIC"
                           ? "Público"
                           : "Privado"}
@@ -542,21 +542,21 @@ export default function GroupDetailsPage({ groupId }: Props) {
                     </div>
 
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-zinc-500">
+                      <span className="text-text-secondary">
                         Participantes
                       </span>
 
-                      <span className="font-medium text-zinc-800">
+                      <span className="font-medium text-text-primary">
                         {group._count.members}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-zinc-500">
+                      <span className="text-text-secondary">
                         Criado em
                       </span>
 
-                      <span className="font-medium text-zinc-800">
+                      <span className="font-medium text-text-primary">
                         {new Date(group.createdAt).toLocaleDateString(
                           "pt-BR",
                         )}
@@ -595,11 +595,11 @@ export default function GroupDetailsPage({ groupId }: Props) {
           {activeTab === "members" && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-xl font-bold text-zinc-900">
+                <h2 className="text-xl font-bold text-text-primary">
                   Membros do grupo
                 </h2>
 
-                <p className="mt-1 text-sm text-zinc-500">
+                <p className="mt-1 text-sm text-text-secondary">
                   Conheça os participantes e veja quem lidera a comunidade.
                 </p>
               </div>
@@ -635,9 +635,9 @@ export default function GroupDetailsPage({ groupId }: Props) {
         </div>
 
         {group.creator && (
-          <p className="mt-8 border-t border-zinc-200 pt-5 text-sm text-zinc-500">
+          <p className="mt-8 border-t border-border-default pt-5 text-sm text-text-secondary">
             Grupo criado por{" "}
-            <span className="font-semibold text-zinc-800">
+            <span className="font-semibold text-text-primary">
               {group.creator.name}
             </span>
           </p>

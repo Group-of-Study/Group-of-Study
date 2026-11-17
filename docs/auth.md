@@ -154,11 +154,13 @@ A página `/configuracoes` (Figma: App / 10 · Configurações e Mobile / 13 · 
 | `changeEmailAction` | confere a senha atual e troca o e-mail | `verifyPassword` + `changeEmail` |
 | `changePasswordAction` | troca a senha; com "Desconectar dos outros dispositivos" marcado, encerra as outras sessões | `changePassword` (`revokeOtherSessions`) |
 | `revokeSessionAction` | encerra uma sessão (`target` = id da sessão) ou todas as outras (`target` = `REVOKE_OTHERS`) | `revokeSession` / `revokeOtherSessions` |
+| `deleteAccountAction` | confere a senha e exclui a conta (ver [Excluir conta](#excluir-conta-gos-036)) | `verifyPassword` + `signOut` |
 
 | Arquivo | Papel |
 |---|---|
 | `src/app/(app)/configuracoes/page.tsx` | Página: título, menu das seções e os painéis dentro do `<Suspense>` |
 | `src/features/account/components/` | Painéis (`ProfileForm`, `AccountSecurityPanel`, `DangerZonePanel`), `SettingsNav` e partes reaproveitáveis (`SettingsPanel`, `SettingRow`, `ComingSoon`) |
+| `src/features/account/deletion.ts` | `softDeleteAccount()` e `purgeDeletedAccounts()`: exclusão de conta (GOS-036) |
 | `src/features/account/sessions.ts` | `listActiveSessions()`: sessões ativas do usuário, já prontas para a tela (dispositivo, IP, data), sem o token |
 | `src/features/account/user-agent.ts` | Transforma o user agent em "Chrome no macOS" (só para exibir, não serve para segurança) |
 | `src/features/account/schemas.ts` | Validação; nome, e-mail e senha usam os mesmos campos do cadastro (`src/features/auth/schemas.ts`) |
@@ -168,7 +170,7 @@ A página `/configuracoes` (Figma: App / 10 · Configurações e Mobile / 13 · 
 - **E-mail já cadastrado:** o Better Auth responde sucesso sem trocar nada, para não revelar quem tem conta. Como o cadastro já avisa "Este email já está cadastrado", a action confere antes no banco e avisa também, em vez de mostrar um sucesso falso. Se um dia o cadastro deixar de revelar isso, esta checagem sai junto.
 - **Senha:** a nova precisa ser diferente da atual. "Desconectar dos outros dispositivos" vem marcado; a sessão atual continua (o Better Auth cria uma nova e troca o cookie).
 - **Sessões ativas (GOS-035):** a lista é lida direto do banco (`listActiveSessions`), não pelo `listSessions` do Better Auth, porque ele exige uma sessão "fresca" (login há menos de 24 h, o `freshAge` padrão) e daria erro para quem está logado há mais tempo. O token da sessão nunca vai para o navegador: o botão manda o id, e a action busca o token só entre as sessões do próprio usuário (trocar o id no HTML não encerra a sessão de outra pessoa). A sessão atual não tem botão de encerrar; para ela existe o "Sair". Rodando local, sem proxy, o IP fica "desconhecido".
-- **O que ainda não existe aparece como "Em breve"**: excluir conta (GOS-036). Gamificação, Notificações, Privacidade, foto e bio estão no Figma, mas ficam para quando as funcionalidades existirem (foto e bio: GOS-039).
+- **O que ainda não existe fica de fora**: Gamificação, Notificações, Privacidade, foto e bio estão no Figma, mas ficam para quando as funcionalidades existirem (foto e bio: GOS-039).
 - **Sem sidebar e topbar:** o `(app)` ainda não tem a moldura do app; a página mostra só a área de conteúdo do Figma.
 
 ## Verificação em duas etapas (GOS-034)
@@ -186,6 +188,26 @@ Ativado, dá para **gerar novos códigos** (os antigos param de valer) ou **desa
 - Sem o cookie temporário (expirou ou a pessoa abriu `/login/verificacao` direto), o código é recusado com "A verificação expirou. Entre de novo com seu e-mail e senha."
 - O Better Auth limita a 5 códigos errados por tentativa de login e bloqueia a conta por alguns minutos depois de muitos erros.
 - Perdeu o celular e os códigos de recuperação? Ainda não existe recuperação pela interface: alguém com acesso ao banco precisa apagar a linha em `two_factor` e pôr `twoFactorEnabled = false` no usuário.
+
+## Excluir conta (GOS-036)
+Configurações › Zona de perigo › **Excluir conta** abre a confirmação no próprio painel (não há tela no Figma): a pessoa digita a senha e marca "Entendo que a exclusão é permanente". A `deleteAccountAction` confere a senha (com rate limit `/delete-account`), chama `softDeleteAccount` e manda para a página inicial.
+
+É um **soft delete**, em duas etapas:
+
+1. **Na hora** (`softDeleteAccount`, uma transação Serializable):
+   - a pessoa sai de todos os grupos com a **mesma regra do "Sair do grupo"** (`leaveGroup` em `src/features/groups/leave.ts`): onde ela é líder, o participante mais antigo assume e é notificado; onde ela é a única, o grupo é encerrado. Um soft delete não dispara os `onDelete` do banco, por isso isso é feito à mão;
+   - sessões, senha (`account`), 2FA, notificações e convites recebidos são apagados: ninguém entra mais na conta;
+   - nome vira "Conta excluída", e-mail vira `excluida-<id>@contas.invalid` (o domínio `.invalid` nunca recebe e-mail) e `deletedAt` é preenchido. O e-mail original fica livre para um cadastro novo.
+   - Fica: a linha do usuário, para não quebrar o que ficou nos grupos (metas e grupos criados por ela aparecem como "Conta excluída").
+2. **Depois de 30 dias** (`purgeDeletedAccounts`): a linha é apagada de vez e os `onDelete` do schema fazem o resto (Cascade nas tabelas da pessoa, SetNull em grupos, metas e convites criados).
+
+- **Por que não o `deleteUser` do Better Auth:** ele apaga a linha na hora, sem passar pela regra dos grupos nem pela anonimização. Ele continua desligado.
+- **Depois da transação** o `signOut` só tira o cookie (a sessão já não existe no banco, e ele não falha por isso).
+- **Conflito:** se outra pessoa mexer num dos grupos no mesmo instante, a transação falha (`P2034`) e a tela pede para tentar de novo; nada é apagado pela metade.
+- **Ainda não roda sozinho:** `purgeDeletedAccounts` não tem agendamento. Ele entra com a fila de jobs (GOS-048). Até lá, dá para rodar o equivalente no banco:
+  ```sql
+  DELETE FROM "user" WHERE "deletedAt" IS NOT NULL AND "deletedAt" <= NOW() - INTERVAL '30 days';
+  ```
 
 ## Testes
 - `npm test` roda os testes (Vitest) uma vez; `npm run test:watch` roda a cada alteração.
@@ -237,4 +259,5 @@ Telas de erro, 404 e carregamento, `EmptyState`, links com visual de botão (`bu
 ## Pendente
 - "Esqueci minha senha": está no Figma, mas fica de fora até existir a recuperação de senha (precisa de envio de email).
 - Página de termos de uso (o checkbox do cadastro ainda não tem link).
-- Configurações: confirmação por e-mail na troca de e-mail (GOS-031/GOS-032), excluir conta (GOS-036), foto e bio (GOS-039).
+- Configurações: confirmação por e-mail na troca de e-mail (GOS-031/GOS-032), foto e bio (GOS-039).
+- Exclusão de conta: agendar o `purgeDeletedAccounts` (GOS-048).

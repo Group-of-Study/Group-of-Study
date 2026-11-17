@@ -12,6 +12,8 @@ const {
     verifyTOTP,
     disableTwoFactor,
     generateBackupCodes,
+    signOut,
+    softDeleteAccount,
     checkAuthRateLimit,
     findUnique,
     findFirstSession,
@@ -28,6 +30,8 @@ const {
     verifyTOTP: vi.fn(),
     disableTwoFactor: vi.fn(),
     generateBackupCodes: vi.fn(),
+    signOut: vi.fn(),
+    softDeleteAccount: vi.fn(),
     checkAuthRateLimit: vi.fn(),
     findUnique: vi.fn(),
     findFirstSession: vi.fn(),
@@ -50,12 +54,20 @@ vi.mock("@/lib/auth", () => ({
             verifyTOTP,
             disableTwoFactor,
             generateBackupCodes,
+            signOut,
         },
     },
 }));
 vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique }, session: { findFirst: findFirstSession } } }));
 vi.mock("@/features/auth/rate-limit", () => ({ checkAuthRateLimit }));
 vi.mock("next/cache", () => ({ refresh }));
+vi.mock("./deletion", () => ({ softDeleteAccount }));
+// Como no Next, redirect() interrompe a action lançando uma exceção.
+vi.mock("next/navigation", () => ({
+    redirect: (url: string) => {
+        throw new Error(`REDIRECT:${url}`);
+    },
+}));
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 // Sem sessão, requireSession() redireciona; aqui o redirect vira uma exceção.
 vi.mock("@/lib/session", () => ({
@@ -71,6 +83,7 @@ import {
     changeEmailAction,
     changePasswordAction,
     confirmTwoFactorAction,
+    deleteAccountAction,
     disableTwoFactorAction,
     enableTwoFactorAction,
     regenerateBackupCodesAction,
@@ -110,6 +123,8 @@ beforeEach(() => {
     verifyTOTP.mockResolvedValue({ token: "nova", user: {} });
     disableTwoFactor.mockResolvedValue({ status: true });
     generateBackupCodes.mockResolvedValue({ status: true, backupCodes: ["Novo1-Cod1g", "Novo2-Cod2g"] });
+    signOut.mockResolvedValue({ success: true });
+    softDeleteAccount.mockResolvedValue(undefined);
     checkAuthRateLimit.mockResolvedValue(null);
     findUnique.mockResolvedValue(null);
     vi.spyOn(console, "error").mockImplementation(() => {});
@@ -125,6 +140,7 @@ describe("sem sessão", () => {
         ["confirmTwoFactorAction", confirmTwoFactorAction],
         ["disableTwoFactorAction", disableTwoFactorAction],
         ["regenerateBackupCodesAction", regenerateBackupCodesAction],
+        ["deleteAccountAction", deleteAccountAction],
     ])("%s redireciona para o login sem chamar o Better Auth", async (_name, action) => {
         session.current = null;
         await expect(action({}, form({}))).rejects.toThrow("REDIRECT:/login");
@@ -137,6 +153,7 @@ describe("sem sessão", () => {
         expect(verifyTOTP).not.toHaveBeenCalled();
         expect(disableTwoFactor).not.toHaveBeenCalled();
         expect(generateBackupCodes).not.toHaveBeenCalled();
+        expect(softDeleteAccount).not.toHaveBeenCalled();
     });
 });
 
@@ -417,5 +434,70 @@ describe("verificação em duas etapas (GOS-034)", () => {
 
         expect(disableTwoFactor).not.toHaveBeenCalled();
         expect(state.error).toMatch(/Muitas tentativas/);
+    });
+});
+
+describe("excluir conta (GOS-036)", () => {
+    const valid = { currentPassword: "senha-atual", confirm: "on" };
+
+    it("confere a senha, exclui, tira o cookie e manda para a página inicial", async () => {
+        await expect(deleteAccountAction({}, form(valid))).rejects.toThrow("REDIRECT:/");
+        expect(verifyPassword).toHaveBeenCalledWith(expect.objectContaining({ body: { password: "senha-atual" } }));
+        expect(softDeleteAccount).toHaveBeenCalledWith("user-1");
+        expect(signOut).toHaveBeenCalled();
+        // A senha é conferida antes de qualquer dado ser apagado.
+        expect(verifyPassword.mock.invocationCallOrder[0]).toBeLessThan(softDeleteAccount.mock.invocationCallOrder[0]);
+    });
+
+    it("sem marcar a confirmação não confere a senha nem exclui", async () => {
+        const state = await deleteAccountAction({}, form({ currentPassword: "senha-atual" }));
+        expect(state.fieldErrors?.confirm).toEqual(["Marque para confirmar a exclusão"]);
+        expect(verifyPassword).not.toHaveBeenCalled();
+        expect(softDeleteAccount).not.toHaveBeenCalled();
+    });
+
+    it("sem senha não exclui", async () => {
+        const state = await deleteAccountAction({}, form({ currentPassword: "", confirm: "on" }));
+        expect(state.fieldErrors?.currentPassword).toEqual(["Informe a senha atual"]);
+        expect(softDeleteAccount).not.toHaveBeenCalled();
+    });
+
+    it("com senha errada não exclui", async () => {
+        verifyPassword.mockRejectedValue(invalidPassword());
+        const state = await deleteAccountAction({}, form(valid));
+        expect(state.error).toBe("Senha atual incorreta.");
+        expect(softDeleteAccount).not.toHaveBeenCalled();
+        expect(signOut).not.toHaveBeenCalled();
+    });
+
+    it("rate limit bloqueia antes de conferir a senha", async () => {
+        checkAuthRateLimit.mockResolvedValue({ error: "Muitas tentativas. Tente novamente em 1 minuto." });
+        const state = await deleteAccountAction({}, form(valid));
+        expect(checkAuthRateLimit).toHaveBeenCalledWith("/delete-account");
+        expect(state.error).toBe("Muitas tentativas. Tente novamente em 1 minuto.");
+        expect(verifyPassword).not.toHaveBeenCalled();
+    });
+
+    it("conflito com outra alteração num grupo pede para tentar de novo, sem deslogar", async () => {
+        const { Prisma } = await import("@/generated/prisma/client");
+        softDeleteAccount.mockRejectedValue(
+            new Prisma.PrismaClientKnownRequestError("conflito", { code: "P2034", clientVersion: "test" }),
+        );
+        const state = await deleteAccountAction({}, form(valid));
+        expect(state.error).toBe("Um dos seus grupos mudou neste instante. Tente excluir de novo.");
+        expect(signOut).not.toHaveBeenCalled();
+    });
+
+    it("erro inesperado vira a mensagem genérica e a pessoa continua logada", async () => {
+        softDeleteAccount.mockRejectedValue(new Error("banco fora do ar"));
+        const state = await deleteAccountAction({}, form(valid));
+        expect(state.error).toBe("Algo deu errado. Tente novamente.");
+        expect(signOut).not.toHaveBeenCalled();
+    });
+
+    it("se o signOut falhar, a conta já foi excluída e a pessoa vai para a página inicial mesmo assim", async () => {
+        signOut.mockRejectedValue(new Error("cookie"));
+        await expect(deleteAccountAction({}, form(valid))).rejects.toThrow("REDIRECT:/");
+        expect(softDeleteAccount).toHaveBeenCalled();
     });
 });
