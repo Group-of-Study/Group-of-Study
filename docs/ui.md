@@ -38,6 +38,19 @@ import { EmptyState } from "@/components/ui/empty-state";
 
 **Link com visual de botão:** use `buttonClassName()` no `<Link>`. Não coloque `<Button>` dentro de `<Link>` (botão dentro de link é HTML inválido e confunde o teclado e o leitor de tela).
 
+## Dialog (modal)
+`Dialog` (`src/components/ui/dialog.tsx`) é o modal do Design System, sobre o `<dialog>` nativo com `showModal()`: o navegador prende o foco dentro do modal, fecha com Esc e escurece o fundo.
+
+```tsx
+<Dialog open={open} title="Excluir meta?" description="Isso não pode ser desfeito." busy={saving} onClose={() => setOpen(false)}>
+    {/* conteúdo e botões */}
+</Dialog>
+```
+
+- **`busy`**: enquanto algo é salvo, Esc, o X e o clique fora não fecham.
+- O conteúdo só é montado com o modal aberto: um formulário dentro dele começa do zero a cada abertura.
+- Exemplo completo: o modal de metas (`src/features/goals/components/goal-form-dialog.tsx`, ver [metas.md](metas.md)).
+
 ## Toast e chamadas à API
 Para Client Components que chamam as rotas de `src/app/api`. O `ToastProvider` já está no `src/app/layout.tsx`.
 

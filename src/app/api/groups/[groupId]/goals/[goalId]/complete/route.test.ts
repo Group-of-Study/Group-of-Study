@@ -41,7 +41,7 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-import { PATCH } from "./route";
+import { DELETE, PATCH } from "./route";
 
 const user = {
   id: "member-1",
@@ -112,6 +112,7 @@ describe("PATCH /api/groups/[groupId]/goals/[goalId]/complete", () => {
       },
       data: {
         status: "COMPLETED",
+        completedAt: expect.any(Date),
       },
     });
 
@@ -174,5 +175,76 @@ describe("PATCH /api/groups/[groupId]/goals/[goalId]/complete", () => {
 
     expect(response.status).toBe(409);
     expect(goalUpdateManyMock).not.toHaveBeenCalled();
+  });
+});
+describe("DELETE /api/groups/[groupId]/goals/[goalId]/complete (reabrir)", () => {
+  beforeEach(() => {
+    goalFindFirstMock.mockResolvedValue({
+      id: "goal-1",
+      status: "COMPLETED",
+    });
+  });
+
+  it("reabre a meta concluída e apaga a data de conclusão", async () => {
+    const response = await DELETE(createRequest(), createContext());
+
+    expect(response.status).toBe(200);
+    expect(goalUpdateManyMock).toHaveBeenCalledWith({
+      where: {
+        id: "goal-1",
+        groupId: "group-1",
+        status: "COMPLETED",
+      },
+      data: {
+        status: "PENDING",
+        completedAt: null,
+      },
+    });
+  });
+
+  it("retorna 409 quando a meta ainda está pendente", async () => {
+    goalFindFirstMock.mockResolvedValue({
+      id: "goal-1",
+      status: "PENDING",
+    });
+
+    const response = await DELETE(createRequest(), createContext());
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body.error).toBe("Esta meta ainda não foi concluída.");
+    expect(goalUpdateManyMock).not.toHaveBeenCalled();
+  });
+
+  it("retorna 409 em grupo arquivado", async () => {
+    groupFindUniqueMock.mockResolvedValue({
+      id: "group-1",
+      status: "ARCHIVED",
+    });
+
+    const response = await DELETE(createRequest(), createContext());
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body.error).toBe(
+      "Não é possível reabrir metas de um grupo que não está ativo.",
+    );
+  });
+
+  it("retorna 403 quando o usuário não participa do grupo", async () => {
+    groupMemberFindUniqueMock.mockResolvedValue(null);
+
+    const response = await DELETE(createRequest(), createContext());
+
+    expect(response.status).toBe(403);
+    expect(goalUpdateManyMock).not.toHaveBeenCalled();
+  });
+
+  it("retorna 409 quando outra pessoa reabriu no mesmo instante", async () => {
+    goalUpdateManyMock.mockResolvedValue({ count: 0 });
+
+    const response = await DELETE(createRequest(), createContext());
+
+    expect(response.status).toBe(409);
   });
 });
