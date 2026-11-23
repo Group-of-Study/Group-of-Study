@@ -32,6 +32,19 @@ enum NotificationType {
   GROUP_INVITE
 }
 
+// Audit log (GOS-037): ações sensíveis registradas em src/lib/audit-log.ts.
+enum AuditAction {
+  GROUP_ARCHIVED
+  GROUP_MEMBER_REMOVED
+  GROUP_LEADER_TRANSFERRED
+  ACCOUNT_DELETED
+}
+
+enum AuditTargetType {
+  GROUP
+  USER
+}
+
 model User {
   id               String      @id
   name             String
@@ -226,4 +239,28 @@ model Notification {
 
   @@index([userId, readAt, createdAt])
   @@map("notification")
+}
+
+// Audit log (GOS-037). Só se acrescenta linha: nada aqui é editado ou apagado pelo app.
+// actorId e targetId não têm chave estrangeira de propósito: o registro precisa
+// continuar existindo (e apontando para o mesmo id) depois que o grupo ou a conta
+// somem (ex.: purgeDeletedAccounts, GOS-036). Por isso também nada de nome ou e-mail
+// em metadata: só ids, que não identificam ninguém depois da anonimização.
+model AuditLog {
+  id         String          @id @default(cuid())
+  action     AuditAction
+  // Quem fez a ação.
+  actorId    String
+  targetType AuditTargetType
+  targetId   String
+  // Detalhes da ação (ex.: quem foi removido, o novo líder). Só ids.
+  metadata   Json?
+  // Mesmo IP que o Better Auth grava na sessão (getIP); null quando não dá para saber.
+  ipAddress  String?
+  createdAt  DateTime        @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId, createdAt])
+  @@index([action, createdAt])
+  @@map("audit_log")
 }

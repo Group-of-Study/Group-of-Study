@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { getSession, unauthorized } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { recordAuditLog, requestIp } from "@/lib/audit-log";
 
 type RouteContext = {
   params: Promise<{ groupId: string }>;
@@ -64,6 +65,7 @@ export async function POST(
     }
 
     const { userId: newLeaderId } = validation.data;
+    const ipAddress = requestIp(request.headers);
 
     const result = await prisma.$transaction(
       async (tx) => {
@@ -148,6 +150,15 @@ export async function POST(
               previousLeaderId: currentUser.id,
             },
           },
+        });
+
+        await recordAuditLog(tx, {
+          action: "GROUP_LEADER_TRANSFERRED",
+          actorId: currentUser.id,
+          targetType: "GROUP",
+          targetId: groupId,
+          metadata: { previousLeaderId: currentUser.id, newLeaderId },
+          ipAddress,
         });
 
         return {

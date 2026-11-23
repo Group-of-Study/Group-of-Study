@@ -18,6 +18,9 @@ const {
     notification: {
       create: vi.fn(),
     },
+    auditLog: {
+      create: vi.fn(),
+    },
   },
 }));
 
@@ -35,6 +38,10 @@ vi.mock("@/lib/prisma", () => ({
     $transaction: transactionMock,
   },
 }));
+
+
+// O audit log (GOS-037) lê o IP com as opções do Better Auth.
+vi.mock("@/lib/auth", () => ({ auth: { options: {} } }));
 
 import { POST } from "./route";
 
@@ -152,6 +159,43 @@ describe("POST /api/groups/[groupId]/leader", () => {
     expect(response.status).toBe(403);
     expect(txMocks.group.updateMany).not.toHaveBeenCalled();
     expect(txMocks.notification.create).not.toHaveBeenCalled();
+    expect(txMocks.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it("registra a transferência no audit log, com o IP de quem pediu (GOS-037)", async () => {
+    const request = new Request("http://localhost", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-forwarded-for": "203.0.113.7",
+      },
+      body: JSON.stringify({ userId: newLeader.id }),
+    });
+
+    const response = await POST(request, createContext());
+
+    expect(response.status).toBe(200);
+    expect(txMocks.auditLog.create).toHaveBeenCalledWith({
+      data: {
+        action: "GROUP_LEADER_TRANSFERRED",
+        actorId: leader.id,
+        targetType: "GROUP",
+        targetId: "group-1",
+        metadata: {
+          previousLeaderId: leader.id,
+          newLeaderId: newLeader.id,
+        },
+        ipAddress: "203.0.113.7",
+      },
+    });
+  });
+
+  it("não registra no audit log quando a liderança não muda", async () => {
+    txMocks.group.updateMany.mockResolvedValue({ count: 0 });
+
+    await POST(createRequest({ userId: newLeader.id }), createContext());
+
+    expect(txMocks.auditLog.create).not.toHaveBeenCalled();
   });
 
   it("retorna 404 quando o grupo não existe", async () => {

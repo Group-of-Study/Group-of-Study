@@ -10,12 +10,14 @@ const { tx, transaction, deleteManyUsers } = vi.hoisted(() => ({
         twoFactor: { deleteMany: vi.fn() },
         groupInvite: { deleteMany: vi.fn() },
         user: { update: vi.fn() },
+        auditLog: { create: vi.fn() },
     },
     transaction: vi.fn(),
     deleteManyUsers: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/auth", () => ({ auth: { options: {} } }));
 vi.mock("@/lib/prisma", () => ({
     prisma: { $transaction: transaction, user: { deleteMany: deleteManyUsers } },
 }));
@@ -45,7 +47,7 @@ describe("softDeleteAccount", () => {
     it("anonimiza nome e e-mail, marca deletedAt e tira o acesso", async () => {
         tx.groupMember.findMany.mockResolvedValueOnce([]);
 
-        await softDeleteAccount(USER, NOW);
+        await softDeleteAccount(USER, { ipAddress: "203.0.113.7", now: NOW });
 
         expect(tx.user.update).toHaveBeenCalledWith({
             where: { id: USER },
@@ -66,7 +68,7 @@ describe("softDeleteAccount", () => {
 
     it("roda tudo numa única transação Serializable", async () => {
         tx.groupMember.findMany.mockResolvedValueOnce([]);
-        await softDeleteAccount(USER, NOW);
+        await softDeleteAccount(USER, { ipAddress: "203.0.113.7", now: NOW });
         expect(transaction).toHaveBeenCalledTimes(1);
         expect(transaction.mock.calls[0][1]).toEqual({ isolationLevel: "Serializable" });
     });
@@ -80,7 +82,7 @@ describe("softDeleteAccount", () => {
             .mockResolvedValueOnce([{ userId: "outra" }])
             .mockResolvedValueOnce([]);
 
-        await softDeleteAccount(USER, NOW);
+        await softDeleteAccount(USER, { ipAddress: "203.0.113.7", now: NOW });
 
         for (const groupId of ["g1", "g2", "g3"]) {
             expect(tx.groupMember.delete).toHaveBeenCalledWith({ where: { userId_groupId: { userId: USER, groupId } } });
@@ -106,11 +108,30 @@ describe("softDeleteAccount", () => {
 
     it("sai dos grupos antes de apagar as notificações (a do novo líder é de outra pessoa)", async () => {
         tx.groupMember.findMany.mockResolvedValueOnce([membership("g1", USER)]).mockResolvedValueOnce([{ userId: "outra" }]);
-        await softDeleteAccount(USER, NOW);
+        await softDeleteAccount(USER, { ipAddress: "203.0.113.7", now: NOW });
         expect(tx.notification.create.mock.invocationCallOrder[0]).toBeLessThan(
             tx.notification.deleteMany.mock.invocationCallOrder[0],
         );
         expect(tx.notification.deleteMany).toHaveBeenCalledWith({ where: { userId: USER } });
+    });
+});
+
+describe("audit log (GOS-037)", () => {
+    it("registra a exclusão na mesma transação, só com ids", async () => {
+        tx.groupMember.findMany.mockResolvedValueOnce([membership("g1", "outra")]).mockResolvedValueOnce([{ userId: "outra" }]);
+
+        await softDeleteAccount(USER, { ipAddress: "203.0.113.7", now: NOW });
+
+        expect(tx.auditLog.create).toHaveBeenCalledWith({
+            data: {
+                action: "ACCOUNT_DELETED",
+                actorId: USER,
+                targetType: "USER",
+                targetId: USER,
+                metadata: { groupsLeft: 1 },
+                ipAddress: "203.0.113.7",
+            },
+        });
     });
 });
 
