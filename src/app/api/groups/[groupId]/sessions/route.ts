@@ -1,11 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import { checkSessionAccess } from "@/features/sessions/access";
-import { sessionInputSchema, toIssues } from "@/features/sessions/schema";
-import { SESSION_SELECT } from "@/features/sessions/session-select";
-import { getSession, unauthorized } from "@/lib/session";
-import { prisma } from "@/lib/prisma";
+import { checkSessionAccess } from "@/backend/features/sessions/access";
+import { sessionInputSchema, toIssues } from "@/shared/features/sessions/schema";
+import { SESSION_SELECT } from "@/backend/features/sessions/session-select";
+import { getSession, unauthorized } from "@/backend/lib/session";
+import { prisma } from "@/backend/lib/prisma";
 
 type RouteContext = {
   params: Promise<{ groupId: string }>;

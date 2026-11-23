@@ -1,13 +1,13 @@
 
 import { Suspense } from "react";
 
-import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/session";
+import { prisma } from "@/backend/lib/prisma";
+import { requireSession } from "@/backend/lib/session";
 
-import ProfileHeader from "@/components/profile/ProfileHeader";
-import ProfileInfo from "@/components/profile/ProfileInfo";
-import ProfileStats from "@/components/profile/ProfileStats";
-import ProfileGroups from "@/components/profile/ProfileGroups";
+import ProfileHeader from "@/frontend/components/profile/ProfileHeader";
+import ProfileInfo from "@/frontend/components/profile/ProfileInfo";
+import ProfileStats from "@/frontend/components/profile/ProfileStats";
+import ProfileGroups from "@/frontend/components/profile/ProfileGroups";
 
 async function ProfileContent() {
   const session = await requireSession();

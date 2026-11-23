@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { GoalsBoard } from "@/features/goals/components/goals-board";
-import type { GoalGroup } from "@/features/goals/types";
-import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/session";
+import { GoalsBoard } from "@/frontend/features/goals/components/goals-board";
+import type { GoalGroup } from "@/shared/features/goals/types";
+import { prisma } from "@/backend/lib/prisma";
+import { requireSession } from "@/backend/lib/session";
 
 export const metadata: Metadata = {
     title: "Metas | Group of Study",

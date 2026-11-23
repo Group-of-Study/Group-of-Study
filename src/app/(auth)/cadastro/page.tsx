@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getCallbackUrl, type AuthSearchParams } from "@/features/auth/auth-page";
-import { RedirectIfAuthenticated } from "@/features/auth/components/redirect-if-authenticated";
-import { SignUpForm } from "@/features/auth/components/sign-up-form";
+import { getCallbackUrl, type AuthSearchParams } from "@/backend/features/auth/auth-page";
+import { RedirectIfAuthenticated } from "@/frontend/features/auth/components/redirect-if-authenticated";
+import { SignUpForm } from "@/frontend/features/auth/components/sign-up-form";
 
 export const metadata: Metadata = {
     title: "Criar conta | Group of Study",

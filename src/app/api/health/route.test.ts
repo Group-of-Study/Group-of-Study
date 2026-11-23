@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("@/lib/prisma", () => ({
+vi.mock("@/backend/lib/prisma", () => ({
   prisma: {
     $queryRaw: vi.fn(),
   },
 }));
 
 import { GET } from "./route";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/backend/lib/prisma";
 
 describe("GET /api/health", () => {
   it("retorna 200 quando o banco responde", async () => {

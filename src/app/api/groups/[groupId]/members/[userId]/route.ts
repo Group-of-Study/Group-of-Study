@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/backend/generated/prisma/client";
 
-import { getSession, unauthorized } from "@/lib/session";
-import { prisma } from "@/lib/prisma";
-import { recordAuditLog, requestIp } from "@/lib/audit-log";
+import { getSession, unauthorized } from "@/backend/lib/session";
+import { prisma } from "@/backend/lib/prisma";
+import { recordAuditLog, requestIp } from "@/backend/lib/audit-log";
 
 type RouteContext = {
   params: Promise<{

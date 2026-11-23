@@ -1,7 +1,7 @@
 
 import { Suspense } from "react";
 
-import GroupDetailsPage from "@/components/groups/GroupDetailsPage";
+import GroupDetailsPage from "@/frontend/components/groups/GroupDetailsPage";
 
 type Props = {
   params: Promise<{

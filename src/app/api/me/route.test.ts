@@ -6,7 +6,7 @@ const { getSessionApi } = vi.hoisted(() => ({
 
 // Só o Better Auth e o Next são simulados: a rota usa o session.ts de verdade.
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/auth", () => ({ auth: { api: { getSession: getSessionApi } } }));
+vi.mock("@/backend/lib/auth", () => ({ auth: { api: { getSession: getSessionApi } } }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 
 import { GET } from "./route";

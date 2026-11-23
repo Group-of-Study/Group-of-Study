@@ -1,4 +1,4 @@
-import { getSession, unauthorized } from "@/lib/session";
+import { getSession, unauthorized } from "@/backend/lib/session";
 
 export async function GET() {
     const session = await getSession();

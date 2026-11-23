@@ -25,7 +25,7 @@ const {
   },
 }));
 
-vi.mock("@/lib/session", () => ({
+vi.mock("@/backend/lib/session", () => ({
   getSession: getSessionMock,
   unauthorized: () =>
     Response.json(
@@ -34,7 +34,7 @@ vi.mock("@/lib/session", () => ({
     ),
 }));
 
-vi.mock("@/lib/prisma", () => ({
+vi.mock("@/backend/lib/prisma", () => ({
   prisma: {
     $transaction: transactionMock,
   },
@@ -42,7 +42,7 @@ vi.mock("@/lib/prisma", () => ({
 
 
 // O audit log (GOS-037) lê o IP com as opções do Better Auth.
-vi.mock("@/lib/auth", () => ({ auth: { options: {} } }));
+vi.mock("@/backend/lib/auth", () => ({ auth: { options: {} } }));
 
 import { DELETE } from "./route";
 

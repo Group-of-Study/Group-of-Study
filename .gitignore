@@ -41,7 +41,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/src/generated/prisma
+/src/backend/generated/prisma
 
 # AI agent skills (local only)
 .agents/

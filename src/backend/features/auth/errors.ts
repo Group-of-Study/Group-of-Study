@@ -1,0 +1,55 @@
+import { APIError } from "better-auth/api";
+import { ACCOUNT_RATE_LIMIT_CODE } from "@/backend/lib/rate-limit";
+
+import type { AuthFormState } from "@/shared/features/auth/form-state";
+
+export type { AuthFormState };
+
+export const GENERIC_ERROR = "Algo deu errado. Tente novamente.";
+
+export function rateLimitedError(retryAfter: number | null): AuthFormState {
+    const seconds = retryAfter ?? 60;
+    const wait =
+        seconds < 60
+            ? `${seconds} ${seconds === 1 ? "segundo" : "segundos"}`
+            : `${Math.ceil(seconds / 60)} ${Math.ceil(seconds / 60) === 1 ? "minuto" : "minutos"}`;
+    return { error: `Muitas tentativas. Tente novamente em ${wait}.` };
+}
+
+// Códigos do Better Auth → mensagem para o usuário.
+const MESSAGES: Record<string, string> = {
+    USER_ALREADY_EXISTS: "Este email já está cadastrado.",
+    USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: "Este email já está cadastrado.",
+    INVALID_EMAIL_OR_PASSWORD: "Email ou senha incorretos.",
+    INVALID_EMAIL: "Email inválido.",
+    PASSWORD_TOO_SHORT: "A senha precisa ter pelo menos 8 caracteres.",
+    PASSWORD_TOO_LONG: "A senha pode ter no máximo 128 caracteres.",
+    // Configurações da conta (senha atual errada, conta sem senha cadastrada).
+    INVALID_PASSWORD: "Senha atual incorreta.",
+    CREDENTIAL_ACCOUNT_NOT_FOUND: "Sua conta não tem senha cadastrada.",
+    // Verificação em duas etapas (GOS-034).
+    INVALID_CODE: "Código incorreto. Confira o app autenticador e tente de novo.",
+    INVALID_BACKUP_CODE: "Código de recuperação incorreto.",
+    INVALID_TWO_FACTOR_COOKIE: "A verificação expirou. Entre de novo com seu e-mail e senha.",
+    TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE: "Muitas tentativas. Entre de novo com seu e-mail e senha.",
+    ACCOUNT_TEMPORARILY_LOCKED: "Muitos códigos errados. Por segurança, espere alguns minutos e tente de novo.",
+    TOTP_ALREADY_ENABLED: "A verificação em duas etapas já está ativada.",
+    TOTP_NOT_ENABLED: "A verificação em duas etapas não está ativada.",
+    TWO_FACTOR_NOT_ENABLED: "A verificação em duas etapas não está ativada.",
+};
+
+// Erro conhecido do Better Auth vira mensagem amigável. Erro inesperado
+// (banco fora do ar, bug) é registrado no log e o usuário vê a genérica.
+export function handleAuthError(action: string, error: unknown): AuthFormState {
+    if (error instanceof APIError) {
+        const code = error.body?.code;
+        if (code === ACCOUNT_RATE_LIMIT_CODE) {
+            return rateLimitedError(Number(error.body?.retryAfter) || null);
+        }
+        if (code && MESSAGES[code]) {
+            return { error: MESSAGES[code] };
+        }
+    }
+    console.error(`[auth] ${action} falhou`, error);
+    return { error: GENERIC_ERROR };
+}

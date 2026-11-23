@@ -1,6 +1,6 @@
 # Autenticação — como usar
 
-A sessão é lida no servidor pelos helpers de `src/lib/session.ts`:
+A sessão é lida no servidor pelos helpers de `src/backend/lib/session.ts`:
 
 | Função | Onde usar | Sem sessão |
 |---|---|---|
@@ -95,17 +95,17 @@ Limita tentativas por IP para dificultar ataques de força bruta. **Só fica ati
 | 2FA: código no login (`/two-factor/verify`) | 10 tentativas por minuto por IP, além do limite do Better Auth: 5 códigos errados por tentativa de login |
 | Demais rotas de `/api/auth/*` | 100 requisições por minuto por IP |
 
-- Os limites ficam em `src/lib/rate-limit.ts` (`AUTH_RATE_LIMITS` e `ACCOUNT_SIGN_IN_LIMIT`).
-- **Limite por conta:** conta todas as tentativas de login de um email (maiúsculas e espaços não importam), venham de qualquer IP. Protege a senha mesmo que o IP seja falsificado. É um hook do Better Auth (`src/lib/account-rate-limit.ts`), então vale para a API e para as Server Actions. **Contra:** quem errar a senha de outra pessoa de propósito trava o login dela por até 15 minutos.
-- Vale para os **dois caminhos**: a API HTTP (`/api/auth/*`, via Better Auth) e as Server Actions. O rate limit do Better Auth não roda em chamadas `auth.api.*` feitas no servidor, então as actions aplicam o mesmo limite com o mesmo contador (`checkAuthRateLimit` em `src/features/auth/rate-limit.ts`). Trocar de caminho não zera as tentativas.
+- Os limites ficam em `src/backend/lib/rate-limit.ts` (`AUTH_RATE_LIMITS` e `ACCOUNT_SIGN_IN_LIMIT`).
+- **Limite por conta:** conta todas as tentativas de login de um email (maiúsculas e espaços não importam), venham de qualquer IP. Protege a senha mesmo que o IP seja falsificado. É um hook do Better Auth (`src/backend/lib/account-rate-limit.ts`), então vale para a API e para as Server Actions. **Contra:** quem errar a senha de outra pessoa de propósito trava o login dela por até 15 minutos.
+- Vale para os **dois caminhos**: a API HTTP (`/api/auth/*`, via Better Auth) e as Server Actions. O rate limit do Better Auth não roda em chamadas `auth.api.*` feitas no servidor, então as actions aplicam o mesmo limite com o mesmo contador (`checkAuthRateLimit` em `src/backend/features/auth/rate-limit.ts`). Trocar de caminho não zera as tentativas.
 - Bloqueado: a API responde `429` com o header `X-Retry-After`; a action devolve `{ error: "Muitas tentativas. Tente novamente em N segundos." }` (ou "N minutos").
-- O contador fica **em memória**: zera quando o servidor reinicia e não é compartilhado entre instâncias. Para rodar mais de uma instância, trocar por um armazenamento compartilhado (banco ou Redis) em `src/lib/rate-limit.ts`.
-- O IP vem do header `x-forwarded-for`. **O Next repassa esse header como o cliente mandou**, então com o app exposto direto qualquer um inventa um IP por tentativa e escapa do limite por IP (o limite por conta continua valendo). Em produção, colocar um proxy reverso (Nginx, Caddy, Cloudflare) que **sobrescreva** o `x-forwarded-for` com o IP real e configurar `advanced.ipAddress.trustedProxies` no `src/lib/auth.ts`. Pedidos sem IP confiável dividem um único contador.
+- O contador fica **em memória**: zera quando o servidor reinicia e não é compartilhado entre instâncias. Para rodar mais de uma instância, trocar por um armazenamento compartilhado (banco ou Redis) em `src/backend/lib/rate-limit.ts`.
+- O IP vem do header `x-forwarded-for`. **O Next repassa esse header como o cliente mandou**, então com o app exposto direto qualquer um inventa um IP por tentativa e escapa do limite por IP (o limite por conta continua valendo). Em produção, colocar um proxy reverso (Nginx, Caddy, Cloudflare) que **sobrescreva** o `x-forwarded-for` com o IP real e configurar `advanced.ipAddress.trustedProxies` no `src/backend/lib/auth.ts`. Pedidos sem IP confiável dividem um único contador.
 
 Para testar localmente: `npm run build && npm start` (modo produção) e repetir o login mais de 5 vezes.
 
 ## Login, cadastro e logout (Server Actions)
-Ficam em `src/features/auth/actions.ts`, no formato do `useActionState`:
+Ficam em `src/backend/features/auth/actions.ts`, no formato do `useActionState`:
 
 | Action | Sucesso | Erro |
 |---|---|---|
@@ -114,7 +114,7 @@ Ficam em `src/features/auth/actions.ts`, no formato do `useActionState`:
 | `verifyTwoFactorAction` | confere o código do app (`method=totp`) ou de recuperação (`method=backup`), inicia a sessão e redireciona para o `callbackUrl` | devolve `{ error }` ou `{ fieldErrors }`, com `values` |
 | `signOutAction` | encerra a sessão e redireciona para `/login` | — |
 
-Exemplo mínimo (a versão completa, com o visual do Figma, está em `src/features/auth/components/login-form.tsx`):
+Exemplo mínimo (a versão completa, com o visual do Figma, está em `src/frontend/features/auth/components/login-form.tsx`):
 
 ```tsx
 "use client";
@@ -141,12 +141,12 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
 
 Logout: `<form action={signOutAction}><button>Sair</button></form>`.
 
-- **Validação:** os dados passam pelos schemas Zod de `src/features/auth/schemas.ts` antes de chegar ao Better Auth. Erros de campo voltam em `fieldErrors` (ex.: `{ email: ["Email inválido"] }`).
+- **Validação:** os dados passam pelos schemas Zod de `src/shared/features/auth/schemas.ts` antes de chegar ao Better Auth. Erros de campo voltam em `fieldErrors` (ex.: `{ email: ["Email inválido"] }`).
 - **`callbackUrl`:** vem de um campo do formulário. Só caminhos internos são aceitos (`/grupos/1`); URLs externas (`https://...`, `//site.com`) viram `/dashboard`, para evitar open redirect.
 - **Erros:** os conhecidos (email já cadastrado, senha errada) viram mensagens em português em `error`. Os inesperados (banco fora do ar, bug) vão para o log do servidor como `[auth] <action> falhou` e o usuário vê "Algo deu errado. Tente novamente.".
 
 ## Configurações da conta
-A página `/configuracoes` (Figma: App / 10 · Configurações e Mobile / 13 · Configurações) usa as Server Actions de `src/features/account/actions.ts`, no mesmo formato do login, mais um `success` com a mensagem de sucesso (a pessoa continua na página):
+A página `/configuracoes` (Figma: App / 10 · Configurações e Mobile / 13 · Configurações) usa as Server Actions de `src/backend/features/account/actions.ts`, no mesmo formato do login, mais um `success` com a mensagem de sucesso (a pessoa continua na página):
 
 | Action | O que faz | Better Auth |
 |---|---|---|
@@ -159,14 +159,14 @@ A página `/configuracoes` (Figma: App / 10 · Configurações e Mobile / 13 · 
 | Arquivo | Papel |
 |---|---|
 | `src/app/(app)/configuracoes/page.tsx` | Página: título, menu das seções e os painéis dentro do `<Suspense>` |
-| `src/features/account/components/` | Painéis (`ProfileForm`, `AccountSecurityPanel`, `DangerZonePanel`), `SettingsNav` e partes reaproveitáveis (`SettingsPanel`, `SettingRow`, `ComingSoon`) |
-| `src/features/account/deletion.ts` | `softDeleteAccount()` e `purgeDeletedAccounts()`: exclusão de conta (GOS-036) |
-| `src/features/account/sessions.ts` | `listActiveSessions()`: sessões ativas do usuário, já prontas para a tela (dispositivo, IP, data), sem o token |
-| `src/features/account/user-agent.ts` | Transforma o user agent em "Chrome no macOS" (só para exibir, não serve para segurança) |
-| `src/features/account/schemas.ts` | Validação; nome, e-mail e senha usam os mesmos campos do cadastro (`src/features/auth/schemas.ts`) |
+| `src/frontend/features/account/components/` | Painéis (`ProfileForm`, `AccountSecurityPanel`, `DangerZonePanel`), `SettingsNav` e partes reaproveitáveis (`SettingsPanel`, `SettingRow`, `ComingSoon`) |
+| `src/backend/features/account/deletion.ts` | `softDeleteAccount()` e `purgeDeletedAccounts()`: exclusão de conta (GOS-036) |
+| `src/backend/features/account/sessions.ts` | `listActiveSessions()`: sessões ativas do usuário, já prontas para a tela (dispositivo, IP, data), sem o token |
+| `src/backend/features/account/user-agent.ts` | Transforma o user agent em "Chrome no macOS" (só para exibir, não serve para segurança) |
+| `src/shared/features/account/schemas.ts` | Validação; nome, e-mail e senha usam os mesmos campos do cadastro (`src/shared/features/auth/schemas.ts`) |
 
 - **Todas as actions começam com `requireSession()`**: sem sessão, redirecionam para o login antes de ler o formulário.
-- **Troca de e-mail sem confirmação:** ainda não há envio de e-mail, então `user.changeEmail.updateEmailWithoutVerification` está ligado em `src/lib/auth.ts` e o e-mail muda na hora. Para compensar, a action pede a senha atual. Quando a verificação de e-mail entrar (GOS-031/GOS-032), trocar para o fluxo com link de confirmação.
+- **Troca de e-mail sem confirmação:** ainda não há envio de e-mail, então `user.changeEmail.updateEmailWithoutVerification` está ligado em `src/backend/lib/auth.ts` e o e-mail muda na hora. Para compensar, a action pede a senha atual. Quando a verificação de e-mail entrar (GOS-031/GOS-032), trocar para o fluxo com link de confirmação.
 - **E-mail já cadastrado:** o Better Auth responde sucesso sem trocar nada, para não revelar quem tem conta. Como o cadastro já avisa "Este email já está cadastrado", a action confere antes no banco e avisa também, em vez de mostrar um sucesso falso. Se um dia o cadastro deixar de revelar isso, esta checagem sai junto.
 - **Senha:** a nova precisa ser diferente da atual. "Desconectar dos outros dispositivos" vem marcado; a sessão atual continua (o Better Auth cria uma nova e troca o cookie).
 - **Sessões ativas (GOS-035):** a lista é lida direto do banco (`listActiveSessions`), não pelo `listSessions` do Better Auth, porque ele exige uma sessão "fresca" (login há menos de 24 h, o `freshAge` padrão) e daria erro para quem está logado há mais tempo. O token da sessão nunca vai para o navegador: o botão manda o id, e a action busca o token só entre as sessões do próprio usuário (trocar o id no HTML não encerra a sessão de outra pessoa). A sessão atual não tem botão de encerrar; para ela existe o "Sair". Rodando local, sem proxy, o IP fica "desconhecido".
@@ -174,9 +174,9 @@ A página `/configuracoes` (Figma: App / 10 · Configurações e Mobile / 13 · 
 - **Sem sidebar e topbar:** o `(app)` ainda não tem a moldura do app; a página mostra só a área de conteúdo do Figma.
 
 ## Verificação em duas etapas (GOS-034)
-Plugin `twoFactor` do Better Auth (`src/lib/auth.ts`), só com app autenticador (TOTP) e códigos de recuperação. Tabela `two_factor` e campo `user.twoFactorEnabled` (migration `add_two_factor`).
+Plugin `twoFactor` do Better Auth (`src/backend/lib/auth.ts`), só com app autenticador (TOTP) e códigos de recuperação. Tabela `two_factor` e campo `user.twoFactorEnabled` (migration `add_two_factor`).
 
-**Ativar** (Configurações › Conta e segurança, `src/features/account/components/two-factor-settings.tsx`):
+**Ativar** (Configurações › Conta e segurança, `src/frontend/features/account/components/two-factor-settings.tsx`):
 1. A pessoa digita a senha → `enableTwoFactorAction` chama `enableTwoFactor` e devolve o QR code (gerado no servidor com a lib `qrcode`, como data URL), a chave para digitar à mão e os 10 códigos de recuperação.
 2. Escaneia o QR code e digita o primeiro código → `confirmTwoFactorAction` chama `verifyTOTP`. **Só aqui o 2FA passa a valer**: antes disso o login continua pedindo só a senha. O Better Auth troca a sessão atual por uma nova.
 3. A tela mostra os códigos de recuperação uma única vez (ficam criptografados no banco). A action não chama `refresh()`; a página só é atualizada quando a pessoa clica em "Já guardei", senão os códigos sumiriam.
@@ -195,7 +195,7 @@ Configurações › Zona de perigo › **Excluir conta** abre a confirmação no
 É um **soft delete**, em duas etapas:
 
 1. **Na hora** (`softDeleteAccount`, uma transação Serializable):
-   - a pessoa sai de todos os grupos com a **mesma regra do "Sair do grupo"** (`leaveGroup` em `src/features/groups/leave.ts`): onde ela é líder, o participante mais antigo assume e é notificado; onde ela é a única, o grupo é encerrado. Um soft delete não dispara os `onDelete` do banco, por isso isso é feito à mão;
+   - a pessoa sai de todos os grupos com a **mesma regra do "Sair do grupo"** (`leaveGroup` em `src/backend/features/groups/leave.ts`): onde ela é líder, o participante mais antigo assume e é notificado; onde ela é a única, o grupo é encerrado. Um soft delete não dispara os `onDelete` do banco, por isso isso é feito à mão;
    - sessões, senha (`account`), 2FA, notificações e convites recebidos são apagados: ninguém entra mais na conta;
    - nome vira "Conta excluída", e-mail vira `excluida-<id>@contas.invalid` (o domínio `.invalid` nunca recebe e-mail) e `deletedAt` é preenchido. O e-mail original fica livre para um cadastro novo.
    - a exclusão fica registrada no audit log (`ACCOUNT_DELETED`, só com ids e o IP; ver [auditoria.md](auditoria.md)).
@@ -216,8 +216,8 @@ Configurações › Zona de perigo › **Excluir conta** abre a confirmação no
 
 | Arquivo | O que cobre |
 |---|---|
-| `src/features/auth/*.test.ts` | Server Actions, validação Zod, mensagens de erro e `callbackUrl` |
-| `src/lib/session.test.ts` | `getSession`, `requireSession` (redireciona sem sessão) e `unauthorized` (401) |
+| `src/backend/features/auth/*.test.ts`, `src/shared/features/auth/*.test.ts` | Server Actions, validação Zod, mensagens de erro e `callbackUrl` |
+| `src/backend/lib/session.test.ts` | `getSession`, `requireSession` (redireciona sem sessão) e `unauthorized` (401) |
 | `src/app/api/me/route.test.ts` | `/api/me`: 200 com o usuário, 401 sem sessão, sem expor o token |
 | `src/proxy.test.ts` | Rotas que o proxy protege (e as que não) e o redirecionamento para `/login` |
 
@@ -240,9 +240,9 @@ vi.mock("@/lib/prisma", () => ({
 |---|---|
 | `src/app/(auth)/layout.tsx` | Moldura das duas telas: painel da marca + área do formulário (no mobile, marca em cima e formulário numa "folha" branca) |
 | `src/app/(auth)/login/page.tsx`, `cadastro/page.tsx` | Páginas: só montam os `<Suspense>` e o formulário |
-| `src/features/auth/components/` | `LoginForm`, `SignUpForm` (Client Components com `useActionState`) e as partes das telas |
-| `src/features/auth/auth-page.ts` | `getCallbackUrl` (lê o `?callbackUrl=`) e `redirectIfAuthenticated` |
-| `src/components/ui/` | Componentes base do Design System: `Button`, `TextField`, `Checkbox`, `Alert`, `Avatar`, `LogoMark` |
+| `src/frontend/features/auth/components/` | `LoginForm`, `SignUpForm` (Client Components com `useActionState`) e as partes das telas |
+| `src/backend/features/auth/auth-page.ts` | `getCallbackUrl` (lê o `?callbackUrl=`) e `redirectIfAuthenticated` |
+| `src/frontend/components/ui/` | Componentes base do Design System: `Button`, `TextField`, `Checkbox`, `Alert`, `Avatar`, `LogoMark` |
 
 - **Logado abrindo `/login` ou `/cadastro`:** vai direto para o `callbackUrl` (ou `/dashboard`). A regra fica na página, não no proxy, para não criar loop com cookie expirado.
 - **`callbackUrl`:** a página repassa o `?callbackUrl=` para o formulário (campo escondido) e para o link "Criar conta" / "Entrar", então o destino não se perde ao trocar de tela. Valor externo é descartado já na página.

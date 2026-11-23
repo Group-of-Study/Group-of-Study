@@ -2,8 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getSession, unauthorized } from "@/lib/session";
-import { prisma } from "@/lib/prisma";
+import { getSession, unauthorized } from "@/backend/lib/session";
+import { prisma } from "@/backend/lib/prisma";
 
 type RouteContext = {
   params: Promise<{ groupId: string }>;

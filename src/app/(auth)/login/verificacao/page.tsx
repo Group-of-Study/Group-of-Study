@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getCallbackUrl, type AuthSearchParams } from "@/features/auth/auth-page";
-import { RedirectIfAuthenticated } from "@/features/auth/components/redirect-if-authenticated";
-import { TwoFactorForm } from "@/features/auth/components/two-factor-form";
+import { getCallbackUrl, type AuthSearchParams } from "@/backend/features/auth/auth-page";
+import { RedirectIfAuthenticated } from "@/frontend/features/auth/components/redirect-if-authenticated";
+import { TwoFactorForm } from "@/frontend/features/auth/components/two-factor-form";
 
 export const metadata: Metadata = {
     title: "Verificação em duas etapas | Group of Study",

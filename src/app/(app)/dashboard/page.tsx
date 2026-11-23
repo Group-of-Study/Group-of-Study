@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Plus, Users } from "lucide-react";
-import GroupCard from "@/components/groups/GroupCard";
-import { OnboardingChecklist } from "@/features/onboarding/components/onboarding-checklist";
-import { buildOnboarding } from "@/features/onboarding/steps";
-import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/session";
-import type { Group } from "@/types/group";
+import GroupCard from "@/frontend/components/groups/GroupCard";
+import { OnboardingChecklist } from "@/frontend/features/onboarding/components/onboarding-checklist";
+import { buildOnboarding } from "@/shared/features/onboarding/steps";
+import { prisma } from "@/backend/lib/prisma";
+import { requireSession } from "@/backend/lib/session";
+import type { Group } from "@/shared/types/group";
 
 export const metadata: Metadata = {
     title: "Início | Group of Study",

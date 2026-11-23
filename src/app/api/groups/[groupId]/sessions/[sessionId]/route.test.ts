@@ -9,13 +9,13 @@ const { getSessionMock, db } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@/lib/session", () => ({
+vi.mock("@/backend/lib/session", () => ({
   getSession: getSessionMock,
   unauthorized: () =>
     Response.json({ error: "Autenticação necessária." }, { status: 401 }),
 }));
 
-vi.mock("@/lib/prisma", () => ({ prisma: db }));
+vi.mock("@/backend/lib/prisma", () => ({ prisma: db }));
 
 import { DELETE, PATCH } from "./route";
 

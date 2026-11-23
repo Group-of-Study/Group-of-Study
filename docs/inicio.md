@@ -1,6 +1,6 @@
 # Início e onboarding (GOS-040)
 
-`/dashboard` é o **Início**: para onde login e cadastro levam (`DEFAULT_REDIRECT` em `src/features/auth/callback-url.ts`) e o primeiro item do menu.
+`/dashboard` é o **Início**: para onde login e cadastro levam (`DEFAULT_REDIRECT` em `src/shared/features/auth/callback-url.ts`) e o primeiro item do menu.
 
 Hoje a página tem:
 - o checklist **"Primeiros passos"** (Figma: 11 · Início — novo usuário), só para quem acabou de chegar;
@@ -12,9 +12,9 @@ O resto do Figma 01 · Dashboard (nível, XP, sequência, constância, ranking, 
 
 | Arquivo | Papel |
 |---|---|
-| `src/features/onboarding/steps.ts` | Calcula os passos a partir dos dados da pessoa (`buildOnboarding`). Função pura, com testes |
-| `src/features/onboarding/actions.ts` | `dismissOnboardingAction`: "Pular" ou "Fechar" salvam `user.onboardingDoneAt` |
-| `src/features/onboarding/components/` | O checklist e o botão Pular/Fechar |
+| `src/shared/features/onboarding/steps.ts` | Calcula os passos a partir dos dados da pessoa (`buildOnboarding`). Função pura, com testes |
+| `src/backend/features/onboarding/actions.ts` | `dismissOnboardingAction`: "Pular" ou "Fechar" salvam `user.onboardingDoneAt` |
+| `src/frontend/features/onboarding/components/` | O checklist e o botão Pular/Fechar |
 | `src/app/(app)/dashboard/page.tsx` | A página Início |
 
 | Passo | Quando conta como feito |

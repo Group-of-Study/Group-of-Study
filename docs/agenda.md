@@ -13,11 +13,11 @@ Página do grupo (`/grupos/[groupId]`):
 
 | Arquivo | Papel |
 |---|---|
-| `src/features/sessions/use-group-sessions.ts` | Estado da agenda e dos modais (o card e a aba dividem o mesmo) |
-| `src/features/sessions/components/group-agenda.tsx` | Card "Próximo encontro", aba "Agenda" e os modais |
-| `src/features/sessions/components/session-form-dialog.tsx` | Modal de marcar/editar; valida com o mesmo `sessionInputSchema` da API antes de enviar |
-| `src/features/sessions/dates.ts` | "Hoje · 19h–20h30", "Acontecendo agora · até 20h30", selo "NOV 20" e os campos de dia/horário |
-| `src/features/sessions/api.ts` | Chamadas à API (sobre o `fetchApi`) |
+| `src/frontend/features/sessions/use-group-sessions.ts` | Estado da agenda e dos modais (o card e a aba dividem o mesmo) |
+| `src/frontend/features/sessions/components/group-agenda.tsx` | Card "Próximo encontro", aba "Agenda" e os modais |
+| `src/frontend/features/sessions/components/session-form-dialog.tsx` | Modal de marcar/editar; valida com o mesmo `sessionInputSchema` da API antes de enviar |
+| `src/shared/features/sessions/dates.ts` | "Hoje · 19h–20h30", "Acontecendo agora · até 20h30", selo "NOV 20" e os campos de dia/horário |
+| `src/frontend/features/sessions/api.ts` | Chamadas à API (sobre o `fetchApi`) |
 
 ## Quem pode o quê
 
@@ -26,7 +26,7 @@ Página do grupo (`/grupos/[groupId]`):
 | Ver a agenda | participantes | qualquer status |
 | Marcar, editar, excluir | só o líder | só ativo |
 
-As checagens ficam num lugar só: `checkSessionAccess` em `src/features/sessions/access.ts`. Ela devolve o grupo ou a resposta de erro pronta (400, 403, 404 ou 409).
+As checagens ficam num lugar só: `checkSessionAccess` em `src/backend/features/sessions/access.ts`. Ela devolve o grupo ou a resposta de erro pronta (400, 403, 404 ou 409).
 
 ## API
 
@@ -55,7 +55,7 @@ Todas as respostas trazem o encontro no mesmo formato (`SESSION_SELECT`), com `c
 
 ## Regras de validação
 
-O schema (`sessionInputSchema` em `src/features/sessions/schema.ts`) é o mesmo na API e no formulário da tela, então as mensagens são as mesmas nos dois:
+O schema (`sessionInputSchema` em `src/shared/features/sessions/schema.ts`) é o mesmo na API e no formulário da tela, então as mensagens são as mesmas nos dois:
 
 - título obrigatório, até 120 caracteres; descrição até 1000;
 - **o fim depois do início**, e no máximo **12 horas** de duração;

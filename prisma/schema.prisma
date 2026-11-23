@@ -3,7 +3,7 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  output   = "../src/backend/generated/prisma"
 }
 
 datasource db {
@@ -32,7 +32,7 @@ enum NotificationType {
   GROUP_INVITE
 }
 
-// Audit log (GOS-037): ações sensíveis registradas em src/lib/audit-log.ts.
+// Audit log (GOS-037): ações sensíveis registradas em src/backend/lib/audit-log.ts.
 enum AuditAction {
   GROUP_ARCHIVED
   GROUP_MEMBER_REMOVED
@@ -58,7 +58,7 @@ model User {
   onboardingDoneAt DateTime?
   // Exclusão de conta (GOS-036): preenchido quando a pessoa exclui a conta. Nome e
   // e-mail já são anonimizados na hora; a linha some de vez depois do prazo
-  // (purgeDeletedAccounts em src/features/account/deletion.ts).
+  // (purgeDeletedAccounts em src/backend/features/account/deletion.ts).
   deletedAt        DateTime?
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt

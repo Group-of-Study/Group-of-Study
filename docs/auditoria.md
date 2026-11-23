@@ -16,8 +16,8 @@ A troca **automática** de líder (quando o líder sai do grupo ou exclui a cont
 ## Como funciona
 
 - **Tabela `audit_log`** (`AuditLog` no `prisma/schema.prisma`), com os enums `AuditAction` e `AuditTargetType`.
-- **`recordAuditLog(tx, entry)`** (`src/lib/audit-log.ts`) grava **dentro da transação da própria ação**: ou as duas acontecem, ou nenhuma. Se o registro falhar, a ação é desfeita, porque uma ação sensível sem rastro é pior do que um erro.
-- **IP:** `requestIp(headers)` usa o `getIP` do Better Auth com as mesmas opções do `src/lib/auth.ts`, então é o mesmo IP que aparece nas sessões e no rate limit. Fica `null` quando não dá para saber (sem proxy configurado em produção). Rodando local, aparece `127.0.0.1`.
+- **`recordAuditLog(tx, entry)`** (`src/backend/lib/audit-log.ts`) grava **dentro da transação da própria ação**: ou as duas acontecem, ou nenhuma. Se o registro falhar, a ação é desfeita, porque uma ação sensível sem rastro é pior do que um erro.
+- **IP:** `requestIp(headers)` usa o `getIP` do Better Auth com as mesmas opções do `src/backend/lib/auth.ts`, então é o mesmo IP que aparece nas sessões e no rate limit. Fica `null` quando não dá para saber (sem proxy configurado em produção). Rodando local, aparece `127.0.0.1`.
 - **Só se acrescenta linha:** o app nunca edita nem apaga registros.
 
 ### Por que `actorId` e `targetId` não têm chave estrangeira

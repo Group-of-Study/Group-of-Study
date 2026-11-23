@@ -17,7 +17,7 @@
 - `.github/` tem apenas `CODEOWNERS`; não existe workflow.
 - `package.json` tem `lint`, mas não tem script de `typecheck`.
 - `npm ci` dispara `postinstall` → `prisma generate`, que precisa de `DATABASE_URL`.
-- Client Prisma é gerado em `src/generated/prisma` (gitignored) e não está no ignore do ESLint.
+- Client Prisma é gerado em `src/backend/generated/prisma` (gitignored) e não está no ignore do ESLint.
 - Docker usa Node 22.
 - `next.config.ts` tem flags experimentais (`cacheComponents`, `partialPrefetching`, `agentFeedback`), então o build precisa ser validado antes de virar obrigatório.
 
@@ -28,7 +28,7 @@
   "typecheck": "next typegen && tsc --noEmit"
   ```
   O `next typegen` é necessário para gerar tipos de rota (ex.: `LayoutProps<"/">`).
-- [x] Adicionar `"src/generated/**"` ao `globalIgnores` do `eslint.config.mjs`.
+- [x] Adicionar `"src/backend/generated/**"` ao `globalIgnores` do `eslint.config.mjs`.
 - [x] Criar `.nvmrc` com `22`.
 - [ ] Opcional: adicionar `engines.node` no `package.json`.
 - [x] Documentar o CI no `README.md`.
@@ -174,7 +174,7 @@ jobs:
 | Risco | Mitigação |
 |---|---|
 | `LayoutProps`/tipos de rota ausentes | Rodar `next typegen` antes do `tsc` |
-| Client Prisma lintado | Ignorar `src/generated/**` no ESLint |
+| Client Prisma lintado | Ignorar `src/backend/generated/**` no ESLint |
 | `postinstall` sem `DATABASE_URL` | Placeholder no `env` do workflow |
 | Flags experimentais quebrarem o build | Build condicional até estabilizar |
 | Build precisar de banco/auth | Placeholders + serviço Postgres quando necessário |
