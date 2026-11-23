@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import type { GoalStatus } from "@/generated/prisma/client";
+import { GOAL_SELECT } from "@/features/goals/goal-select";
 import { getSession, unauthorized } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
@@ -10,11 +12,48 @@ type RouteContext = {
   }>;
 };
 
-// PATCH: concluir meta (somente membros de grupos ativos)
-export async function PATCH(
-  _request: Request,
+// Concluir (PATCH) e reabrir (DELETE) seguem as mesmas regras: qualquer participante,
+// só em grupo ativo. A diferença é o status de partida e o de chegada.
+const TRANSITIONS = {
+  complete: {
+    from: "PENDING",
+    to: "COMPLETED",
+    verb: "concluir",
+    alreadyDone: "Esta meta já foi concluída.",
+    conflict: "A meta já foi concluída ou foi alterada simultaneamente.",
+    success: "Meta concluída com sucesso.",
+    failure: "Não foi possível concluir a meta.",
+  },
+  reopen: {
+    from: "COMPLETED",
+    to: "PENDING",
+    verb: "reabrir",
+    alreadyDone: "Esta meta ainda não foi concluída.",
+    conflict: "A meta já foi reaberta ou foi alterada simultaneamente.",
+    success: "Meta reaberta.",
+    failure: "Não foi possível reabrir a meta.",
+  },
+} satisfies Record<
+  string,
+  {
+    from: GoalStatus;
+    to: GoalStatus;
+    verb: string;
+    alreadyDone: string;
+    conflict: string;
+    success: string;
+    failure: string;
+  }
+>;
+
+type Transition = keyof typeof TRANSITIONS;
+
+async function changeStatus(
+  transition: Transition,
   { params }: RouteContext,
 ) {
+  const rule = TRANSITIONS[transition];
+
   try {
     const session = await getSession();
     const user = session?.user;
@@ -50,7 +89,7 @@ export async function PATCH(
     if (group.status !== "ACTIVE") {
       return NextResponse.json(
         {
-          error: "Não é possível concluir metas de um grupo que não está ativo.",
+          error: `Não é possível ${rule.verb} metas de um grupo que não está ativo.`,
         },
         { status: 409 },
       );
@@ -91,58 +130,62 @@ export async function PATCH(
       );
     }
 
-    if (goal.status === "COMPLETED") {
+    if (goal.status !== rule.from) {
       return NextResponse.json(
-        { error: "Esta meta já foi concluída." },
+        { error: rule.alreadyDone },
         { status: 409 },
       );
     }
 
+    // Só muda se o status ainda for o de partida: duas pessoas clicando ao mesmo
+    // tempo não concluem (nem reabrem) a meta duas vezes.
     const result = await prisma.goal.updateMany({
       where: {
         id: goalId,
         groupId,
-        status: "PENDING",
+        status: rule.from,
       },
       data: {
-        status: "COMPLETED",
+        status: rule.to,
+        completedAt: rule.to === "COMPLETED" ? new Date() : null,
       },
     });
 
     if (result.count === 0) {
       return NextResponse.json(
-        {
-          error: "A meta já foi concluída ou foi alterada simultaneamente.",
-        },
+        { error: rule.conflict },
         { status: 409 },
       );
     }
 
-    const completedGoal = await prisma.goal.findUnique({
+    const updatedGoal = await prisma.goal.findUnique({
       where: { id: goalId },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        dueDate: true,
-        status: true,
-        updatedAt: true,
-      },
+      select: GOAL_SELECT,
     });
 
     return NextResponse.json({
-      message: "Meta concluída com sucesso.",
-      data: completedGoal,
+      message: rule.success,
+      data: updatedGoal,
     });
   } catch (error) {
     console.error(
-      "[PATCH /api/groups/:groupId/goals/:goalId/complete]",
+      `[${transition === "complete" ? "PATCH" : "DELETE"} /api/groups/:groupId/goals/:goalId/complete]`,
       error,
     );
 
     return NextResponse.json(
-      { error: "Não foi possível concluir a meta." },
+      { error: rule.failure },
       { status: 500 },
     );
   }
+}
+
+// PATCH: concluir meta (somente membros de grupos ativos)
+export async function PATCH(_request: Request, context: RouteContext) {
+  return changeStatus("complete", context);
+}
+
+// DELETE: reabrir meta concluída (desmarcar), com as mesmas regras
+export async function DELETE(_request: Request, context: RouteContext) {
+  return changeStatus("reopen", context);
 }

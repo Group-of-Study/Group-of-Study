@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { getSession, unauthorized } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { GOAL_SELECT } from "@/features/goals/goal-select";
 
 type RouteContext = {
   params: Promise<{
@@ -81,7 +82,7 @@ export async function PATCH(
         {
           error: "Dados inválidos.",
           issues: validation.error.issues.map((issue) => ({
-            path: issue.path.join("."),
+            field: issue.path.join("."),
             message: issue.message,
           })),
         },
@@ -161,20 +162,7 @@ export async function PATCH(
     const updatedGoal = await prisma.goal.update({
       where: { id: goalId },
       data: validation.data,
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        dueDate: true,
-        status: true,
-        updatedAt: true,
-        author: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+      select: GOAL_SELECT,
     });
 
     return NextResponse.json({
