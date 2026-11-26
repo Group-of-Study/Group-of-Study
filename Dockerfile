@@ -5,12 +5,13 @@
 # Prisma 7: config em prisma7.config.ts (auto-detectada pelo CLI 7.10+).
 # Usamos --config explicitamente para não depender da ordem de busca.
 
-ARG NODE_VERSION=22
+# Imagem base fixada por digest (manifest list multi-arch) para builds reproduzíveis
+ARG NODE_IMAGE=node:22-bookworm-slim@sha256:be979e5523c76fa4d5ca4ebd3099078f220aa47ec39c48ad5b5df9314debd6eb
 
 # -----------------------------------------------------------------------------
 # Dependências (cache de layer com package-lock)
 # -----------------------------------------------------------------------------
-FROM node:${NODE_VERSION}-bookworm-slim AS deps
+FROM ${NODE_IMAGE} AS deps
 
 WORKDIR /app
 
@@ -30,7 +31,7 @@ RUN npm ci
 # -----------------------------------------------------------------------------
 # Build
 # -----------------------------------------------------------------------------
-FROM node:${NODE_VERSION}-bookworm-slim AS builder
+FROM ${NODE_IMAGE} AS builder
 
 WORKDIR /app
 
@@ -51,7 +52,7 @@ RUN npx prisma generate --config prisma7.config.ts \
 # -----------------------------------------------------------------------------
 # Runtime (não-root, standalone)
 # -----------------------------------------------------------------------------
-FROM node:${NODE_VERSION}-bookworm-slim AS runner
+FROM ${NODE_IMAGE} AS runner
 
 WORKDIR /app
 

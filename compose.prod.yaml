@@ -8,8 +8,28 @@ name: group-of-study-prod
 
 services:
   postgres:
-    image: postgres:16.6-bookworm
+    image: postgres:16.6-bookworm@sha256:557fea37a744d5f4c8faab304b0a90858b53ab119735a88c131fd19dab802f36
     restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+      - /var/run/postgresql:rw,noexec,nosuid,nodev,uid=999,gid=999,mode=0755,size=16m
+    cap_drop:
+      - ALL
+    cap_add:
+      # Necessárias no entrypoint oficial para gosu/permissões em PGDATA
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -30,6 +50,19 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+      - /app/.next/cache:rw,noexec,nosuid,nodev,uid=1001,gid=1001,mode=0755,size=128m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 768M
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:

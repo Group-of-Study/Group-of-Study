@@ -15,7 +15,7 @@ coverage
 .env.*
 !.env.example
 
-# Logs e temporários
+# Logs, testes e temporários
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -24,9 +24,28 @@ yarn-error.log*
 *.tsbuildinfo
 .DS_Store
 *.pem
+*.key
+vitest.config.mts
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+playwright-report
+test-results
+
+# Documentação e arquivos Docker
+docs
+*.md
+Dockerfile
+Dockerfile.*
+compose.yaml
+compose.prod.yaml
+.dockerignore
 
 # Deploy / IDE / agentes
 .vercel
+.vscode
+.idea
 .agents
 .claude
 .windsurf
