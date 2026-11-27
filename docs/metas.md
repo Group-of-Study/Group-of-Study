@@ -40,32 +40,32 @@ Com o grupo arquivado ou encerrado, a lista fica só para consulta.
 | `DELETE` | `/api/groups/[groupId]/goals/[goalId]/complete` | reabre (desmarca; `completedAt` volta a `null`) |
 
 - **`/api/goals`** traz todas as pendentes e só as concluídas desde `completedSince` (padrão: 30 dias; no máximo 90), com teto de 500 metas. Cada meta vem com `group: { id, name, status, leaderId }` (`GOAL_WITH_GROUP_SELECT`). As abas e o filtro são calculados no navegador, com as mesmas regras de data.
-- Todas devolvem a meta no mesmo formato (`GOAL_SELECT` em `src/features/goals/goal-select.ts`), então o front troca a meta da lista pela resposta, sem recarregar tudo.
+- Todas devolvem a meta no mesmo formato (`GOAL_SELECT` em `src/backend/features/goals/goal-select.ts`), então o front troca a meta da lista pela resposta, sem recarregar tudo.
 - Concluir e reabrir só mudam se o status ainda for o de partida (`updateMany` com o status no `where`): dois cliques ao mesmo tempo não fazem a mesma coisa duas vezes; o segundo recebe 409.
 - Erros de validação vêm como `issues: [{ field, message }]`, o formato da [auth.md](auth.md#formato-das-respostas-da-api).
 
 ## Prazo e fuso
 
 - O prazo é um instante (`dueDate`). No formulário são dois campos: **dia** e **horário**. Sem horário, vale **até 23h59** daquele dia, e a lista mostra só o dia ("Sex, 24/10" em vez de "Sex, 24/10, 23h59").
-- "Hoje", "Amanhã", "Esta semana" (segunda a domingo) e "Atrasada" são calculados **no navegador, no fuso de quem está vendo** (`src/features/goals/dates.ts`). As funções recebem `now` para os testes não dependerem do relógio; o teste fixa o fuso em `America/Sao_Paulo`.
+- "Hoje", "Amanhã", "Esta semana" (segunda a domingo) e "Atrasada" são calculados **no navegador, no fuso de quem está vendo** (`src/shared/features/goals/dates.ts`). As funções recebem `now` para os testes não dependerem do relógio; o teste fixa o fuso em `America/Sao_Paulo`.
 - `completedAt` (migration `add_goal_completed_at`) guarda quando a meta foi concluída ("Concluída hoje"). Metas concluídas antes da migration ganharam o `updatedAt` como melhor estimativa.
 
 ## Arquivos
 
 | Arquivo | Papel |
 |---|---|
-| `src/features/goals/types.ts` | Tipos `Goal` e `GoalInput` do front |
-| `src/features/goals/api.ts` | Chamadas à API (sobre o `fetchApi`; nunca lançam erro) |
-| `src/features/goals/dates.ts` | Rótulos de prazo, ordenação, "metas da semana" e conversão dos campos de data |
-| `src/features/goals/use-goals.ts` | `useGoalsController`: estado de uma lista de metas e dos modais (carregar, concluir, criar, editar, excluir) |
-| `src/features/goals/use-group-goals.ts` | O controller configurado para um grupo (a visão geral e a aba dividem o mesmo) |
-| `src/features/goals/components/goal-item.tsx` | Linha da meta: checkbox, título, detalhes, iniciais de quem criou, editar/excluir |
-| `src/features/goals/components/goal-form-dialog.tsx` | Modal de criar/editar |
-| `src/features/goals/components/group-goals.tsx` | "Metas da semana", aba Metas e os modais, para a página do grupo |
-| `src/features/goals/components/goals-board.tsx` | Página `/metas`: abas, filtro, lista por dia e "Seu ritmo na semana" |
-| `src/features/goals/components/goal-delete-dialog.tsx` | Confirmação de excluir (grupo e `/metas`) |
+| `src/shared/features/goals/types.ts` | Tipos `Goal` e `GoalInput` do front |
+| `src/frontend/features/goals/api.ts` | Chamadas à API (sobre o `fetchApi`; nunca lançam erro) |
+| `src/shared/features/goals/dates.ts` | Rótulos de prazo, ordenação, "metas da semana" e conversão dos campos de data |
+| `src/frontend/features/goals/use-goals.ts` | `useGoalsController`: estado de uma lista de metas e dos modais (carregar, concluir, criar, editar, excluir) |
+| `src/frontend/features/goals/use-group-goals.ts` | O controller configurado para um grupo (a visão geral e a aba dividem o mesmo) |
+| `src/frontend/features/goals/components/goal-item.tsx` | Linha da meta: checkbox, título, detalhes, iniciais de quem criou, editar/excluir |
+| `src/frontend/features/goals/components/goal-form-dialog.tsx` | Modal de criar/editar |
+| `src/frontend/features/goals/components/group-goals.tsx` | "Metas da semana", aba Metas e os modais, para a página do grupo |
+| `src/frontend/features/goals/components/goals-board.tsx` | Página `/metas`: abas, filtro, lista por dia e "Seu ritmo na semana" |
+| `src/frontend/features/goals/components/goal-delete-dialog.tsx` | Confirmação de excluir (grupo e `/metas`) |
 | `src/app/(app)/metas/page.tsx` | Página `/metas`: busca a sessão e os grupos da pessoa no servidor |
-| `src/components/ui/dialog.tsx` | `Dialog` do Design System, sobre o `<dialog>` nativo (foco preso, Esc, fundo escuro) |
+| `src/frontend/components/ui/dialog.tsx` | `Dialog` do Design System, sobre o `<dialog>` nativo (foco preso, Esc, fundo escuro) |
 
 ## Fora do escopo (por enquanto)
 

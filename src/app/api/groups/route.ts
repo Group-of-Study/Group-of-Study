@@ -1,10 +1,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import type { Prisma } from "@/generated/prisma/client";
+import type { Prisma } from "@/backend/generated/prisma/client";
 
-import { getSession, unauthorized } from "@/lib/session";
-import { prisma } from "@/lib/prisma";
+import { getSession, unauthorized } from "@/backend/lib/session";
+import { prisma } from "@/backend/lib/prisma";
 
 const CreateGroupSchema = z
   .object({

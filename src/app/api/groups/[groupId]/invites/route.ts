@@ -2,8 +2,8 @@ import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { prisma } from "@/lib/prisma";
-import { getSession, unauthorized } from "@/lib/session";
+import { prisma } from "@/backend/lib/prisma";
+import { getSession, unauthorized } from "@/backend/lib/session";
 
 type RouteContext = {
   params: Promise<{ groupId: string }>;

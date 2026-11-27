@@ -1,7 +1,7 @@
 "use client"; // global-error.tsx precisa ser Client Component
 
-import { RouteError } from "@/components/feedback/route-error";
-import { readPreference, resolveTheme, systemPrefersDark } from "@/lib/theme";
+import { RouteError } from "@/frontend/components/feedback/route-error";
+import { readPreference, resolveTheme, systemPrefersDark } from "@/frontend/lib/theme";
 import "./globals.css";
 
 // Erro no próprio layout raiz. Ele substitui o layout inteiro, então precisa do próprio

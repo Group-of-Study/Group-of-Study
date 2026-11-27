@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { buttonClassName } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
-import { LogoMark } from "@/components/ui/logo-mark";
+import { buttonClassName } from "@/frontend/components/ui/button";
+import { EmptyState } from "@/frontend/components/ui/empty-state";
+import { LogoMark } from "@/frontend/components/ui/logo-mark";
 
 export const metadata: Metadata = {
     title: "Página não encontrada | Group of Study",

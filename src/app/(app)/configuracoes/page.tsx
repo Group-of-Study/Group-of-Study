@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { AccountSecurityPanel } from "@/features/account/components/account-security-panel";
-import { AppearancePanel } from "@/features/account/components/appearance-panel";
-import { DangerZonePanel } from "@/features/account/components/danger-zone-panel";
-import { ProfileForm } from "@/features/account/components/profile-form";
-import { SettingsNav } from "@/features/account/components/settings-nav";
-import { listActiveSessions } from "@/features/account/sessions";
-import { requireSession } from "@/lib/session";
+import { AccountSecurityPanel } from "@/frontend/features/account/components/account-security-panel";
+import { AppearancePanel } from "@/frontend/features/account/components/appearance-panel";
+import { DangerZonePanel } from "@/frontend/features/account/components/danger-zone-panel";
+import { ProfileForm } from "@/frontend/features/account/components/profile-form";
+import { SettingsNav } from "@/frontend/features/account/components/settings-nav";
+import { listActiveSessions } from "@/backend/features/account/sessions";
+import { requireSession } from "@/backend/lib/session";
 
 export const metadata: Metadata = {
     title: "Configurações | Group of Study",

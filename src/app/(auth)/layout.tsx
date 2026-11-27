@@ -1,4 +1,4 @@
-import { AuthBrandPanel } from "@/features/auth/components/auth-brand-panel";
+import { AuthBrandPanel } from "@/frontend/features/auth/components/auth-brand-panel";
 
 // Moldura das telas de login e cadastro: painel da marca + área do formulário.
 // No mobile a marca fica em cima e o formulário vira uma "folha" branca.

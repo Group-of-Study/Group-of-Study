@@ -39,7 +39,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 **Link com visual de botão:** use `buttonClassName()` no `<Link>`. Não coloque `<Button>` dentro de `<Link>` (botão dentro de link é HTML inválido e confunde o teclado e o leitor de tela).
 
 ## Dialog (modal)
-`Dialog` (`src/components/ui/dialog.tsx`) é o modal do Design System, sobre o `<dialog>` nativo com `showModal()`: o navegador prende o foco dentro do modal, fecha com Esc e escurece o fundo.
+`Dialog` (`src/frontend/components/ui/dialog.tsx`) é o modal do Design System, sobre o `<dialog>` nativo com `showModal()`: o navegador prende o foco dentro do modal, fecha com Esc e escurece o fundo.
 
 ```tsx
 <Dialog open={open} title="Excluir meta?" description="Isso não pode ser desfeito." busy={saving} onClose={() => setOpen(false)}>
@@ -49,10 +49,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 
 - **`busy`**: enquanto algo é salvo, Esc, o X e o clique fora não fecham.
 - O conteúdo só é montado com o modal aberto: um formulário dentro dele começa do zero a cada abertura.
-- Exemplo completo: o modal de metas (`src/features/goals/components/goal-form-dialog.tsx`, ver [metas.md](metas.md)).
+- Exemplo completo: o modal de metas (`src/frontend/features/goals/components/goal-form-dialog.tsx`, ver [metas.md](metas.md)).
 
 ## TextAreaField
-`TextAreaField` (`src/components/ui/text-area-field.tsx`) é o campo de texto longo com o mesmo visual do `TextField` (rótulo, borda, foco, `error` e `helper`). Usado em "Detalhes" das metas e da agenda.
+`TextAreaField` (`src/frontend/components/ui/text-area-field.tsx`) é o campo de texto longo com o mesmo visual do `TextField` (rótulo, borda, foco, `error` e `helper`). Usado em "Detalhes" das metas e da agenda.
 
 ## Toast e chamadas à API
 Para Client Components que chamam as rotas de `src/app/api`. O `ToastProvider` já está no `src/app/layout.tsx`.
@@ -87,12 +87,12 @@ Os tokens do escuro vêm do Figma (Foundations, coleção "Color Dark") e ficam 
 
 | Arquivo | Papel |
 |---|---|
-| `src/lib/theme.ts` | Preferência (`light`, `dark`, `system`), salva no `localStorage` (`gos-theme`), e o script que aplica o tema |
+| `src/frontend/lib/theme.ts` | Preferência (`light`, `dark`, `system`), salva no `localStorage` (`gos-theme`), e o script que aplica o tema |
 | `src/app/layout.tsx` | `<html data-theme="light">` + o script no `<head>`, que troca para o tema certo **antes da página aparecer** (guia "Preventing Flash" do Next) |
-| `src/components/theme/theme-watcher.tsx` | Mantém o tema certo depois do carregamento: no modo "Sistema", quando o aparelho troca entre claro e escuro, e quando outra aba muda a escolha |
-| `src/features/account/components/appearance-panel.tsx` | Configurações › Aparência: Claro, Escuro ou Sistema (padrão) |
+| `src/frontend/components/theme/theme-watcher.tsx` | Mantém o tema certo depois do carregamento: no modo "Sistema", quando o aparelho troca entre claro e escuro, e quando outra aba muda a escolha |
+| `src/frontend/features/account/components/appearance-panel.tsx` | Configurações › Aparência: Claro, Escuro ou Sistema (padrão) |
 
 - **A escolha é do navegador, não da conta:** fica no `localStorage`, então o celular e o computador podem ter temas diferentes. Sem escolha salva, vale o tema do aparelho (`prefers-color-scheme`).
 - **Variante `dark:` do Tailwind** segue o `data-theme` (`@custom-variant dark`), para os raros casos em que um token não resolve.
 - **Sombras:** o Figma só define sombras para o claro; no escuro elas ficam iguais (quase invisíveis). Se precisar, combinar com o design antes de inventar.
-- **O que ainda não segue o tema:** a landing (`src/components/sections`, `landing`, `PublicNavbar`, que usam cor fixa e ficam sempre claras), o `Badge` e as variantes `secondary`/`ghost` do `Button` (usados pela landing). As telas de grupo e perfil dos PRs #25/#26 entram numa task depois do merge deles.
+- **O que ainda não segue o tema:** a landing (`src/frontend/components/sections`, `landing`, `PublicNavbar`, que usam cor fixa e ficam sempre claras), o `Badge` e as variantes `secondary`/`ghost` do `Button` (usados pela landing). As telas de grupo e perfil dos PRs #25/#26 entram numa task depois do merge deles.

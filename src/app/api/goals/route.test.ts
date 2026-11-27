@@ -5,13 +5,13 @@ const { getSessionMock, findManyMock } = vi.hoisted(() => ({
   findManyMock: vi.fn(),
 }));
 
-vi.mock("@/lib/session", () => ({
+vi.mock("@/backend/lib/session", () => ({
   getSession: getSessionMock,
   unauthorized: () =>
     Response.json({ error: "Autenticação necessária." }, { status: 401 }),
 }));
 
-vi.mock("@/lib/prisma", () => ({
+vi.mock("@/backend/lib/prisma", () => ({
   prisma: { goal: { findMany: findManyMock } },
 }));
 

@@ -3,18 +3,18 @@
 
 import { useEffect, useState } from "react";
 
-import Button from "@/components/ui/button";
+import Button from "@/frontend/components/ui/button";
 import Link from "next/link";
-import GroupEmptyState from "@/components/groups/GroupEmptyState";
-import GroupList from "@/components/groups/GroupList";
-import GroupListSkeleton from "@/components/groups/GroupListSkeleton";
-import LoadMoreButton from "@/components/groups/LoadMoreButton";
+import GroupEmptyState from "@/frontend/components/groups/GroupEmptyState";
+import GroupList from "@/frontend/components/groups/GroupList";
+import GroupListSkeleton from "@/frontend/components/groups/GroupListSkeleton";
+import LoadMoreButton from "@/frontend/components/groups/LoadMoreButton";
 
 import type {
   GroupsResponse,
   GroupsErrorResponse,
   Group,
-} from "@/types/group";
+} from "@/shared/types/group";
 
 async function fetchGroups(cursor?: string, signal?: AbortSignal) {
   const params = new URLSearchParams({

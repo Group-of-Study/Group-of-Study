@@ -1,10 +1,10 @@
 
 import { NextResponse } from "next/server";
-import { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/backend/generated/prisma/client";
 
-import { getSession, unauthorized } from "@/lib/session";
-import { prisma } from "@/lib/prisma";
-import { leaveGroup } from "@/features/groups/leave";
+import { getSession, unauthorized } from "@/backend/lib/session";
+import { prisma } from "@/backend/lib/prisma";
+import { leaveGroup } from "@/backend/features/groups/leave";
 
 type RouteContext = {
   params: Promise<{ groupId: string }>;

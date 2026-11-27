@@ -45,7 +45,7 @@ COPY . .
 ENV DATABASE_URL="postgresql://build:build@127.0.0.1:5432/build?schema=public"
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Garante o client em src/generated/prisma (output do schema) após o COPY do código
+# Garante o client em src/backend/generated/prisma (output do schema) após o COPY do código
 RUN npx prisma generate --config prisma7.config.ts \
   && npm run build
 
@@ -71,7 +71,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Cliente Prisma (output customizado fora de node_modules)
-COPY --from=builder --chown=nextjs:nodejs /app/src/generated ./src/generated
+COPY --from=builder --chown=nextjs:nodejs /app/src/backend/generated ./src/backend/generated
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma7.config.ts ./prisma7.config.ts
 

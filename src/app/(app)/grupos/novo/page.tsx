@@ -1,5 +1,5 @@
 
-import GroupCreateForm from "@/components/groups/GroupCreateForm";
+import GroupCreateForm from "@/frontend/components/groups/GroupCreateForm";
 
 export default function NewGroupPage() {
   return (

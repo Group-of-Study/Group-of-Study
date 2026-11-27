@@ -18,6 +18,35 @@ Matheus, Miguel, Gabriel, Eduardo e Talys.
 | [Better Auth](https://www.better-auth.com) | Autenticação (cadastro, login e sessões). |
 | [Docker](https://www.docker.com) | Ambiente de desenvolvimento e build de produção reproduzíveis. |
 
+## Estrutura de pastas
+
+Continua sendo um app Next.js só (um `package.json`, um deploy). O código fica separado por camada:
+
+```
+src/
+  app/         rotas do Next: páginas e api/**/route.ts (o Next exige que fiquem aqui)
+  proxy.ts     proxy do Next (também precisa ficar na raiz do src)
+  frontend/    o que roda ou desenha na tela
+    components/          UI reutilizável (ui/, layout/, groups/, profile/, sections/...)
+    features/<feature>/  components/, hooks use-*.ts e api.ts (fetch para /api)
+    lib/                 api-client, auth-client, theme
+    hooks/
+  backend/     o que só roda no servidor
+    lib/                 prisma, auth (better-auth), session, audit-log, rate-limit
+    features/<feature>/  server actions, consultas e regras de acesso
+    generated/prisma     client do Prisma (gerado, gitignored)
+  shared/      usado pelos dois lados, sem dependência de servidor nem de React
+    features/<feature>/  schemas Zod, tipos, datas, estados dos formulários
+    types/
+```
+
+Regras:
+
+- `shared/` não importa de `frontend/` nem de `backend/`.
+- Um componente `"use client"` só importa do `backend/` **server actions** (arquivos `"use server"`) ou `import type`. Qualquer outro valor que os dois lados usem vai para `shared/`.
+- Arquivo do `backend/` que acessa banco ou segredo começa com `import "server-only"`.
+- Testes ficam ao lado do arquivo testado (`x.ts` e `x.test.ts`).
+
 ## Pré-requisitos
 
 - [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/) (v2+)
@@ -38,7 +67,7 @@ Matheus, Miguel, Gabriel, Eduardo e Talys.
 
 O CLI Prisma 7.10+ procura, nesta ordem: `prisma7.config.*`, `.config/prisma7.*`, depois `prisma.config.*`.
 
-Este repositório usa `prisma7.config.ts` na raiz. Os scripts e Dockerfiles passam `--config prisma7.config.ts` de forma explícita. O client é gerado em `src/generated/prisma` (gitignored).
+Este repositório usa `prisma7.config.ts` na raiz. Os scripts e Dockerfiles passam `--config prisma7.config.ts` de forma explícita. O client é gerado em `src/backend/generated/prisma` (gitignored).
 
 O `postinstall` (`prisma generate --config prisma7.config.ts`) **não** exige um banco real; nos builds Docker usamos uma `DATABASE_URL` placeholder só para carregar a config.
 

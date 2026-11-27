@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getRedirectUrl, unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 import { describe, expect, it } from "vitest";
-import { config, proxy } from "./proxy";
+import { config, proxy } from "@/proxy";
 
 // No Next 16.4 o helper ainda se chama "Middleware" (a doc já cita "Proxy").
 function matches(url: string) {

@@ -32,6 +32,6 @@ ENV PORT=3000
 
 EXPOSE 3000
 
-# Regenera o client (src/generated é gitignored e some no bind mount do host)
+# Regenera o client (src/backend/generated é gitignored e some no bind mount do host)
 # e sobe o servidor de desenvolvimento escutando em todas as interfaces.
 CMD ["sh", "-c", "npx prisma generate --config prisma7.config.ts && npm run dev -- -H 0.0.0.0 -p 3000"]

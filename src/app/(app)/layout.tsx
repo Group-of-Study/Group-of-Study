@@ -1,11 +1,11 @@
 
 import { Suspense, type ReactNode } from "react";
 
-import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/session";
+import { prisma } from "@/backend/lib/prisma";
+import { requireSession } from "@/backend/lib/session";
 
-import { Sidebar } from "@/components/layout/Sidebar";
-import { MobileSidebar } from "@/components/layout/MobileSidebar";
+import { Sidebar } from "@/frontend/components/layout/Sidebar";
+import { MobileSidebar } from "@/frontend/components/layout/MobileSidebar";
 
 
 

@@ -1,11 +1,11 @@
-import PublicNavbar from "@/components/layout/PublicNavbar";
-import Hero from "@/components/sections/hero";
-import HowItWorks from "@/components/sections/how-it-works";
-import Features from "@/components/sections/features";
-import Philosophy from "@/components/sections/philosophy";
-import Values from "@/components/sections/values";
-import CTA from "@/components/sections/cta";
-import Footer from "@/components/sections/footer";
+import PublicNavbar from "@/frontend/components/layout/PublicNavbar";
+import Hero from "@/frontend/components/sections/hero";
+import HowItWorks from "@/frontend/components/sections/how-it-works";
+import Features from "@/frontend/components/sections/features";
+import Philosophy from "@/frontend/components/sections/philosophy";
+import Values from "@/frontend/components/sections/values";
+import CTA from "@/frontend/components/sections/cta";
+import Footer from "@/frontend/components/sections/footer";
 
 export default function Home() {
   return (

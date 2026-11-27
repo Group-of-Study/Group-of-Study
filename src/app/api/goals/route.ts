@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import { GOAL_WITH_GROUP_SELECT } from "@/features/goals/goal-select";
-import { getSession, unauthorized } from "@/lib/session";
-import { prisma } from "@/lib/prisma";
+import { GOAL_WITH_GROUP_SELECT } from "@/backend/features/goals/goal-select";
+import { getSession, unauthorized } from "@/backend/lib/session";
+import { prisma } from "@/backend/lib/prisma";
 
 // Concluídas entram só a partir desta data (padrão: 30 dias), para a lista não crescer
 // para sempre; as pendentes vêm todas. Mais de 90 dias não é aceito.

@@ -52,4 +52,4 @@ compose.prod.yaml
 skills-lock.json
 
 # Cliente Prisma gerado no host (regenerado no build da imagem)
-src/generated/prisma
+src/backend/generated/prisma

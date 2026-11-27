@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
-import type { GoalStatus } from "@/generated/prisma/client";
-import { GOAL_SELECT } from "@/features/goals/goal-select";
-import { getSession, unauthorized } from "@/lib/session";
-import { prisma } from "@/lib/prisma";
+import type { GoalStatus } from "@/backend/generated/prisma/client";
+import { GOAL_SELECT } from "@/backend/features/goals/goal-select";
+import { getSession, unauthorized } from "@/backend/lib/session";
+import { prisma } from "@/backend/lib/prisma";
 
 type RouteContext = {
   params: Promise<{

@@ -14,7 +14,7 @@ const {
   goalCreateMock: vi.fn(),
 }));
 
-vi.mock("@/lib/session", () => ({
+vi.mock("@/backend/lib/session", () => ({
   getSession: getSessionMock,
   unauthorized: () =>
     Response.json(
@@ -23,7 +23,7 @@ vi.mock("@/lib/session", () => ({
     ),
 }));
 
-vi.mock("@/lib/prisma", () => ({
+vi.mock("@/backend/lib/prisma", () => ({
   prisma: {
     group: {
       findUnique: groupFindUniqueMock,
